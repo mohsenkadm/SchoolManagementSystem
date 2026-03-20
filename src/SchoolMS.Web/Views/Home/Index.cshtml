@@ -1,0 +1,236 @@
+@model SchoolMS.Application.DTOs.DashboardDto
+@{
+    ViewData["Title"] = Localizer["Dashboard"].Value;
+}
+
+<!-- Welcome Hero Banner -->
+<div class="welcome-hero" data-aos="fade-down">
+    <div class="d-flex align-items-center justify-content-between flex-wrap">
+        <div>
+            <h2 class="mb-1">@Localizer["WelcomeBack"] <span style="text-decoration:underline;text-decoration-color:rgba(255,255,255,0.4);">@User.Identity?.Name</span>! 👋</h2>
+            <p class="mb-0" style="opacity:0.8;">@Localizer["DashboardSubtitle"]</p>
+            <div class="mt-2" style="opacity:0.6;">
+                <i class="far fa-calendar-alt me-1"></i>
+                <span id="currentDate"></span>
+                <span class="mx-2">&bull;</span>
+                <i class="far fa-clock me-1"></i>
+                <span id="currentTime"></span>
+            </div>
+        </div>
+    </div>
+    <!-- Quick action buttons -->
+    <div class="hero-actions">
+        <a href="@Url.Action("Index", "Students")" class="quick-action-btn" data-aos="zoom-in" data-aos-delay="100">
+            <i class="fas fa-user-plus"></i>
+            <span>@Localizer["AddStudent"]</span>
+        </a>
+        <a href="@Url.Action("Index", "Installments")" class="quick-action-btn" data-aos="zoom-in" data-aos-delay="200">
+            <i class="fas fa-receipt"></i>
+            <span>@Localizer["RecordPayment"]</span>
+        </a>
+        <a href="@Url.Action("Index", "Attendance")" class="quick-action-btn" data-aos="zoom-in" data-aos-delay="300">
+            <i class="fas fa-fingerprint"></i>
+            <span>@Localizer["CheckIn"]</span>
+        </a>
+        <a href="@Url.Action("Index", "Notifications")" class="quick-action-btn" data-aos="zoom-in" data-aos-delay="400">
+            <i class="fas fa-bell"></i>
+            <span>@Localizer["SendNotification"]</span>
+        </a>
+    </div>
+</div>
+
+<!-- Statistics Cards Row 1 -->
+<div class="stats-grid mb-4">
+    <div class="stat-card stat-students" data-aos="fade-up" data-aos-delay="100">
+        <i class="fas fa-user-graduate stat-icon"></i>
+        <div class="stat-value counter-value" data-target="@Model.TotalStudents">0</div>
+        <div class="stat-label">@Localizer["TotalStudents"]</div>
+        <div class="mt-2">
+            <span class="stat-trend" style="color:rgba(255,255,255,0.8);font-size:0.8rem;">
+                <i class="fas fa-arrow-up"></i> +12%
+            </span>
+        </div>
+    </div>
+    <div class="stat-card stat-teachers" data-aos="fade-up" data-aos-delay="200">
+        <i class="fas fa-chalkboard-teacher stat-icon"></i>
+        <div class="stat-value counter-value" data-target="@Model.TotalTeachers">0</div>
+        <div class="stat-label">@Localizer["TotalTeachers"]</div>
+    </div>
+    <div class="stat-card stat-staff" data-aos="fade-up" data-aos-delay="300">
+        <i class="fas fa-users stat-icon"></i>
+        <div class="stat-value counter-value" data-target="@Model.TotalStaff">0</div>
+        <div class="stat-label">@Localizer["TotalStaff"]</div>
+    </div>
+    <div class="stat-card stat-attendance" data-aos="fade-up" data-aos-delay="400">
+        <i class="fas fa-fingerprint stat-icon"></i>
+        <div class="stat-value">@Model.AttendanceRateToday%</div>
+        <div class="stat-label">@Localizer["AttendanceRateToday"]</div>
+    </div>
+</div>
+
+<!-- Statistics Cards Row 2 -->
+<div class="stats-grid mb-4">
+    <div class="stat-card stat-revenue" data-aos="fade-up" data-aos-delay="100">
+        <i class="fas fa-dollar-sign stat-icon"></i>
+        <div class="stat-value">$@Model.RevenueThisMonth.ToString("N0")</div>
+        <div class="stat-label">@Localizer["RevenueThisMonth"]</div>
+    </div>
+    <div class="stat-card stat-expenses" data-aos="fade-up" data-aos-delay="200">
+        <i class="fas fa-receipt stat-icon"></i>
+        <div class="stat-value">$@Model.ExpensesThisMonth.ToString("N0")</div>
+        <div class="stat-label">@Localizer["ExpensesThisMonth"]</div>
+    </div>
+    <div class="stat-card stat-profit" data-aos="fade-up" data-aos-delay="300">
+        <i class="fas fa-chart-line stat-icon"></i>
+        <div class="stat-value">$@Model.NetProfit.ToString("N0")</div>
+        <div class="stat-label">@Localizer["NetProfit"]</div>
+    </div>
+    <div class="stat-card stat-overdue" data-aos="fade-up" data-aos-delay="400">
+        <i class="fas fa-exclamation-triangle stat-icon"></i>
+        <div class="stat-value counter-value" data-target="@Model.OverdueInstallments">0</div>
+        <div class="stat-label">@Localizer["OverdueInstallments"]</div>
+    </div>
+</div>
+
+<!-- Charts Section -->
+<div class="row g-4 mb-4">
+    <!-- Revenue vs Expenses -->
+    <div class="col-lg-8" data-aos="fade-up">
+        <div class="chart-card">
+            <div class="chart-card-header">
+                <div>
+                    <h5 class="mb-1"><i class="fas fa-chart-bar me-2" style="color:var(--primary-500);"></i>@Localizer["RevenueVsExpenses"]</h5>
+                    <p class="text-muted mb-0" style="font-size:0.85rem;">Monthly financial analysis</p>
+                </div>
+            </div>
+            <div class="chart-card-body">
+                <canvas id="revenueExpensesChart" height="280"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Fee Collection - Doughnut -->
+    <div class="col-lg-4" data-aos="fade-up" data-aos-delay="100">
+        <div class="chart-card">
+            <div class="chart-card-header">
+                <h5 class="mb-0"><i class="fas fa-chart-pie me-2" style="color:var(--accent-500);"></i>@Localizer["FeeCollectionStatus"]</h5>
+            </div>
+            <div class="chart-card-body text-center">
+                <canvas id="feeStatusChart" height="220"></canvas>
+                <div class="d-flex justify-content-center gap-3 mt-3" style="font-size:0.85rem;">
+                    <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--success-500);margin-right:4px;"></span> @Localizer["Paid"]</span>
+                    <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--warning-500);margin-right:4px;"></span> @Localizer["Pending"]</span>
+                    <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--danger-500);margin-right:4px;"></span> @Localizer["Overdue"]</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Overdue Alert Banner -->
+@if (Model.OverdueInstallments > 0)
+{
+<div class="alert-banner" data-aos="fade-up">
+    <div style="font-size:1.5rem;"><i class="fas fa-exclamation-circle text-warning"></i></div>
+    <div class="flex-grow-1">
+        <h6 class="mb-1">@Localizer["OverdueInstallments"]: <strong>@Model.OverdueInstallments</strong></h6>
+        <p class="mb-0 text-muted" style="font-size:0.85rem;">Please review overdue installments and take necessary actions.</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="@Url.Action("Index", "Installments")" class="btn btn-warning btn-sm"><i class="fas fa-eye me-1"></i>Review</a>
+    </div>
+</div>
+}
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            // Live date/time
+            function updateDateTime() {
+                var now = new Date();
+                $('#currentDate').text(now.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }));
+                $('#currentTime').text(now.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' }));
+            }
+            updateDateTime();
+            setInterval(updateDateTime, 60000);
+
+            // Counter animations
+            $('.counter-value').each(function () {
+                var el = this;
+                var target = parseInt($(el).data('target') || $(el).text());
+                var current = 0;
+                var increment = Math.max(1, Math.floor(target / 40));
+                var timer = setInterval(function () {
+                    current += increment;
+                    if (current >= target) { current = target; clearInterval(timer); }
+                    $(el).text(current.toLocaleString());
+                }, 30);
+            });
+
+            // Revenue vs Expenses Chart
+            var months = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.MonthlyFinancials.Select(m => m.Month)));
+            var revenues = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.MonthlyFinancials.Select(m => m.Revenue)));
+            var expenses = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.MonthlyFinancials.Select(m => m.Expenses)));
+
+            new Chart(document.getElementById('revenueExpensesChart'), {
+                type: 'bar',
+                data: {
+                    labels: months,
+                    datasets: [
+                        {
+                            label: '@Localizer["Revenue"]',
+                            data: revenues,
+                            backgroundColor: 'rgba(99, 102, 241, 0.7)',
+                            borderColor: 'rgba(99, 102, 241, 1)',
+                            borderWidth: 1,
+                            borderRadius: 8,
+                            borderSkipped: false
+                        },
+                        {
+                            label: '@Localizer["Expenses"]',
+                            data: expenses,
+                            backgroundColor: 'rgba(236, 72, 153, 0.7)',
+                            borderColor: 'rgba(236, 72, 153, 1)',
+                            borderWidth: 1,
+                            borderRadius: 8,
+                            borderSkipped: false
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'top', labels: { usePointStyle: true, padding: 20 } }
+                    },
+                    scales: {
+                        y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.05)' } },
+                        x: { grid: { display: false } }
+                    }
+                }
+            });
+
+            // Fee Status Doughnut Chart
+            new Chart(document.getElementById('feeStatusChart'), {
+                type: 'doughnut',
+                data: {
+                    labels: ['@Localizer["Paid"]', '@Localizer["Pending"]', '@Localizer["Overdue"]'],
+                    datasets: [{
+                        data: [@Model.RevenueThisMonth, 5000, @Model.OverdueInstallments * 100],
+                        backgroundColor: ['#22c55e', '#f59e0b', '#ef4444'],
+                        borderWidth: 0,
+                        hoverOffset: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '70%',
+                    plugins: {
+                        legend: { display: false }
+                    }
+                }
+            });
+        });
+    </script>
+}

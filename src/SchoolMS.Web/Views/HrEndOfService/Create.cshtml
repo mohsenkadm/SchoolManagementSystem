@@ -1,0 +1,61 @@
+@using SchoolMS.Application.DTOs
+@{
+    var employees = ViewBag.Employees as List<HrEmployeeDto> ?? new();
+    ViewData["Title"] = Localizer["CreateEndOfService"].Value;
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4" data-aos="fade-down">
+    <h4 class="mb-0"><i class="fas fa-plus-circle me-2 text-primary"></i>@Localizer["CreateEndOfService"]</h4>
+    <a href="@Url.Action("Index")" class="btn btn-secondary"><i class="fas fa-arrow-left me-1"></i>@Localizer["Back"]</a>
+</div>
+<div class="dashboard-card card p-4" data-aos="fade-up">
+    <form asp-action="Create" method="post">
+        @Html.AntiForgeryToken()
+        <div class="row g-3">
+            <div class="col-md-4">
+                <label class="form-label">@Localizer["Employee"] *</label>
+                <select name="EmployeeId" class="form-select select2" required id="empSelect"><option value="">—</option>@foreach (var e in employees) { <option value="@e.Id">@e.FullName</option> }</select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">@Localizer["Type"] *</label>
+                <select name="Type" class="form-select" id="eosType" required>@foreach (var t in Enum.GetValues<EndOfServiceType>()) { <option value="@t">@t</option> }</select>
+            </div>
+            <div class="col-md-4"><label class="form-label">@Localizer["EffectiveDate"] *</label><input type="date" name="EffectiveDate" class="form-control" id="eosDate" value="@DateTime.Today.ToString("yyyy-MM-dd")" required /></div>
+            <div class="col-md-4"><label class="form-label">@Localizer["LastWorkingDay"]</label><input type="date" name="LastWorkingDay" class="form-control" /></div>
+            <div class="col-md-8"><label class="form-label">@Localizer["Reason"]</label><textarea name="Reason" class="form-control" rows="2"></textarea></div>
+            <div class="col-12"><label class="form-label">@Localizer["Notes"]</label><textarea name="Notes" class="form-control" rows="2"></textarea></div>
+        </div>
+
+        <div class="mt-3">
+            <button type="button" class="btn btn-info" id="calcBtn"><i class="fas fa-calculator me-1"></i>@Localizer["CalculateSettlement"]</button>
+        </div>
+        <div id="calcResult" class="mt-3" style="display:none">
+            <div class="alert alert-info">
+                <div class="row">
+                    <div class="col-md-3"><strong>@Localizer["EndOfServiceBenefit"]:</strong> <span id="resBenefit"></span></div>
+                    <div class="col-md-3"><strong>@Localizer["LeaveCompensation"]:</strong> <span id="resLeave"></span></div>
+                    <div class="col-md-3"><strong>@Localizer["TotalDeductions"]:</strong> <span id="resDed"></span></div>
+                    <div class="col-md-3"><strong>@Localizer["FinalSettlement"]:</strong> <span id="resFinal" class="text-success fw-bold"></span></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-4"><button type="submit" class="btn btn-accent"><i class="fas fa-save me-1"></i>@Localizer["Save"]</button></div>
+    </form>
+</div>
+
+@section Scripts {
+<script>
+    $('#calcBtn').click(function () {
+        var empId = $('#empSelect').val(), type = $('#eosType').val(), date = $('#eosDate').val();
+        if (!empId || !date) return;
+        $.get('@Url.Action("Calculate")', { employeeId: empId, type: type, effectiveDate: date }, function (d) {
+            $('#resBenefit').text(d.endOfServiceBenefit?.toLocaleString() ?? 0);
+            $('#resLeave').text(d.unusedLeaveCompensation?.toLocaleString() ?? 0);
+            $('#resDed').text(d.totalDeductions?.toLocaleString() ?? 0);
+            $('#resFinal').text(d.finalSettlementAmount?.toLocaleString() ?? 0);
+            $('#calcResult').show();
+        });
+    });
+</script>
+}

@@ -1,0 +1,52 @@
+@model List<SchoolMS.Application.DTOs.HrPerformanceCriteriaDto>
+@{ ViewData["Title"] = Localizer["PerformanceCriteria"].Value; }
+@Html.AntiForgeryToken()
+
+<div class="page-header" data-aos="fade-down">
+    <div><h4 class="page-title"><i class="fas fa-list-check text-primary"></i> @Localizer["PerformanceCriteria"]</h4></div>
+    <div class="page-actions"><a href="@Url.Action("Cycles")" class="btn btn-secondary"><i class="fas fa-arrow-left me-1"></i>@Localizer["Back"]</a></div>
+</div>
+
+<div class="row g-3" data-aos="fade-up">
+    <div class="col-md-8">
+        <div class="table-card hover-lift">
+            <table id="dataTable" class="table table-hover" style="width:100%">
+                <thead><tr><th>#</th><th>@Localizer["Name"]</th><th>@Localizer["Category"]</th><th>@Localizer["Weight"]</th><th>@Localizer["MaxScore"]</th><th>@Localizer["Active"]</th><th>@Localizer["Actions"]</th></tr></thead>
+                <tbody>
+                    @for (int i = 0; i < Model.Count; i++)
+                    {
+                        var c = Model[i];
+                        <tr>
+                            <td>@c.SortOrder</td><td>@c.CriteriaName</td><td>@c.Category</td>
+                            <td><span class="badge bg-info">@c.Weight%</span></td><td>@c.MaxScore</td>
+                            <td>@(c.IsActive ? "✅" : "❌")</td>
+                            <td><button class="btn btn-sm btn-danger" onclick="del(@c.Id)"><i class="fas fa-trash"></i></button></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="dashboard-card card p-3">
+            <h6><i class="fas fa-plus me-1"></i>@Localizer["Add"] @Localizer["Criteria"]</h6>
+            <form asp-action="CreateCriteria" method="post">
+                @Html.AntiForgeryToken()
+                <div class="mb-2"><input type="text" name="CriteriaName" class="form-control form-control-sm" placeholder="@Localizer["Name"] *" required /></div>
+                <div class="mb-2"><input type="text" name="Category" class="form-control form-control-sm" placeholder="@Localizer["Category"]" /></div>
+                <div class="mb-2"><input type="number" step="0.01" name="Weight" class="form-control form-control-sm" placeholder="@Localizer["Weight"] %" value="10" /></div>
+                <div class="mb-2"><input type="number" step="0.01" name="MaxScore" class="form-control form-control-sm" placeholder="@Localizer["MaxScore"]" value="100" /></div>
+                <div class="mb-2"><input type="number" name="SortOrder" class="form-control form-control-sm" placeholder="@Localizer["SortOrder"]" value="@(Model.Count + 1)" /></div>
+                <div class="mb-2"><textarea name="Description" class="form-control form-control-sm" rows="2" placeholder="@Localizer["Description"]"></textarea></div>
+                <button type="submit" class="btn btn-accent btn-sm w-100"><i class="fas fa-save me-1"></i>@Localizer["Save"]</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    $(function () { $('#dataTable').DataTable({ responsive: true, dom: 'rtip' }); });
+    function del(id) { confirmDelete('@Url.Action("DeleteCriteria")', id, function () { location.reload(); }); }
+</script>
+}

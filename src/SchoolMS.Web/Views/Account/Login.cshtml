@@ -1,0 +1,89 @@
+@model SchoolMS.Application.DTOs.LoginDto
+@{
+    ViewData["Title"] = Localizer["SignIn"].Value;
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="login-page">
+    <!-- Animated Gradient Orbs -->
+    <div class="gradient-orb orb-1"></div>
+    <div class="gradient-orb orb-2"></div>
+    <div class="gradient-orb orb-3"></div>
+
+    <div class="login-card animate__animated animate__fadeIn">
+        <!-- Language switcher -->
+        <div class="text-end mb-2">
+            @{
+                var currentLang = System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
+            }
+            @if (currentLang == "ar")
+            {
+                <a href="@Url.Action("SetLanguage", "Language", new { culture = "en", returnUrl = Context.Request.Path })" class="btn btn-sm" style="color:rgba(255,255,255,0.6);border-color:rgba(255,255,255,0.2);">English</a>
+            }
+            else
+            {
+                <a href="@Url.Action("SetLanguage", "Language", new { culture = "ar", returnUrl = Context.Request.Path })" class="btn btn-sm" style="color:rgba(255,255,255,0.6);border-color:rgba(255,255,255,0.2);">العربية</a>
+            }
+        </div>
+
+        <div class="login-header">
+            <i class="fas fa-graduation-cap"></i>
+            <h2>@Localizer["SchoolMS"]</h2>
+            <p style="color:rgba(255,255,255,0.5);">@Localizer["SignInToAccount"]</p>
+        </div>
+
+        <form asp-action="Login" method="post">
+            <div asp-validation-summary="All" class="alert alert-danger" style="display:@(ViewData.ModelState.ErrorCount > 0 ? "block" : "none");background:rgba(239,68,68,0.15);border-color:rgba(239,68,68,0.3);color:#fca5a5;border-radius:var(--border-radius-md);"></div>
+
+            <div class="mb-3">
+                <label asp-for="SchoolSlug" class="form-label"><i class="fas fa-school me-1"></i> @Localizer["SchoolSlug"]</label>
+                <input asp-for="SchoolSlug" class="form-control" placeholder="e.g. demo-school" value="@ViewData["SchoolSlug"]" />
+                <small style="color:rgba(255,255,255,0.4);">@Localizer["SchoolSlugHint"]</small>
+            </div>
+            <div class="mb-3">
+                <label asp-for="Email" class="form-label"><i class="fas fa-envelope me-1"></i> @Localizer["Email"]</label>
+                <input asp-for="Email" class="form-control" placeholder="admin@demo-school.com" autofocus />
+            </div>
+            <div class="mb-3">
+                <label asp-for="Password" class="form-label"><i class="fas fa-lock me-1"></i> @Localizer["Password"]</label>
+                <div class="position-relative">
+                    <input asp-for="Password" type="password" class="form-control" placeholder="••••••••" id="loginPassword" />
+                    <button type="button" class="btn btn-link position-absolute end-0 top-50 translate-middle-y" style="color:rgba(255,255,255,0.5);" onclick="togglePasswordVisibility()">
+                        <i class="fas fa-eye" id="passwordToggleIcon"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="d-grid">
+                <button type="submit" class="btn btn-login-gradient">
+                    <i class="fas fa-sign-in-alt me-2"></i>@Localizer["SignIn"]
+                </button>
+            </div>
+        </form>
+
+        <div class="text-center mt-4">
+            <small style="color:rgba(255,255,255,0.4);">@Localizer["DefaultCredentials"]</small>
+        </div>
+
+        <div class="text-center mt-3" style="border-top:1px solid rgba(255,255,255,0.08);padding-top:16px;">
+            <small style="color:rgba(255,255,255,0.3);">
+                Powered by <strong class="gradient-text" style="-webkit-text-fill-color:unset;">SchoolMS</strong> v3.0
+            </small>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    function togglePasswordVisibility() {
+        var input = document.getElementById('loginPassword');
+        var icon = document.getElementById('passwordToggleIcon');
+        if (input.type === 'password') {
+            input.type = 'text';
+            icon.className = 'fas fa-eye-slash';
+        } else {
+            input.type = 'password';
+            icon.className = 'fas fa-eye';
+        }
+    }
+</script>
+}

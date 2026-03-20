@@ -1,0 +1,54 @@
+@model List<SchoolMS.Application.DTOs.HrLeaveTypeDto>
+@{ ViewData["Title"] = Localizer["LeaveTypes"].Value; }
+@Html.AntiForgeryToken()
+
+<div class="page-header" data-aos="fade-down">
+    <div><h4 class="page-title"><i class="fas fa-list text-primary"></i> @Localizer["LeaveTypes"]</h4></div>
+    <div class="page-actions"><a href="@Url.Action("Index")" class="btn btn-secondary"><i class="fas fa-arrow-left me-1"></i>@Localizer["Back"]</a></div>
+</div>
+
+<div class="row g-3" data-aos="fade-up">
+    <div class="col-md-8">
+        <div class="table-card hover-lift">
+            <table id="dataTable" class="table table-hover" style="width:100%">
+                <thead><tr><th>#</th><th>@Localizer["Name"]</th><th>@Localizer["Code"]</th><th>@Localizer["DefaultDays"]</th><th>@Localizer["Paid"]</th><th>@Localizer["Active"]</th><th>@Localizer["Actions"]</th></tr></thead>
+                <tbody>
+                    @for (int i = 0; i < Model.Count; i++)
+                    {
+                        var t = Model[i];
+                        <tr>
+                            <td>@(i + 1)</td>
+                            <td>@if (t.Color != null) { <span class="badge me-1" style="background-color:@t.Color">&nbsp;</span> }@t.LeaveTypeName</td>
+                            <td>@t.LeaveCode</td><td>@t.DefaultDaysPerYear</td>
+                            <td>@(t.IsPaid ? "✅" : "❌")</td>
+                            <td>@(t.IsActive ? "✅" : "❌")</td>
+                            <td><button class="btn btn-sm btn-danger" onclick="delType(@t.Id)"><i class="fas fa-trash"></i></button></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="dashboard-card card p-3">
+            <h6><i class="fas fa-plus me-1"></i>@Localizer["Add"] @Localizer["LeaveType"]</h6>
+            <form asp-action="CreateType" method="post">
+                @Html.AntiForgeryToken()
+                <div class="mb-2"><input type="text" name="LeaveTypeName" class="form-control form-control-sm" placeholder="@Localizer["Name"] *" required /></div>
+                <div class="mb-2"><input type="text" name="LeaveCode" class="form-control form-control-sm" placeholder="@Localizer["Code"]" /></div>
+                <div class="mb-2"><input type="number" name="DefaultDaysPerYear" class="form-control form-control-sm" placeholder="@Localizer["DefaultDays"]" value="21" /></div>
+                <div class="mb-2"><input type="color" name="Color" class="form-control form-control-color form-control-sm" value="#3b82f6" /></div>
+                <div class="form-check mb-2"><input class="form-check-input" type="checkbox" name="IsPaid" value="true" checked /><label class="form-check-label">@Localizer["Paid"]</label></div>
+                <div class="form-check mb-2"><input class="form-check-input" type="checkbox" name="RequiresApproval" value="true" checked /><label class="form-check-label">@Localizer["RequiresApproval"]</label></div>
+                <button type="submit" class="btn btn-accent btn-sm w-100"><i class="fas fa-save me-1"></i>@Localizer["Save"]</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    $(function () { $('#dataTable').DataTable({ responsive: true, dom: 'rtip' }); });
+    function delType(id) { confirmDelete('@Url.Action("DeleteType")', id, function () { location.reload(); }); }
+</script>
+}

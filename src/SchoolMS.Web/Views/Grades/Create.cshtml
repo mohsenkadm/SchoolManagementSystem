@@ -1,0 +1,104 @@
+@using SchoolMS.Application.DTOs
+@{
+    var isEdit = Model != null;
+    var item = isEdit ? (GradeDto)Model : null;
+    var divisions = ViewBag.Divisions as List<DivisionDto> ?? new();
+    var branches = ViewBag.Branches as List<BranchDto> ?? new();
+    var isSuperAdmin = (bool)(ViewBag.IsSuperAdmin ?? false);
+    var schools = ViewBag.Schools as List<SchoolDto> ?? new();
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4" data-aos="fade-down">
+    <h4 class="mb-0"><i class="fas @(isEdit ? "fa-edit" : "fa-plus-circle") me-2 text-primary"></i>@(isEdit ? Localizer["EditGrade"] : Localizer["AddGrade"])</h4>
+    <a href="@Url.Action("Index")" class="btn btn-secondary"><i class="fas fa-arrow-left me-1"></i>@Localizer["Back"]</a>
+</div>
+<div class="dashboard-card card p-4" data-aos="fade-up">
+    <form asp-action="@(isEdit ? "Edit" : "Create")" method="post">
+        @Html.AntiForgeryToken()
+        @if (isEdit) { <input type="hidden" name="Id" value="@item!.Id" /> }
+        <div class="row g-3">
+            @if (isSuperAdmin)
+            {
+                <div class="col-md-6">
+                    <label class="form-label">@Localizer["School"] *</label>
+                    <select name="SchoolId" id="schoolSelect" class="form-select select2" required>
+                        <option value="">-- @Localizer["SelectSchool"] --</option>
+                        @foreach (var s in schools)
+                        {
+                            var isSelected = item?.SchoolId == s.Id;
+                            <option value="@s.Id" selected="@isSelected">@s.Name</option>
+                        }
+                    </select>
+                </div>
+            }
+            <div class="col-md-6"><label class="form-label">@Localizer["GradeName"] *</label><input type="text" name="GradeName" class="form-control" value="@item?.GradeName" required /></div>
+            <div class="col-md-6">
+                <label class="form-label">@Localizer["Division"] *</label>
+                <select name="DivisionId" id="divisionSelect" class="form-select select2" required>
+                    <option value="">-- @Localizer["SelectDivision"] --</option>
+                    @foreach (var d in divisions)
+                    {
+                        var isSelected = item?.DivisionId == d.Id;
+                        <option value="@d.Id" selected="@isSelected">@d.DivisionName</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">@Localizer["Branch"] *</label>
+                <select name="BranchId" id="branchSelect" class="form-select select2" required>
+                    <option value="">-- @Localizer["SelectBranch"] --</option>
+                    @foreach (var b in branches)
+                    {
+                        var isSelected = item?.BranchId == b.Id;
+                        <option value="@b.Id" selected="@isSelected">@b.Name</option>
+                    }
+                </select>
+            </div>
+        </div>
+        <div class="mt-4 d-flex gap-2">
+            <button type="submit" class="btn btn-accent"><i class="fas fa-save me-1"></i>@Localizer["Save"]</button>
+            <a href="@Url.Action("Index")" class="btn btn-secondary">@Localizer["Cancel"]</a>
+        </div>
+    </form>
+</div>
+
+@if (isSuperAdmin)
+{
+    @section Scripts {
+    <script>
+        $(function () {
+            $('#schoolSelect').on('change', function () {
+                var schoolId = $(this).val();
+                var divSel = $('#divisionSelect');
+                var brSel = $('#branchSelect');
+
+                // Reset both dropdowns
+                divSel.html('<option value="">-- @Localizer["SelectDivision"] --</option>');
+                brSel.html('<option value="">-- @Localizer["SelectBranch"] --</option>');
+
+                if (!schoolId) return;
+
+                // Load divisions for selected school
+                $.get('@Url.Action("GetDivisionsBySchool")?schoolId=' + schoolId, function (data) {
+                    data.forEach(function (d) {
+                        divSel.append('<option value="' + d.id + '">' + d.divisionName + '</option>');
+                    });
+                    if (divSel.hasClass('select2-hidden-accessible')) {
+                        divSel.trigger('change.select2');
+                    }
+                });
+
+                // Load branches for selected school
+                $.get('@Url.Action("GetBranchesBySchool")?schoolId=' + schoolId, function (data) {
+                    data.forEach(function (b) {
+                        brSel.append('<option value="' + b.id + '">' + b.name + '</option>');
+                    });
+                    if (brSel.hasClass('select2-hidden-accessible')) {
+                        brSel.trigger('change.select2');
+                    }
+                });
+            });
+        });
+    </script>
+    }
+}

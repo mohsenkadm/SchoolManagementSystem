@@ -1,0 +1,105 @@
+@using SchoolMS.Application.DTOs
+@model List<LibraryBookDto>
+@{
+    ViewData["Title"] = Localizer["Library"].Value;
+    var isSuperAdmin = (bool)(ViewBag.IsSuperAdmin ?? false);
+    var schools = ViewBag.Schools as List<SchoolDto> ?? new();
+    var branches = ViewBag.Branches as List<BranchDto> ?? new();
+    var libByCategory = Model.Where(b => b.Category != null).GroupBy(b => b.Category!).Select(g => new { Name = g.Key, Count = g.Count() }).OrderByDescending(x => x.Count).ToList();
+    var totalAvail = Model.Sum(b => b.AvailableCopies);
+    var totalBorrowed = Model.Sum(b => b.TotalCopies) - totalAvail;
+}
+
+@Html.AntiForgeryToken()
+
+<div class="page-header" data-aos="fade-down">
+    <div>
+        <h4 class="page-title"><i class="fas fa-book-open text-primary"></i>@Localizer["Library"]</h4>
+        <span class="record-count"><i class="fas fa-layer-group"></i> @Model.Count</span>
+    </div>
+    <div class="page-actions">
+        <a href="@Url.Action("Create")" class="btn btn-accent"><i class="fas fa-plus me-1"></i>@Localizer["AddBook"]</a>
+    </div>
+</div>
+
+<div class="stat-ribbon" data-aos="fade-up">
+    <div class="stat-item stagger-item"><div class="stat-icon bg-primary-soft"><i class="fas fa-book-open"></i></div><div class="stat-info"><h6>@Localizer["Total"]</h6><div class="stat-value">@Model.Count</div></div></div>
+    <div class="stat-item stagger-item"><div class="stat-icon bg-success-soft"><i class="fas fa-check-circle"></i></div><div class="stat-info"><h6>@Localizer["Available"]</h6><div class="stat-value">@Model.Sum(b => b.AvailableCopies)</div></div></div>
+    <div class="stat-item stagger-item"><div class="stat-icon bg-warning-soft"><i class="fas fa-hand-holding"></i></div><div class="stat-info"><h6>@Localizer["Borrowed"]</h6><div class="stat-value">@(Model.Sum(b => b.TotalCopies) - Model.Sum(b => b.AvailableCopies))</div></div></div>
+    <div class="stat-item stagger-item"><div class="stat-icon bg-info-soft"><i class="fas fa-tags"></i></div><div class="stat-info"><h6>@Localizer["Categories"]</h6><div class="stat-value">@Model.Select(b => b.Category).Where(c => c != null).Distinct().Count()</div></div></div>
+</div>
+
+<div class="row mb-4" data-aos="fade-up">
+    <div class="col-lg-5">
+        <div class="dashboard-card card p-3 hover-lift"><h6 class="mb-3"><i class="fas fa-chart-pie me-2 text-primary"></i>@Localizer["Availability"]</h6><canvas id="chartAvail" height="220"></canvas></div>
+    </div>
+    <div class="col-lg-7">
+        <div class="dashboard-card card p-3 hover-lift"><h6 class="mb-3"><i class="fas fa-chart-bar me-2 text-primary"></i>@Localizer["ByCategory"]</h6><canvas id="chartCat" height="220"></canvas></div>
+    </div>
+</div>
+
+<div class="filter-panel" data-aos="fade-up">
+    <div class="filter-title"><i class="fas fa-filter"></i> @Localizer["Filter"]</div>
+    <div class="row g-2 align-items-end">
+        @if (isSuperAdmin)
+        {
+            <div class="col-md-2">
+                <select id="filterSchool" class="form-select select2">
+                    <option value="">@Localizer["AllSchools"]</option>
+                    @foreach (var s in schools) { <option value="@s.Name">@s.Name</option> }
+                </select>
+            </div>
+        }
+        <div class="col-md-2">
+            <select id="filterBranch" class="form-select">
+                <option value="">@Localizer["AllBranches"]</option>
+                @foreach (var b in branches) { <option value="@b.Name">@b.Name</option> }
+            </select>
+        </div>
+        <div class="col-md-3"><input type="text" id="searchInput" class="form-control" placeholder="🔍 @Localizer["SearchBook"]..." /></div>
+        <div class="col-md-2"><select id="filterCategory" class="form-select"><option value="">@Localizer["AllCategories"]</option>@foreach (var c in Model.Select(b => b.Category).Distinct().OrderBy(c => c)) { <option value="@c">@c</option> }</select></div>
+        <div class="col-md-1"><button class="btn btn-filter w-100" onclick="applyFilters()"><i class="fas fa-search"></i></button></div>
+        <div class="col-md-1"><button class="btn btn-reset w-100" onclick="resetFilters()"><i class="fas fa-redo"></i></button></div>
+    </div>
+</div>
+
+<div class="table-card hover-lift" data-aos="fade-up">
+    <table id="dataTable" class="table table-hover" style="width:100%">
+        <thead><tr><th>#</th><th>@Localizer["Title"]</th><th>@Localizer["Author"]</th><th>@Localizer["Category"]</th><th>@Localizer["Available"]</th><th>@Localizer["Branch"]</th>@if (isSuperAdmin){<th>@Localizer["School"]</th>}<th>@Localizer["Actions"]</th></tr></thead>
+        <tbody>
+            @for (int i = 0; i < Model.Count; i++)
+            {
+                <tr class="table-row-animated">
+                    <td>@(i + 1)</td><td>@Model[i].Title</td><td>@Model[i].Author</td><td><span class="badge bg-secondary">@Model[i].Category</span></td><td><span class="badge bg-info">@Model[i].AvailableCopies</span> / @Model[i].TotalCopies</td><td>@Model[i].BranchName</td>
+                    @if (isSuperAdmin){<td>@Model[i].SchoolName</td>}
+                    <td>
+                        <div class="d-flex gap-1">
+                            <a href="@Url.Action("Edit", new { id = Model[i].Id })" class="btn btn-sm btn-primary" data-bs-toggle="tooltip" title="@Localizer["Edit"]"><i class="fas fa-edit"></i></a>
+                            <button class="btn btn-sm btn-danger" onclick="del(@Model[i].Id)" data-bs-toggle="tooltip" title="@Localizer["Delete"]"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+@section Scripts {
+<script>
+    var dt, isSA = @(isSuperAdmin ? "true" : "false");
+    var catCol = 3, branchCol = 5, schoolCol = isSA ? 6 : -1;
+    $(function () {
+        dt = $('#dataTable').DataTable({ responsive: true, pageLength: 25, dom: 'rtip' });
+        $('#searchInput').on('keyup', function () { dt.search(this.value).draw(); });
+
+        new Chart(document.getElementById('chartAvail'), { type: 'doughnut', data: { labels: ['@Localizer["Available"]', '@Localizer["Borrowed"]'], datasets: [{ data: [@totalAvail, @totalBorrowed], backgroundColor: ['#22c55e','#f59e0b'], borderWidth: 0 }] }, options: { responsive: true, plugins: { legend: { position: 'bottom' } } } });
+
+        var catLabels = [@Html.Raw(string.Join(",", libByCategory.Select(x => $"\"{x.Name}\"")))]; 
+        var catData = [@Html.Raw(string.Join(",", libByCategory.Select(x => x.Count)))]; 
+        var colors = ['#6366f1','#ec4899','#22c55e','#f59e0b','#06b6d4','#8b5cf6','#ef4444','#14b8a6'];
+        new Chart(document.getElementById('chartCat'), { type: 'bar', data: { labels: catLabels, datasets: [{ label: '@Localizer["Books"]', data: catData, backgroundColor: colors.slice(0, catLabels.length), borderRadius: 8 }] }, options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } } });
+    });
+    function applyFilters() { dt.search($('#searchInput').val()); dt.column(catCol).search($('#filterCategory').val()); dt.column(branchCol).search($('#filterBranch').val()); if (isSA) dt.column(schoolCol).search($('#filterSchool').val()); dt.draw(); }
+    function resetFilters() { $('#searchInput, #filterCategory, #filterBranch').val(''); if (isSA) $('#filterSchool').val(''); dt.search('').columns().search('').draw(); }
+    function del(id) { confirmDelete('@Url.Action("DeleteBook")', id, function () { location.reload(); }); }
+</script>
+}

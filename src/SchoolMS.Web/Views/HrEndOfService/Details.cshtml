@@ -1,0 +1,69 @@
+@model SchoolMS.Application.DTOs.HrEndOfServiceDto
+@{ ViewData["Title"] = $"{Localizer["EndOfServiceDetails"].Value} — {Model?.EmployeeName}"; }
+
+<div class="page-header" data-aos="fade-down">
+    <div><h4 class="page-title"><i class="fas fa-door-open text-primary"></i> @Localizer["EndOfServiceDetails"]</h4></div>
+    <div class="page-actions"><a href="@Url.Action("Index")" class="btn btn-secondary"><i class="fas fa-arrow-left me-1"></i>@Localizer["Back"]</a></div>
+</div>
+
+@if (Model != null)
+{
+    var cls = Model.Status switch { EndOfServiceStatus.Requested => "bg-warning", EndOfServiceStatus.InProgress => "bg-info", EndOfServiceStatus.ClearancePhase => "bg-primary", EndOfServiceStatus.Approved => "bg-success", EndOfServiceStatus.Settled => "bg-dark", EndOfServiceStatus.Completed => "bg-success", _ => "bg-secondary" };
+
+    <div class="stat-ribbon" data-aos="fade-up">
+        <div class="stat-item stagger-item"><div class="stat-icon bg-primary-soft"><i class="fas fa-user"></i></div><div class="stat-info"><h6>@Localizer["Employee"]</h6><div class="stat-value">@Model.EmployeeName</div></div></div>
+        <div class="stat-item stagger-item"><div class="stat-icon bg-info-soft"><i class="fas fa-tag"></i></div><div class="stat-info"><h6>@Localizer["Type"]</h6><div class="stat-value">@Model.Type</div></div></div>
+        <div class="stat-item stagger-item"><div class="stat-icon bg-warning-soft"><i class="fas fa-calendar"></i></div><div class="stat-info"><h6>@Localizer["Service"]</h6><div class="stat-value">@Model.TotalServiceYears y @Model.TotalServiceMonths m</div></div></div>
+        <div class="stat-item stagger-item"><div class="stat-icon bg-success-soft"><i class="fas fa-signal"></i></div><div class="stat-info"><h6>@Localizer["Status"]</h6><div class="stat-value"><span class="badge @cls">@Model.Status</span></div></div></div>
+    </div>
+
+    <div class="row g-3 mt-2" data-aos="fade-up">
+        <div class="col-md-6">
+            <div class="dashboard-card card p-3">
+                <h6><i class="fas fa-info-circle me-1 text-info"></i>@Localizer["Details"]</h6>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item d-flex justify-content-between"><span>@Localizer["RequestDate"]</span><span>@Model.RequestDate.ToString("dd/MM/yyyy")</span></li>
+                    <li class="list-group-item d-flex justify-content-between"><span>@Localizer["EffectiveDate"]</span><span>@Model.EffectiveDate.ToString("dd/MM/yyyy")</span></li>
+                    @if (Model.LastWorkingDay.HasValue) { <li class="list-group-item d-flex justify-content-between"><span>@Localizer["LastWorkingDay"]</span><span>@Model.LastWorkingDay.Value.ToString("dd/MM/yyyy")</span></li> }
+                    <li class="list-group-item d-flex justify-content-between"><span>@Localizer["LastBaseSalary"]</span><span>@Model.LastBaseSalary.ToString("N0")</span></li>
+                    <li class="list-group-item d-flex justify-content-between"><span>@Localizer["Clearances"]</span><span>@(Model.AllClearancesCompleted ? "✅" : "❌")</span></li>
+                    <li class="list-group-item d-flex justify-content-between"><span>@Localizer["Settled"]</span><span>@(Model.IsSettled ? "✅" : "❌")</span></li>
+                </ul>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="dashboard-card card p-3">
+                <h6><i class="fas fa-calculator me-1 text-success"></i>@Localizer["Settlement"]</h6>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item d-flex justify-content-between"><span>@Localizer["EndOfServiceBenefit"]</span><span class="text-success">+@Model.EndOfServiceBenefit.ToString("N0")</span></li>
+                    <li class="list-group-item d-flex justify-content-between"><span>@Localizer["LeaveCompensation"]</span><span class="text-success">+@Model.UnusedLeaveCompensation.ToString("N0")</span></li>
+                    <li class="list-group-item d-flex justify-content-between"><span>@Localizer["TotalEntitlements"]</span><span class="text-success fw-bold">+@Model.TotalEntitlements.ToString("N0")</span></li>
+                    <li class="list-group-item d-flex justify-content-between"><span>@Localizer["TotalDeductions"]</span><span class="text-danger">-@Model.TotalDeductions.ToString("N0")</span></li>
+                    <li class="list-group-item d-flex justify-content-between border-top"><span class="fw-bold">@Localizer["FinalSettlement"]</span><span class="text-success fw-bold fs-5">@Model.FinalSettlementAmount.ToString("N0")</span></li>
+                </ul>
+            </div>
+            @if (!string.IsNullOrEmpty(Model.Reason))
+            {
+                <div class="dashboard-card card p-3 mt-3">
+                    <h6><i class="fas fa-comment me-1 text-warning"></i>@Localizer["Reason"]</h6>
+                    <p class="mb-0">@Model.Reason</p>
+                </div>
+            }
+        </div>
+    </div>
+
+    @if (!Model.IsSettled && (Model.Status == EndOfServiceStatus.Approved || Model.Status == EndOfServiceStatus.Settled))
+    {
+        <div class="dashboard-card card p-4 mt-3" data-aos="fade-up">
+            <h6><i class="fas fa-money-check me-1 text-success"></i>@Localizer["MarkSettled"]</h6>
+            <form asp-action="MarkSettled" method="post">
+                <input type="hidden" name="id" value="@Model.Id" />
+                <div class="row g-3">
+                    <div class="col-md-4"><label class="form-label">@Localizer["PaymentMethod"]</label><input type="text" name="paymentMethod" class="form-control" required /></div>
+                    <div class="col-md-4"><label class="form-label">@Localizer["PaymentReference"]</label><input type="text" name="paymentReference" class="form-control" required /></div>
+                    <div class="col-md-4 d-flex align-items-end"><button type="submit" class="btn btn-success w-100"><i class="fas fa-check me-1"></i>@Localizer["MarkSettled"]</button></div>
+                </div>
+            </form>
+        </div>
+    }
+}

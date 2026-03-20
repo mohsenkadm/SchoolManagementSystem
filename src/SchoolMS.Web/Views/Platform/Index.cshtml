@@ -1,0 +1,146 @@
+@model SchoolMS.Application.DTOs.PlatformDashboardDto
+
+<div class="page-header" data-aos="fade-down">
+    <div>
+        <h4 class="page-title"><i class="fas fa-tachometer-alt text-primary"></i>Platform Dashboard</h4>
+    </div>
+</div>
+
+<div class="container-fluid">
+    <div class="row g-4 mb-4">
+        <div class="col-xl-2 col-md-4 col-sm-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body text-center">
+                    <div class="mb-2"><i class="fas fa-school fa-2x text-primary"></i></div>
+                    <h3 class="fw-bold text-primary">@Model.TotalSchools</h3>
+                    <small class="text-muted">Total Schools</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-2 col-md-4 col-sm-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body text-center">
+                    <div class="mb-2"><i class="fas fa-check-circle fa-2x text-success"></i></div>
+                    <h3 class="fw-bold text-success">@Model.ActiveSchools</h3>
+                    <small class="text-muted">Active Schools</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-2 col-md-4 col-sm-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body text-center">
+                    <div class="mb-2"><i class="fas fa-user-graduate fa-2x text-info"></i></div>
+                    <h3 class="fw-bold text-info">@Model.TotalStudents</h3>
+                    <small class="text-muted">Total Students</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-2 col-md-4 col-sm-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body text-center">
+                    <div class="mb-2"><i class="fas fa-chalkboard-teacher fa-2x text-warning"></i></div>
+                    <h3 class="fw-bold text-warning">@Model.TotalTeachers</h3>
+                    <small class="text-muted">Total Teachers</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-2 col-md-4 col-sm-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body text-center">
+                    <div class="mb-2"><i class="fas fa-file-contract fa-2x text-secondary"></i></div>
+                    <h3 class="fw-bold text-secondary">@Model.ActiveSubscriptions</h3>
+                    <small class="text-muted">Active Subscriptions</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-2 col-md-4 col-sm-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body text-center">
+                    <div class="mb-2"><i class="fas fa-exclamation-triangle fa-2x text-danger"></i></div>
+                    <h3 class="fw-bold text-danger">@Model.ExpiringSoon</h3>
+                    <small class="text-muted">Expiring Soon</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="fas fa-clock me-2"></i>Recent Schools</h5>
+                    <a href="@Url.Action("Schools", "Platform")" class="btn btn-primary btn-sm">
+                        <i class="fas fa-list me-1"></i>View All Schools
+                    </a>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Slug</th>
+                                    <th>Status</th>
+                                    <th>Expiry</th>
+                                    <th>Created</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var school in Model.RecentSchools)
+                                {
+                                    <tr>
+                                        <td><strong>@school.Name</strong></td>
+                                        <td><code>@school.Slug</code></td>
+                                        <td>
+                                            @if (school.IsActive)
+                                            {
+                                                <span class="badge bg-success">Active</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-danger">Inactive</span>
+                                            }
+                                        </td>
+                                        <td>@(school.ExpiryDate?.ToString("MMM dd, yyyy") ?? "—")</td>
+                                        <td>@school.CreatedAt.ToString("MMM dd, yyyy")</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-md-6">
+            <a href="@Url.Action("Schools", "Platform")" class="card border-0 shadow-sm text-decoration-none mb-3">
+                <div class="card-body d-flex align-items-center">
+                    <div class="bg-primary bg-opacity-10 rounded-circle p-3 me-3">
+                        <i class="fas fa-school fa-2x text-primary"></i>
+                    </div>
+                    <div>
+                        <h5 class="mb-1 text-dark">Manage Schools</h5>
+                        <small class="text-muted">Create, edit, activate/deactivate schools</small>
+                    </div>
+                    <i class="fas fa-chevron-right ms-auto text-muted"></i>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-6">
+            <a href="@Url.Action("Plans", "Platform")" class="card border-0 shadow-sm text-decoration-none mb-3">
+                <div class="card-body d-flex align-items-center">
+                    <div class="bg-success bg-opacity-10 rounded-circle p-3 me-3">
+                        <i class="fas fa-tags fa-2x text-success"></i>
+                    </div>
+                    <div>
+                        <h5 class="mb-1 text-dark">Subscription Plans</h5>
+                        <small class="text-muted">Manage pricing plans and assign to schools</small>
+                    </div>
+                    <i class="fas fa-chevron-right ms-auto text-muted"></i>
+                </div>
+            </a>
+        </div>
+    </div>
+</div>

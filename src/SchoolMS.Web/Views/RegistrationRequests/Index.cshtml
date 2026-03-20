@@ -1,0 +1,191 @@
+@{
+    ViewData["Title"] = Localizer["RegistrationRequests"].Value;
+}
+
+@Html.AntiForgeryToken()
+
+<div class="page-header" data-aos="fade-down">
+    <div>
+        <h4 class="page-title"><i class="fas fa-school text-primary"></i>@Localizer["RegistrationRequests"]</h4>
+        <p class="text-muted mb-0" style="font-size:0.85rem;">@Localizer["RegistrationRequestsDesc"]</p>
+    </div>
+</div>
+
+<!-- Stats Cards -->
+<div class="stats-grid mb-4">
+    <div class="stat-card stat-students" data-aos="fade-up" data-aos-delay="100">
+        <i class="fas fa-inbox stat-icon"></i>
+        <div class="stat-value" id="totalRequests">0</div>
+        <div class="stat-label">@Localizer["TotalRequests"]</div>
+    </div>
+    <div class="stat-card stat-revenue" data-aos="fade-up" data-aos-delay="200">
+        <i class="fas fa-envelope-open stat-icon"></i>
+        <div class="stat-value" id="newRequests">0</div>
+        <div class="stat-label">@Localizer["NewRequests"]</div>
+    </div>
+    <div class="stat-card stat-attendance" data-aos="fade-up" data-aos-delay="300">
+        <i class="fas fa-check-circle stat-icon"></i>
+        <div class="stat-value" id="approvedRequests">0</div>
+        <div class="stat-label">@Localizer["Approved"]</div>
+    </div>
+    <div class="stat-card stat-expenses" data-aos="fade-up" data-aos-delay="400">
+        <i class="fas fa-chart-line stat-icon"></i>
+        <div class="stat-value" id="conversionRate">0%</div>
+        <div class="stat-label">@Localizer["ConversionRate"]</div>
+    </div>
+</div>
+
+<!-- Data Table -->
+<div class="table-card hover-lift" data-aos="fade-up">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="mb-0"><i class="fas fa-list me-2" style="color:var(--primary-500);"></i>@Localizer["AllRequests"]</h5>
+    </div>
+    <div class="table-responsive">
+        <table id="requestsTable" class="table table-hover w-100">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>@Localizer["SchoolName"]</th>
+                    <th>@Localizer["ContactName"]</th>
+                    <th>@Localizer["Phone"]</th>
+                    <th>@Localizer["City"]</th>
+                    <th>@Localizer["Plan"]</th>
+                    <th>@Localizer["Status"]</th>
+                    <th>@Localizer["SubmittedAt"]</th>
+                    <th>@Localizer["Actions"]</th>
+                </tr>
+            </thead>
+        </table>
+    </div>
+</div>
+
+<!-- Detail Modal -->
+<div class="modal fade" id="detailModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-info-circle me-2"></i>@Localizer["RequestDetails"]</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="detailContent">
+            </div>
+            <div class="modal-footer">
+                <div class="d-flex gap-2">
+                    <button class="btn btn-success btn-sm" onclick="updateStatus(currentRequestId, 1)">
+                        <i class="fas fa-phone"></i> @Localizer["Contacted"]
+                    </button>
+                    <button class="btn btn-info btn-sm" onclick="updateStatus(currentRequestId, 2)">
+                        <i class="fas fa-spinner"></i> @Localizer["InProgress"]
+                    </button>
+                    <button class="btn btn-primary btn-sm" onclick="updateStatus(currentRequestId, 3)">
+                        <i class="fas fa-check"></i> @Localizer["Approve"]
+                    </button>
+                    <button class="btn btn-danger btn-sm" onclick="updateStatus(currentRequestId, 4)">
+                        <i class="fas fa-times"></i> @Localizer["Reject"]
+                    </button>
+                </div>
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">@Localizer["Close"]</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    var currentRequestId = 0;
+    var statusLabels = ['New', 'Contacted', 'InProgress', 'Approved', 'Rejected', 'Cancelled'];
+    var statusColors = ['primary', 'info', 'warning', 'success', 'danger', 'secondary'];
+
+    // Load stats
+    $.get('@Url.Action("Stats")', function (data) {
+        animateCounter('#totalRequests', data.totalRequests);
+        animateCounter('#newRequests', data.newRequests);
+        animateCounter('#approvedRequests', data.approvedRequests);
+        $('#conversionRate').text(data.conversionRate + '%');
+    });
+
+    function animateCounter(el, target) {
+        var current = 0;
+        var inc = Math.max(1, Math.floor(target / 30));
+        var timer = setInterval(function () {
+            current += inc;
+            if (current >= target) { current = target; clearInterval(timer); }
+            $(el).text(current);
+        }, 30);
+    }
+
+    // DataTable
+    var table = $('#requestsTable').DataTable({
+        ajax: '@Url.Action("GetAll")',
+        columns: [
+            { data: 'id' },
+            { data: 'schoolName' },
+            { data: 'contactName' },
+            { data: 'phone' },
+            { data: 'city' },
+            { data: 'requestedPlan' },
+            {
+                data: 'status',
+                render: function (data) {
+                    return '<span class="badge bg-' + statusColors[data] + '">' + statusLabels[data] + '</span>';
+                }
+            },
+            {
+                data: 'submittedAt',
+                render: function (data) {
+                    return new Date(data).toLocaleDateString();
+                }
+            },
+            {
+                data: 'id',
+                orderable: false,
+                render: function (data) {
+                    return '<button class="btn btn-sm btn-outline-primary me-1" onclick="viewDetails(' + data + ')"><i class="fas fa-eye"></i></button>' +
+                        '<button class="btn btn-sm btn-outline-danger" onclick="confirmDelete(\'@Url.Action("Delete")\', ' + data + ', function(){ table.ajax.reload(); })"><i class="fas fa-trash"></i></button>';
+                }
+            }
+        ],
+        order: [[7, 'desc']],
+        responsive: true,
+        language: { url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/en-GB.json' }
+    });
+
+    function viewDetails(id) {
+        currentRequestId = id;
+        $.get('@Url.Action("Get")', { id: id }, function (d) {
+            var html = '<div class="row g-3">' +
+                '<div class="col-md-6"><strong>School:</strong> ' + d.schoolName + '</div>' +
+                '<div class="col-md-6"><strong>Contact:</strong> ' + d.contactName + '</div>' +
+                '<div class="col-md-6"><strong>Phone:</strong> <a href="tel:' + d.phone + '">' + d.phone + '</a></div>' +
+                '<div class="col-md-6"><strong>Email:</strong> <a href="mailto:' + d.email + '">' + d.email + '</a></div>' +
+                '<div class="col-md-6"><strong>City:</strong> ' + (d.city || '-') + '</div>' +
+                '<div class="col-md-6"><strong>Type:</strong> ' + (d.schoolType || '-') + '</div>' +
+                '<div class="col-md-6"><strong>Students:</strong> ' + (d.studentCountRange || '-') + '</div>' +
+                '<div class="col-md-6"><strong>Plan:</strong> ' + (d.requestedPlan || '-') + '</div>' +
+                '<div class="col-md-6"><strong>Status:</strong> <span class="badge bg-' + statusColors[d.status] + '">' + statusLabels[d.status] + '</span></div>' +
+                '<div class="col-md-6"><strong>Source:</strong> ' + (d.source || '-') + '</div>' +
+                '<div class="col-12"><strong>Notes:</strong> ' + (d.notes || '-') + '</div>' +
+                '<div class="col-12"><strong>Internal Notes:</strong> ' + (d.internalNotes || '-') + '</div>' +
+                '</div>';
+            $('#detailContent').html(html);
+            new bootstrap.Modal('#detailModal').show();
+        });
+    }
+
+    function updateStatus(id, status) {
+        $.ajax({
+            url: '@Url.Action("UpdateStatus")',
+            type: 'POST',
+            contentType: 'application/json',
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            data: JSON.stringify({ id: id, status: status }),
+            success: function () {
+                toastr.success('Status updated!');
+                table.ajax.reload();
+                bootstrap.Modal.getInstance('#detailModal')?.hide();
+            },
+            error: function () { toastr.error('Error updating status.'); }
+        });
+    }
+</script>
+}

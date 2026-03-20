@@ -1,0 +1,133 @@
+@using SchoolMS.Application.DTOs
+@using SchoolMS.Domain.Enums
+@{
+    var isEdit = Model != null;
+    var item = isEdit ? (StudentSubscriptionDto)Model : null;
+    var isSuperAdmin = (bool)(ViewBag.IsSuperAdmin ?? false);
+    var schools = ViewBag.Schools as List<SchoolDto> ?? new();
+    var plans = ViewBag.Plans as List<OnlineSubscriptionPlanDto> ?? new();
+    var students = ViewBag.Students as List<StudentDto> ?? new();
+    var statuses = ViewBag.Statuses as SubscriptionStatus[] ?? Enum.GetValues<SubscriptionStatus>();
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4" data-aos="fade-down">
+    <h4 class="mb-0"><i class="fas @(isEdit ? "fa-edit" : "fa-plus-circle") me-2 text-primary"></i>@(isEdit ? Localizer["EditSubscription"] : Localizer["AddSubscription"])</h4>
+    <a href="@Url.Action("Index")" class="btn btn-secondary"><i class="fas fa-arrow-left me-1"></i>@Localizer["Back"]</a>
+</div>
+<div class="dashboard-card card p-4" data-aos="fade-up">
+    <form asp-action="@(isEdit ? "Edit" : "Create")" method="post">
+        @Html.AntiForgeryToken()
+        @if (isEdit) { <input type="hidden" name="Id" value="@item!.Id" /> }
+        <div class="row g-3">
+            @if (isSuperAdmin)
+            {
+                <div class="col-md-6">
+                    <label class="form-label">@Localizer["School"] *</label>
+                    <select name="SchoolId" class="form-select select2" required>
+                        <option value="">-- @Localizer["Select"] --</option>
+                        @foreach (var s in schools) { <option value="@s.Id" selected="@(item?.SchoolId == s.Id)">@s.Name</option> }
+                    </select>
+                </div>
+            }
+            <div class="col-md-6">
+                <label class="form-label">@Localizer["Student"] *</label>
+                <select name="StudentId" class="form-select select2" required>
+                    <option value="">-- @Localizer["Select"] --</option>
+                    @foreach (var s in students) { <option value="@s.Id" selected="@(item?.StudentId == s.Id)">@s.FullName</option> }
+                </select>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">@Localizer["SubscriptionPlan"] *</label>
+                <select name="OnlineSubscriptionPlanId" id="planSelect" class="form-select select2" required>
+                    <option value="" data-price="0" data-duration="0" data-type="">-- @Localizer["Select"] --</option>
+                    @foreach (var p in plans)
+                    {
+                        var typeLabel = p.SubscriptionType == SubscriptionType.LiveStream ? "🔴 LiveStream" : "📚 Course";
+                        <option value="@p.Id"
+                                data-price="@p.Price"
+                                data-duration="@p.DurationMonths"
+                                data-type="@p.SubscriptionType"
+                                selected="@(item?.OnlineSubscriptionPlanId == p.Id)">
+                            @p.PlanName — @p.SubjectName (@typeLabel - @p.Price.ToString("N2"))
+                        </option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">@Localizer["Status"] *</label>
+                <select name="Status" class="form-select" required>
+                    @foreach (var status in statuses) { <option value="@((int)status)" selected="@(item?.Status == status)">@status</option> }
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">@Localizer["OriginalAmount"]</label>
+                <input type="number" name="OriginalAmount" id="originalAmount" class="form-control" step="0.01" value="@(item?.OriginalAmount)" readonly />
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">@Localizer["Discount"]</label>
+                <input type="number" name="DiscountAmount" id="discountAmount" class="form-control" step="0.01" value="@(item?.DiscountAmount ?? 0)" />
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">@Localizer["PaidAmount"] *</label>
+                <input type="number" name="PaidAmount" id="paidAmount" class="form-control" step="0.01" value="@item?.PaidAmount" required />
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">@Localizer["PromoCode"]</label>
+                <input type="text" name="PromoCode" class="form-control" value="@item?.PromoCode" />
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">@Localizer["StartDate"] *</label>
+                <input type="date" name="StartDate" id="startDate" class="form-control" value="@(item?.StartDate.ToString("yyyy-MM-dd") ?? DateTime.Today.ToString("yyyy-MM-dd"))" required />
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">@Localizer["EndDate"] *</label>
+                <input type="date" name="EndDate" id="endDate" class="form-control" value="@(item?.EndDate.ToString("yyyy-MM-dd") ?? DateTime.Today.AddMonths(1).ToString("yyyy-MM-dd"))" required />
+            </div>
+        </div>
+        <div class="mt-4 d-flex gap-2">
+            <button type="submit" class="btn btn-accent"><i class="fas fa-save me-1"></i>@Localizer["Save"]</button>
+            <a href="@Url.Action("Index")" class="btn btn-secondary">@Localizer["Cancel"]</a>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+<script>
+    $(function () {
+        var isEdit = @(isEdit ? "true" : "false");
+
+        $('#planSelect').on('change', function () {
+            var sel = $(this).find(':selected');
+            var price = parseFloat(sel.data('price')) || 0;
+            var duration = parseInt(sel.data('duration')) || 1;
+
+            $('#originalAmount').val(price.toFixed(2));
+
+            var discount = parseFloat($('#discountAmount').val()) || 0;
+            $('#paidAmount').val((price - discount).toFixed(2));
+
+            if (!isEdit) {
+                var start = new Date($('#startDate').val() || new Date().toISOString().split('T')[0]);
+                var end = new Date(start);
+                end.setMonth(end.getMonth() + duration);
+                $('#endDate').val(end.toISOString().split('T')[0]);
+            }
+        });
+
+        $('#discountAmount').on('input', function () {
+            var original = parseFloat($('#originalAmount').val()) || 0;
+            var discount = parseFloat($(this).val()) || 0;
+            $('#paidAmount').val(Math.max(0, original - discount).toFixed(2));
+        });
+
+        $('#startDate').on('change', function () {
+            var sel = $('#planSelect').find(':selected');
+            var duration = parseInt(sel.data('duration')) || 1;
+            var start = new Date($(this).val());
+            var end = new Date(start);
+            end.setMonth(end.getMonth() + duration);
+            $('#endDate').val(end.toISOString().split('T')[0]);
+        });
+    });
+</script>
+}

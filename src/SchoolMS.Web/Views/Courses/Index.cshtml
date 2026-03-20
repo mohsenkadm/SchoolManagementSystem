@@ -1,0 +1,168 @@
+@model List<SchoolMS.Application.DTOs.CourseDto>
+@using SchoolMS.Application.DTOs
+@{
+    ViewData["Title"] = Localizer["Courses"].Value;
+    var isSuperAdmin = (bool)(ViewBag.IsSuperAdmin ?? false);
+    var schools = ViewBag.Schools as List<SchoolDto> ?? new();
+    var branches = ViewBag.Branches as List<BranchDto> ?? new();
+}
+
+@Html.AntiForgeryToken()
+
+<div class="page-header" data-aos="fade-down">
+    <div>
+        <h4 class="page-title"><i class="fas fa-graduation-cap text-primary"></i>@Localizer["Courses"]</h4>
+        <span class="record-count"><i class="fas fa-layer-group"></i> @Model.Count</span>
+    </div>
+    <div class="page-actions">
+        <a href="@Url.Action("Create")" class="btn btn-accent"><i class="fas fa-plus me-1"></i>@Localizer["AddCourse"]</a>
+    </div>
+</div>
+
+<div class="stat-ribbon" data-aos="fade-up">
+    <div class="stat-item stagger-item"><div class="stat-icon bg-primary-soft"><i class="fas fa-graduation-cap"></i></div><div class="stat-info"><h6>@Localizer["Total"]</h6><div class="stat-value">@Model.Count</div></div></div>
+    <div class="stat-item stagger-item"><div class="stat-icon bg-success-soft"><i class="fas fa-check-circle"></i></div><div class="stat-info"><h6>@Localizer["Published"]</h6><div class="stat-value">@Model.Count(c => c.IsPublished)</div></div></div>
+    <div class="stat-item stagger-item"><div class="stat-icon bg-warning-soft"><i class="fas fa-edit"></i></div><div class="stat-info"><h6>@Localizer["Draft"]</h6><div class="stat-value">@Model.Count(c => !c.IsPublished)</div></div></div>
+    <div class="stat-item stagger-item"><div class="stat-icon bg-info-soft"><i class="fas fa-video"></i></div><div class="stat-info"><h6>@Localizer["Videos"]</h6><div class="stat-value">@Model.Sum(c => c.VideoCount)</div></div></div>
+    <div class="stat-item stagger-item"><div class="stat-icon bg-danger-soft"><i class="fas fa-broadcast-tower"></i></div><div class="stat-info"><h6>@Localizer["LiveStreams"]</h6><div class="stat-value">@Model.Sum(c => c.LiveStreamCount)</div></div></div>
+</div>
+
+@{
+    var bySubject = Model.GroupBy(c => c.SubjectName ?? "Other").Select(g => new { Name = g.Key, Count = g.Count(), Videos = g.Sum(c => c.VideoCount) }).OrderByDescending(x => x.Count).ToList();
+}
+
+<div class="row mb-4" data-aos="fade-up">
+    <div class="col-lg-4">
+        <div class="dashboard-card card p-3 hover-lift"><h6 class="mb-3"><i class="fas fa-chart-pie me-2 text-primary"></i>@Localizer["PublishStatus"]</h6><canvas id="chartStatus" height="220"></canvas></div>
+    </div>
+    <div class="col-lg-8">
+        <div class="dashboard-card card p-3 hover-lift"><h6 class="mb-3"><i class="fas fa-chart-bar me-2 text-primary"></i>@Localizer["VideosBySubject"]</h6><canvas id="chartSubject" height="220"></canvas></div>
+    </div>
+</div>
+
+<div class="filter-panel" data-aos="fade-up">
+    <div class="filter-title"><i class="fas fa-filter"></i> @Localizer["Filter"]</div>
+    <div class="row g-2 align-items-end">
+        @if (isSuperAdmin)
+        {
+            <div class="col-md-2">
+                <select id="filterSchool" class="form-select select2">
+                    <option value="">@Localizer["AllSchools"]</option>
+                    @foreach (var s in schools) { <option value="@s.Name">@s.Name</option> }
+                </select>
+            </div>
+        }
+        <div class="col-md-2">
+            <select id="filterBranch" class="form-select">
+                <option value="">@Localizer["AllBranches"]</option>
+                @foreach (var b in branches) { <option value="@b.Name">@b.Name</option> }
+            </select>
+        </div>
+        <div class="col-md-3"><select id="filterSubject" class="form-select"><option value="">@Localizer["AllSubjects"]</option>@foreach (var s in Model.Select(c => c.SubjectName).Distinct().OrderBy(s => s)) { <option value="@s">@s</option> }</select></div>
+        <div class="col-md-2"><input type="text" id="searchInput" class="form-control" placeholder="🔍 @Localizer["Search"]..." /></div>
+        <div class="col-md-1"><button class="btn btn-filter w-100" onclick="applyFilters()"><i class="fas fa-search"></i></button></div>
+        <div class="col-md-1"><button class="btn btn-reset w-100" onclick="resetFilters()"><i class="fas fa-redo"></i></button></div>
+    </div>
+</div>
+
+<div class="table-card hover-lift" data-aos="fade-up">
+    <table id="dataTable" class="table table-hover" style="width:100%">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>@Localizer["Thumbnail"]</th>
+                <th>@Localizer["Title"]</th>
+                <th>@Localizer["Subject"]</th>
+                <th>@Localizer["Teacher"]</th>
+                <th>@Localizer["Videos"]</th>
+                <th>@Localizer["LiveStreams"]</th>
+                <th>@Localizer["Published"]</th>
+                <th>@Localizer["Actions"]</th>
+            </tr>
+        </thead>
+        <tbody>
+            @for (int i = 0; i < Model.Count; i++)
+            {
+                <tr class="table-row-animated">
+                    <td>@(i + 1)</td>
+                    <td>
+                        @if (!string.IsNullOrEmpty(Model[i].ThumbnailImage))
+                        {
+                            <img src="@Model[i].ThumbnailImage" style="width:60px;height:40px;object-fit:cover;border-radius:6px;" alt="" />
+                        }
+                        else
+                        {
+                            <div class="d-flex align-items-center justify-content-center bg-light" style="width:60px;height:40px;border-radius:6px;">
+                                <i class="fas fa-graduation-cap text-muted"></i>
+                            </div>
+                        }
+                    </td>
+                    <td>@Model[i].Title</td>
+                    <td>@Model[i].SubjectName</td>
+                    <td>@Model[i].TeacherName</td>
+                    <td>
+                        <a href="@Url.Action("Index", "CourseVideos", new { courseId = Model[i].Id })" class="badge bg-info text-white">
+                            <i class="fas fa-video me-1"></i>@Model[i].VideoCount
+                        </a>
+                    </td>
+                    <td>
+                        <span class="badge bg-warning">@Model[i].LiveStreamCount</span>
+                    </td>
+                    <td>
+                        @if (Model[i].IsPublished)
+                        {
+                            <span class="status-badge status-active"><span class="status-dot"></span> @Localizer["Published"]</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-secondary"><i class="fas fa-times"></i></span>
+                        }
+                    </td>
+                    <td>
+                        <div class="d-flex gap-1">
+                            <a href="@Url.Action("Index", "CourseVideos", new { courseId = Model[i].Id })" class="btn btn-sm btn-info" data-bs-toggle="tooltip" title="@Localizer["Videos"]">
+                                <i class="fas fa-video"></i>
+                            </a>
+                            <a href="@Url.Action("Edit", new { id = Model[i].Id })" class="btn btn-sm btn-primary" data-bs-toggle="tooltip" title="@Localizer["Edit"]">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <button class="btn btn-sm btn-danger" onclick="del(@Model[i].Id)" data-bs-toggle="tooltip" title="@Localizer["Delete"]">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@section Scripts {
+<script>
+    var isSuperAdmin = @(isSuperAdmin ? "true" : "false");
+    var dt;
+    $(function () {
+        dt = $('#dataTable').DataTable({ responsive: true, pageLength: 25, dom: 'rtip' });
+        $('#searchInput').on('keyup', function () { dt.search(this.value).draw(); });
+
+        new Chart(document.getElementById('chartStatus'), { type: 'doughnut', data: { labels: ['@Localizer["Published"]', '@Localizer["Draft"]'], datasets: [{ data: [@Model.Count(c => c.IsPublished), @Model.Count(c => !c.IsPublished)], backgroundColor: ['#22c55e','#94a3b8'], borderWidth: 0 }] }, options: { responsive: true, plugins: { legend: { position: 'bottom' } } } });
+
+        var subLabels = [@Html.Raw(string.Join(",", bySubject.Select(x => $"\"{x.Name}\"")))];
+        var subData = [@Html.Raw(string.Join(",", bySubject.Select(x => x.Videos)))];
+        var colors = ['#6366f1','#ec4899','#22c55e','#f59e0b','#06b6d4','#8b5cf6','#ef4444','#14b8a6'];
+        new Chart(document.getElementById('chartSubject'), { type: 'bar', data: { labels: subLabels, datasets: [{ label: '@Localizer["Videos"]', data: subData, backgroundColor: colors.slice(0, subLabels.length), borderRadius: 8 }] }, options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } } });
+    });
+    function applyFilters() {
+        dt.search($('#searchInput').val());
+        dt.column(2).search($('#filterSubject').val());
+        if (isSuperAdmin) { dt.column(2).search($('#filterSchool').val()); }
+        dt.draw();
+    }
+    function resetFilters() {
+        $('#searchInput, #filterSubject, #filterBranch').val('');
+        if (isSuperAdmin) { $('#filterSchool').val(''); }
+        dt.search('').columns().search('').draw();
+    }
+    function del(id) { confirmDelete('@Url.Action("Delete")', id, function () { location.reload(); }); }
+</script>
+}

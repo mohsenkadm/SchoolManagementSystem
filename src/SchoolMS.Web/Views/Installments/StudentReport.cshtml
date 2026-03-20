@@ -1,0 +1,166 @@
+@using SchoolMS.Application.DTOs
+@model List<FeeInstallmentDto>
+@{ ViewData["Title"] = Localizer["StudentReport"].Value; }
+@Html.AntiForgeryToken()
+@{
+    var isSuperAdmin = (bool)(ViewBag.IsSuperAdmin ?? false);
+    var schools = ViewBag.Schools as List<SchoolDto> ?? new();
+    var summaryData = Model.Select(m => new
+    {
+        m.StudentName,
+        m.TotalAmount,
+        m.AcademicYearName,
+        m.SchoolName,
+        PaidAmount = m.Payments.Where(p => p.Status == PaymentStatus.Paid).Sum(p => p.Amount),
+        UnpaidAmount = m.TotalAmount - m.Payments.Where(p => p.Status == PaymentStatus.Paid).Sum(p => p.Amount),
+        PaidCount = m.Payments.Count(p => p.Status == PaymentStatus.Paid),
+        TotalCount = m.NumberOfPayments
+    }).ToList();
+
+    var grandTotal = summaryData.Sum(s => s.TotalAmount);
+    var grandPaid = summaryData.Sum(s => s.PaidAmount);
+    var grandUnpaid = summaryData.Sum(s => s.UnpaidAmount);
+    var fullyPaid = summaryData.Count(s => s.UnpaidAmount == 0);
+    var partial = summaryData.Count(s => s.PaidAmount > 0 && s.UnpaidAmount > 0);
+    var noPay = summaryData.Count(s => s.PaidAmount == 0);
+
+    var topUnpaid = summaryData.OrderByDescending(s => s.UnpaidAmount).Take(10).ToList();
+}
+
+<div class="page-header" data-aos="fade-down">
+    <div>
+        <h4 class="page-title"><i class="fas fa-user-graduate text-primary"></i>@Localizer["StudentReport"]</h4>
+        <span class="record-count"><i class="fas fa-layer-group"></i> @summaryData.Count</span>
+    </div>
+    <div class="page-actions">
+        <a href="@Url.Action("Index")" class="btn btn-secondary"><i class="fas fa-arrow-left me-1"></i>@Localizer["Back"]</a>
+        <a href="@Url.Action("ExportStudentSummaryExcel")" class="btn btn-success"><i class="fas fa-file-excel me-1"></i>@Localizer["Export"]</a>
+        <button class="btn btn-outline-primary" onclick="printSchedule()"><i class="fas fa-print me-1"></i>@Localizer["Print"]</button>
+    </div>
+</div>
+
+<div class="stat-ribbon" data-aos="fade-up">
+    <div class="stat-item stagger-item"><div class="stat-icon bg-primary-soft"><i class="fas fa-users"></i></div><div class="stat-info"><h6>@Localizer["Students"]</h6><div class="stat-value">@summaryData.Count</div></div></div>
+    <div class="stat-item stagger-item"><div class="stat-icon bg-info-soft"><i class="fas fa-coins"></i></div><div class="stat-info"><h6>@Localizer["GrandTotal"]</h6><div class="stat-value">@grandTotal.ToString("N0")</div></div></div>
+    <div class="stat-item stagger-item"><div class="stat-icon bg-success-soft"><i class="fas fa-check-double"></i></div><div class="stat-info"><h6>@Localizer["TotalPaid"]</h6><div class="stat-value text-success">@grandPaid.ToString("N0")</div></div></div>
+    <div class="stat-item stagger-item"><div class="stat-icon bg-danger-soft"><i class="fas fa-times-circle"></i></div><div class="stat-info"><h6>@Localizer["TotalUnpaid"]</h6><div class="stat-value text-danger">@grandUnpaid.ToString("N0")</div></div></div>
+    <div class="stat-item stagger-item"><div class="stat-icon bg-success-soft"><i class="fas fa-user-check"></i></div><div class="stat-info"><h6>@Localizer["FullyPaid"]</h6><div class="stat-value">@fullyPaid</div></div></div>
+    <div class="stat-item stagger-item"><div class="stat-icon bg-warning-soft"><i class="fas fa-user-clock"></i></div><div class="stat-info"><h6>@Localizer["Partial"]</h6><div class="stat-value">@partial</div></div></div>
+</div>
+
+<div class="row mb-4" data-aos="fade-up">
+    <div class="col-lg-4">
+        <div class="dashboard-card card p-3 hover-lift"><h6 class="mb-3"><i class="fas fa-chart-pie me-2 text-primary"></i>@Localizer["PaymentBreakdown"]</h6><canvas id="chartPie" height="220"></canvas></div>
+    </div>
+    <div class="col-lg-4">
+        <div class="dashboard-card card p-3 hover-lift"><h6 class="mb-3"><i class="fas fa-chart-doughnut me-2 text-primary"></i>@Localizer["StudentStatus"]</h6><canvas id="chartStudentStatus" height="220"></canvas></div>
+    </div>
+    <div class="col-lg-4">
+        <div class="dashboard-card card p-3 hover-lift"><h6 class="mb-3"><i class="fas fa-chart-bar me-2 text-primary"></i>@Localizer["TopUnpaid"]</h6><canvas id="chartTopUnpaid" height="220"></canvas></div>
+    </div>
+</div>
+
+<div class="filter-panel" data-aos="fade-up">
+    <div class="filter-title"><i class="fas fa-filter"></i> @Localizer["Filter"]</div>
+    <div class="row g-2 align-items-end">
+        @if (isSuperAdmin)
+        {
+            <div class="col-md-2">
+                <select id="filterSchool" class="form-select select2">
+                    <option value="">@Localizer["AllSchools"]</option>
+                    @foreach (var s in schools) { <option value="@s.Name">@s.Name</option> }
+                </select>
+            </div>
+        }
+        <div class="col-md-3"><input type="text" id="searchInput" class="form-control" placeholder="🔍 @Localizer["SearchStudent"]..." /></div>
+        <div class="col-md-3"><select id="filterYear" class="form-select"><option value="">@Localizer["AllYears"]</option>@foreach (var y in summaryData.Select(s => s.AcademicYearName).Distinct().OrderBy(y => y)) { <option value="@y">@y</option> }</select></div>
+        <div class="col-md-2">
+            <select id="filterPayStatus" class="form-select">
+                <option value="">@Localizer["AllStatuses"]</option>
+                <option value="fullyPaid">@Localizer["FullyPaid"]</option>
+                <option value="partial">@Localizer["Partial"]</option>
+                <option value="noPay">@Localizer["NoPay"]</option>
+            </select>
+        </div>
+        <div class="col-md-1"><button class="btn btn-filter w-100" onclick="applyFilters()"><i class="fas fa-search"></i></button></div>
+        <div class="col-md-2"><button class="btn btn-reset w-100" onclick="resetFilters()"><i class="fas fa-redo me-1"></i>@Localizer["Reset"]</button></div>
+    </div>
+</div>
+
+<div class="table-card hover-lift" data-aos="fade-up">
+    <table id="dataTable" class="table table-hover" style="width:100%">
+        <thead>
+            <tr><th>#</th><th>@Localizer["Student"]</th><th>@Localizer["TotalAmount"]</th><th>@Localizer["PaidAmount"]</th><th>@Localizer["UnpaidAmount"]</th><th>@Localizer["Progress"]</th><th>@Localizer["Payments"]</th><th>@Localizer["AcademicYear"]</th>@if (isSuperAdmin) { <th>@Localizer["School"]</th> }<th>@Localizer["Status"]</th></tr>
+        </thead>
+        <tbody>
+            @for (int i = 0; i < summaryData.Count; i++)
+            {
+                var s = summaryData[i];
+                var pct = s.TotalAmount > 0 ? (int)(s.PaidAmount / s.TotalAmount * 100) : 0;
+                var barCls = pct == 100 ? "bg-success" : pct >= 50 ? "bg-info" : pct > 0 ? "bg-warning" : "bg-danger";
+                var statusTag = s.UnpaidAmount == 0 ? "fullyPaid" : s.PaidAmount > 0 ? "partial" : "noPay";
+                <tr class="table-row-animated" data-pay-status="@statusTag">
+                    <td>@(i + 1)</td>
+                    <td><strong>@s.StudentName</strong></td>
+                    <td class="fw-bold">@s.TotalAmount.ToString("N0")</td>
+                    <td class="text-success fw-bold">@s.PaidAmount.ToString("N0")</td>
+                    <td class="text-danger fw-bold">@s.UnpaidAmount.ToString("N0")</td>
+                    <td style="min-width:140px"><div class="progress" style="height:20px"><div class="progress-bar @barCls" style="width:@(pct)%">@(pct)%</div></div></td>
+                    <td><span class="badge bg-success">@s.PaidCount</span> / @s.TotalCount</td>
+                    <td>@s.AcademicYearName</td>
+                    @if (isSuperAdmin) { <td>@s.SchoolName</td> }
+                    <td>
+                        @if (s.UnpaidAmount == 0) { <span class="status-badge status-active"><span class="status-dot"></span> @Localizer["FullyPaid"]</span> }
+                        else if (s.PaidAmount > 0) { <span class="badge bg-warning"><i class="fas fa-adjust me-1"></i>@Localizer["Partial"]</span> }
+                        else { <span class="badge bg-danger"><i class="fas fa-times me-1"></i>@Localizer["NoPay"]</span> }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@section Scripts {
+<style media="print">
+    .page-header, .stat-ribbon, .filter-panel, .no-print, nav, .sidebar, footer, .row.mb-4 { display: none !important; }
+    .table-card { box-shadow: none !important; border: none !important; }
+    table { font-size: 12px; }
+    th, td { padding: 4px 8px !important; }
+</style>
+<script>
+    var isSuperAdmin = @(isSuperAdmin ? "true" : "false");
+    var dt;
+    $(function () {
+        dt = $('#dataTable').DataTable({ responsive: true, pageLength: 25, dom: 'rtip' });
+        $('#searchInput').on('keyup', function () { dt.search(this.value).draw(); });
+
+        new Chart(document.getElementById('chartPie'), { type: 'doughnut', data: { labels: ['@Localizer["Paid"]', '@Localizer["Unpaid"]'], datasets: [{ data: [@grandPaid.ToString("F0"), @grandUnpaid.ToString("F0")], backgroundColor: ['#22c55e','#ef4444'], borderWidth: 0 }] }, options: { responsive: true, plugins: { legend: { position: 'bottom' } } } });
+
+        new Chart(document.getElementById('chartStudentStatus'), { type: 'doughnut', data: { labels: ['@Localizer["FullyPaid"]', '@Localizer["Partial"]', '@Localizer["NoPay"]'], datasets: [{ data: [@fullyPaid, @partial, @noPay], backgroundColor: ['#22c55e','#f59e0b','#ef4444'], borderWidth: 0 }] }, options: { responsive: true, plugins: { legend: { position: 'bottom' } } } });
+
+        var topLabels = [@Html.Raw(string.Join(",", topUnpaid.Select(x => $"\"{x.StudentName}\"")))];
+        var topData = [@Html.Raw(string.Join(",", topUnpaid.Select(x => x.UnpaidAmount.ToString("F0"))))];
+        new Chart(document.getElementById('chartTopUnpaid'), { type: 'bar', data: { labels: topLabels, datasets: [{ label: '@Localizer["Unpaid"]', data: topData, backgroundColor: '#ef4444', borderRadius: 8 }] }, options: { responsive: true, indexAxis: 'y', plugins: { legend: { display: false } }, scales: { x: { beginAtZero: true } } } });
+    });
+
+    var yearColIdx = 7;
+    var schoolColIdx = isSuperAdmin ? 8 : -1;
+
+    function applyFilters() {
+        dt.search($('#searchInput').val());
+        dt.column(yearColIdx).search($('#filterYear').val());
+        if (isSuperAdmin) { dt.column(schoolColIdx).search($('#filterSchool').val()); }
+        var payStatus = $('#filterPayStatus').val();
+        $.fn.dataTable.ext.search.length = 0;
+        if (payStatus) {
+            $.fn.dataTable.ext.search.push(function (settings, data, dataIndex) {
+                var row = dt.row(dataIndex).node();
+                return $(row).data('pay-status') === payStatus;
+            });
+        }
+        dt.draw();
+    }
+    function resetFilters() { $('#searchInput, #filterYear, #filterPayStatus').val(''); if (isSuperAdmin) { $('#filterSchool').val(''); } $.fn.dataTable.ext.search.length = 0; dt.search('').columns().search('').draw(); }
+    function printSchedule() { window.print(); }
+</script>
+}

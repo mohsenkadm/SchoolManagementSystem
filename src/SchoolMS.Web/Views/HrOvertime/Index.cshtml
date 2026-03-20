@@ -1,0 +1,42 @@
+@model List<SchoolMS.Application.DTOs.HrOvertimeRequestDto>
+@{ ViewData["Title"] = Localizer["Overtime"].Value; }
+@Html.AntiForgeryToken()
+
+<div class="page-header" data-aos="fade-down">
+    <div><h4 class="page-title"><i class="fas fa-business-time text-primary"></i> @Localizer["Overtime"]</h4><span class="record-count"><i class="fas fa-layer-group"></i> @Model.Count</span></div>
+    <div class="page-actions"><a href="@Url.Action("Create")" class="btn btn-accent"><i class="fas fa-plus me-1"></i>@Localizer["Add"]</a></div>
+</div>
+
+<div class="stat-ribbon" data-aos="fade-up">
+    <div class="stat-item stagger-item"><div class="stat-icon bg-warning-soft"><i class="fas fa-hourglass-half"></i></div><div class="stat-info"><h6>@Localizer["Pending"]</h6><div class="stat-value">@Model.Count(o => o.Status == OvertimeStatus.Pending)</div></div></div>
+    <div class="stat-item stagger-item"><div class="stat-icon bg-success-soft"><i class="fas fa-check"></i></div><div class="stat-info"><h6>@Localizer["Approved"]</h6><div class="stat-value">@Model.Count(o => o.Status == OvertimeStatus.Approved)</div></div></div>
+</div>
+
+<div class="table-card hover-lift" data-aos="fade-up">
+    <table id="dataTable" class="table table-hover" style="width:100%">
+        <thead><tr><th>#</th><th>@Localizer["Employee"]</th><th>@Localizer["Date"]</th><th>@Localizer["Hours"]</th><th>@Localizer["Amount"]</th><th>@Localizer["Status"]</th><th>@Localizer["Actions"]</th></tr></thead>
+        <tbody>
+            @for (int i = 0; i < Model.Count; i++)
+            {
+                var o = Model[i];
+                var cls = o.Status switch { OvertimeStatus.Pending => "bg-warning", OvertimeStatus.Approved => "bg-success", OvertimeStatus.Rejected => "bg-danger", _ => "bg-secondary" };
+                <tr>
+                    <td>@(i + 1)</td><td>@o.EmployeeName</td><td>@o.OvertimeDate.ToString("dd/MM/yyyy")</td>
+                    <td>@o.Hours h</td><td>@o.CalculatedAmount.ToString("N0")</td>
+                    <td><span class="badge @cls">@o.Status</span></td>
+                    <td>
+                        @if (o.Status == OvertimeStatus.Pending)
+                        {
+                            <form asp-action="Approve" method="post" class="d-inline"><input type="hidden" name="id" value="@o.Id" /><button class="btn btn-sm btn-success"><i class="fas fa-check"></i></button></form>
+                            <form asp-action="Reject" method="post" class="d-inline"><input type="hidden" name="id" value="@o.Id" /><button class="btn btn-sm btn-danger"><i class="fas fa-times"></i></button></form>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@section Scripts {
+<script>$(function () { $('#dataTable').DataTable({ responsive: true, pageLength: 25, dom: 'rtip' }); });</script>
+}

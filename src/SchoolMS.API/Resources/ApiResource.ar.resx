@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+
+  <!-- Auth Messages -->
+  <data name="InvalidCredentials" xml:space="preserve"><value>البريد الإلكتروني أو كلمة المرور غير صحيحة.</value></data>
+  <data name="SchoolNotFound" xml:space="preserve"><value>المدرسة غير موجودة أو غير نشطة.</value></data>
+  <data name="UserNotBelongToSchool" xml:space="preserve"><value>المستخدم لا ينتمي إلى هذه المدرسة.</value></data>
+  <data name="LoginSuccess" xml:space="preserve"><value>تم تسجيل الدخول بنجاح.</value></data>
+
+  <!-- CRUD Messages -->
+  <data name="NotFound" xml:space="preserve"><value>السجل غير موجود.</value></data>
+  <data name="CreatedSuccess" xml:space="preserve"><value>تم الإنشاء بنجاح.</value></data>
+  <data name="UpdatedSuccess" xml:space="preserve"><value>تم التحديث بنجاح.</value></data>
+  <data name="DeletedSuccess" xml:space="preserve"><value>تم الحذف بنجاح.</value></data>
+  <data name="ValidationError" xml:space="preserve"><value>خطأ في التحقق. يرجى مراجعة المدخلات.</value></data>
+
+  <!-- Entities -->
+  <data name="Students" xml:space="preserve"><value>الطلاب</value></data>
+  <data name="Teachers" xml:space="preserve"><value>المعلمون</value></data>
+  <data name="Subjects" xml:space="preserve"><value>المواد الدراسية</value></data>
+  <data name="Divisions" xml:space="preserve"><value>الشُعب</value></data>
+  <data name="Grades" xml:space="preserve"><value>الصفوف</value></data>
+  <data name="Branches" xml:space="preserve"><value>الفروع</value></data>
+</root>

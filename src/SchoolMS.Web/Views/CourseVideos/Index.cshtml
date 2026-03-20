@@ -1,0 +1,392 @@
+@using SchoolMS.Application.DTOs
+@model List<CourseVideoDto>
+@{
+    var course = ViewBag.Course as CourseDto;
+    var uploaded = Model.Count(v => !string.IsNullOrEmpty(v.BunnyStreamVideoId));
+    var pending = Model.Count - uploaded;
+    var scheduled = Model.Count(v => v.IsScheduled);
+    var totalDuration = TimeSpan.FromTicks(Model.Sum(v => v.Duration.Ticks));
+    var quota = ViewBag.StorageQuota as StorageQuotaDto;
+}
+
+@Html.AntiForgeryToken()
+
+<div class="page-header" data-aos="fade-down">
+    <div>
+        <h4 class="page-title"><i class="fas fa-video text-primary"></i>@Localizer["Videos"] - @course?.Title</h4>
+        <a href="@Url.Action("Index", "Courses")" class="text-muted small"><i class="fas fa-arrow-left me-1"></i>@Localizer["BackToCourses"]</a>
+    </div>
+    <div class="page-actions d-flex gap-2">
+        <button class="btn btn-outline-primary" id="btnToggleView" onclick="toggleView()"><i class="fas fa-th me-1"></i>@Localizer["Grid"]</button>
+        <a href="@Url.Action("Create", new { courseId = course?.Id })" class="btn btn-accent"><i class="fas fa-plus me-1"></i>@Localizer["AddVideo"]</a>
+    </div>
+</div>
+
+<div class="stat-ribbon" data-aos="fade-up">
+    <div class="stat-item stagger-item"><div class="stat-icon bg-primary-soft"><i class="fas fa-video"></i></div><div class="stat-info"><h6>@Localizer["Total"]</h6><div class="stat-value">@Model.Count</div></div></div>
+    <div class="stat-item stagger-item"><div class="stat-icon bg-success-soft"><i class="fas fa-check-circle"></i></div><div class="stat-info"><h6>@Localizer["Uploaded"]</h6><div class="stat-value">@uploaded</div></div></div>
+    <div class="stat-item stagger-item"><div class="stat-icon bg-warning-soft"><i class="fas fa-clock"></i></div><div class="stat-info"><h6>@Localizer["Pending"]</h6><div class="stat-value">@pending</div></div></div>
+    <div class="stat-item stagger-item"><div class="stat-icon bg-info-soft"><i class="fas fa-eye"></i></div><div class="stat-info"><h6>@Localizer["Views"]</h6><div class="stat-value">@Model.Sum(v => v.ViewCount)</div></div></div>
+    <div class="stat-item stagger-item"><div class="stat-icon" style="background:rgba(236,72,153,0.15);"><i class="fas fa-heart" style="color:#ec4899;"></i></div><div class="stat-info"><h6>@Localizer["Likes"]</h6><div class="stat-value">@Model.Sum(v => v.LikeCount)</div></div></div>
+    <div class="stat-item stagger-item"><div class="stat-icon" style="background:rgba(14,165,233,0.15);"><i class="fas fa-user-check" style="color:#0ea5e9;"></i></div><div class="stat-info"><h6>@Localizer["Seen"]</h6><div class="stat-value">@Model.Sum(v => v.SeenCount)</div></div></div>
+    <div class="stat-item stagger-item"><div class="stat-icon" style="background:rgba(250,204,21,0.15);"><i class="fas fa-star" style="color:#facc15;"></i></div><div class="stat-info"><h6>@Localizer["AvgRating"]</h6><div class="stat-value">@(Model.Any(v => v.RatingCount > 0) ? (Model.Where(v => v.RatingCount > 0).Average(v => v.AverageRating)).ToString("F1") : "0")</div></div></div>
+    <div class="stat-item stagger-item"><div class="stat-icon bg-danger-soft"><i class="fas fa-gift"></i></div><div class="stat-info"><h6>@Localizer["Free"]</h6><div class="stat-value">@Model.Count(v => v.IsFreeTrial)</div></div></div>
+    <div class="stat-item stagger-item"><div class="stat-icon bg-purple-soft" style="background:rgba(139,92,246,0.15);"><i class="fas fa-calendar-check" style="color:#8b5cf6;"></i></div><div class="stat-info"><h6>@Localizer["Scheduled"]</h6><div class="stat-value">@scheduled</div></div></div>
+    <div class="stat-item stagger-item"><div class="stat-icon bg-secondary"><i class="fas fa-stopwatch"></i></div><div class="stat-info"><h6>@Localizer["Duration"]</h6><div class="stat-value">@totalDuration.ToString(@"hh\:mm\:ss")</div></div></div>
+</div>
+
+@if (quota != null)
+{
+    var usedPct = quota.TotalStorageGB > 0 ? Math.Min(100, Math.Round((double)(quota.UsedStorageGB / quota.TotalStorageGB * 100), 1)) : 0;
+    var barColor = usedPct > 90 ? "bg-danger" : usedPct > 70 ? "bg-warning" : "bg-info";
+    <div class="dashboard-card card p-3 mb-3" data-aos="fade-up">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <h6 class="mb-0"><i class="fas fa-hdd me-2 text-info"></i>@Localizer["StorageUsage"]</h6>
+            <span class="text-muted small">@quota.UsedStorageGB.ToString("F2") GB / @quota.TotalStorageGB.ToString("F2") GB (@usedPct%)</span>
+        </div>
+        <div class="progress" style="height:8px;border-radius:4px;">
+            <div class="progress-bar @barColor" style="width:@(usedPct)%;border-radius:4px;"></div>
+        </div>
+        <div class="d-flex justify-content-between mt-1">
+            <small class="text-muted">@Localizer["Available"]: @quota.AvailableGB.ToString("F2") GB</small>
+            @if (quota.ExtraStorageGB > 0)
+            {
+                <small class="text-success"><i class="fas fa-plus-circle me-1"></i>+@quota.ExtraStorageGB.ToString("F2") GB extra</small>
+            }
+        </div>
+    </div>
+}
+
+<div class="filter-panel" data-aos="fade-up">
+    <div class="filter-title"><i class="fas fa-filter"></i> @Localizer["Filter"]</div>
+    <div class="row g-2 align-items-end">
+        <div class="col-md-4"><input type="text" id="searchInput" class="form-control" placeholder="🔍 @Localizer["Search"]..." /></div>
+        <div class="col-md-2">
+            <select id="filterStatus" class="form-select">
+                <option value="">@Localizer["AllStatus"]</option>
+                <option value="uploaded">@Localizer["Uploaded"]</option>
+                <option value="pending">@Localizer["Pending"]</option>
+            </select>
+        </div>
+        <div class="col-md-2">
+            <select id="filterFree" class="form-select">
+                <option value="">@Localizer["All"]</option>
+                <option value="free">@Localizer["Free"]</option>
+                <option value="paid">@Localizer["Paid"]</option>
+            </select>
+        </div>
+        <div class="col-md-2"><button class="btn btn-filter w-100" onclick="applyFilters()"><i class="fas fa-search me-1"></i>@Localizer["Filter"]</button></div>
+        <div class="col-md-2"><button class="btn btn-reset w-100" onclick="resetFilters()"><i class="fas fa-redo me-1"></i>@Localizer["Reset"]</button></div>
+    </div>
+</div>
+
+<!-- GRID VIEW -->
+<div id="gridView" class="row g-3" data-aos="fade-up" style="display:none;">
+    @foreach (var v in Model)
+    {
+        var hasVideo = !string.IsNullOrEmpty(v.BunnyStreamVideoId);
+        <div class="col-xl-3 col-lg-4 col-md-6 video-card-item"
+             data-title="@v.Title.ToLower()" data-status="@(hasVideo ? "uploaded" : "pending")" data-free="@(v.IsFreeTrial ? "free" : "paid")">
+            <div class="dashboard-card card hover-lift h-100">
+                <div class="position-relative" style="cursor:pointer;" onclick="@(hasVideo ? $"playVideo('{v.VideoUrl}', '{v.Title}')" : "")">
+                    @if (hasVideo && !string.IsNullOrEmpty(v.ThumbnailUrl))
+                    {
+                        <img src="@v.ThumbnailUrl" class="card-img-top" style="height:180px;object-fit:cover;border-radius:12px 12px 0 0;" alt="@v.Title" />
+                    }
+                    else
+                    {
+                        <div class="d-flex align-items-center justify-content-center bg-light" style="height:180px;border-radius:12px 12px 0 0;">
+                            <i class="fas @(hasVideo ? "fa-video" : "fa-cloud-upload-alt") fa-3x text-muted"></i>
+                        </div>
+                    }
+                    @if (hasVideo)
+                    {
+                        <div class="position-absolute top-50 start-50 translate-middle">
+                            <div class="bg-white bg-opacity-75 rounded-circle d-flex align-items-center justify-content-center" style="width:50px;height:50px;">
+                                <i class="fas fa-play text-primary fs-5"></i>
+                            </div>
+                        </div>
+                    }
+                    <div class="position-absolute bottom-0 end-0 m-2">
+                        <span class="badge bg-dark bg-opacity-75 text-white"><i class="fas fa-clock me-1"></i>@v.Duration.ToString(@"hh\:mm\:ss")</span>
+                    </div>
+                    @if (v.IsFreeTrial)
+                    {
+                        <div class="position-absolute top-0 start-0 m-2">
+                            <span class="badge bg-success"><i class="fas fa-gift me-1"></i>@Localizer["Free"]</span>
+                        </div>
+                    }
+                    @if (v.IsScheduled)
+                    {
+                        <div class="position-absolute top-0 end-0 m-2">
+                            <span class="badge bg-purple" style="background:#8b5cf6;"><i class="fas fa-calendar-check me-1"></i>@(v.ScheduledPublishAt?.ToString("MMM dd, HH:mm") ?? "Scheduled")</span>
+                        </div>
+                    }
+                </div>
+                <div class="card-body p-3">
+                    <h6 class="card-title mb-1 text-truncate" title="@v.Title">
+                        <span class="badge bg-secondary me-1">#@v.SortOrder</span>@v.Title
+                    </h6>
+                    @if (!string.IsNullOrEmpty(v.Description))
+                    {
+                        <p class="text-muted small mb-2 text-truncate">@v.Description</p>
+                    }
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            @if (v.IsScheduled)
+                            {
+                                <span class="badge" style="background:#8b5cf6;color:#fff;"><i class="fas fa-calendar-check me-1"></i>@Localizer["Scheduled"]</span>
+                            }
+                            else if (hasVideo)
+                            {
+                                <span class="status-badge status-active"><span class="status-dot"></span>@Localizer["Uploaded"]</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-warning"><i class="fas fa-clock me-1"></i>@Localizer["NoVideo"]</span>
+                            }
+                        </div>
+                        <span class="text-muted small"><i class="fas fa-eye me-1"></i>@v.ViewCount</span>
+                    </div>
+                    <div class="d-flex gap-2 mt-2">
+                        <span class="text-muted small"><i class="fas fa-heart me-1" style="color:#ec4899;"></i>@v.LikeCount</span>
+                        <span class="text-muted small"><i class="fas fa-user-check me-1" style="color:#0ea5e9;"></i>@v.SeenCount</span>
+                    </div>
+                    <div class="d-flex align-items-center gap-1 mt-1">
+                        @for (int s = 1; s <= 5; s++)
+                        {
+                            if (s <= (int)Math.Round(v.AverageRating))
+                            {
+                                <i class="fas fa-star" style="color:#facc15;font-size:0.75rem;"></i>
+                            }
+                            else
+                            {
+                                <i class="far fa-star" style="color:#facc15;font-size:0.75rem;"></i>
+                            }
+                        }
+                        <span class="text-muted small ms-1">@v.AverageRating.ToString("F1") (@v.RatingCount)</span>
+                    </div>
+                </div>
+                <div class="card-footer bg-transparent border-0 p-3 pt-0">
+                    <div class="d-flex gap-1">
+                        <a href="@Url.Action("Edit", new { id = v.Id })" class="btn btn-sm btn-primary flex-fill" title="@Localizer["Edit"]"><i class="fas fa-edit me-1"></i>@Localizer["Edit"]</a>
+                        <button class="btn btn-sm btn-danger" onclick="del(@v.Id)" title="@Localizer["Delete"]"><i class="fas fa-trash"></i></button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<!-- TABLE VIEW -->
+<div id="tableView" class="table-card hover-lift" data-aos="fade-up">
+    <table id="dataTable" class="table table-hover" style="width:100%">
+        <thead>
+            <tr>
+                <th>@Localizer["Order"]</th>
+                <th>@Localizer["Thumbnail"]</th>
+                <th>@Localizer["Title"]</th>
+                <th>@Localizer["Duration"]</th>
+                <th>@Localizer["Views"]</th>
+                <th>@Localizer["Likes"]</th>
+                <th>@Localizer["Seen"]</th>
+                <th>@Localizer["Rating"]</th>
+                <th>@Localizer["Free"]</th>
+                <th>@Localizer["Scheduled"]</th>
+                <th>@Localizer["Status"]</th>
+                <th>@Localizer["Actions"]</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var v in Model)
+            {
+                var hasVideo = !string.IsNullOrEmpty(v.BunnyStreamVideoId);
+                <tr class="table-row-animated">
+                    <td>@v.SortOrder</td>
+                    <td>
+                        @if (hasVideo && !string.IsNullOrEmpty(v.ThumbnailUrl))
+                        {
+                            <img src="@v.ThumbnailUrl" style="width:80px;height:45px;object-fit:cover;border-radius:6px;cursor:pointer;" onclick="playVideo('@v.VideoUrl', '@v.Title')" alt="" />
+                        }
+                        else
+                        {
+                            <div class="d-flex align-items-center justify-content-center bg-light" style="width:80px;height:45px;border-radius:6px;">
+                                <i class="fas fa-video text-muted"></i>
+                            </div>
+                        }
+                    </td>
+                    <td>
+                        <div>
+                            <strong>@v.Title</strong>
+                            @if (!string.IsNullOrEmpty(v.Description))
+                            {
+                                <br /><small class="text-muted">@v.Description</small>
+                            }
+                        </div>
+                    </td>
+                    <td>@v.Duration.ToString(@"hh\:mm\:ss")</td>
+                    <td><span class="badge bg-info">@v.ViewCount</span></td>
+                    <td><span class="badge" style="background:#ec4899;color:#fff;"><i class="fas fa-heart me-1"></i>@v.LikeCount</span></td>
+                    <td><span class="badge" style="background:#0ea5e9;color:#fff;"><i class="fas fa-user-check me-1"></i>@v.SeenCount</span></td>
+                    <td>
+                        <div class="d-flex align-items-center gap-1">
+                            @for (int s = 1; s <= 5; s++)
+                            {
+                                if (s <= (int)Math.Round(v.AverageRating))
+                                {
+                                    <i class="fas fa-star" style="color:#facc15;font-size:0.7rem;"></i>
+                                }
+                                else
+                                {
+                                    <i class="far fa-star" style="color:#facc15;font-size:0.7rem;"></i>
+                                }
+                            }
+                            <span class="small text-muted">@v.AverageRating.ToString("F1") (@v.RatingCount)</span>
+                        </div>
+                    </td>
+                    <td>
+                        @if (v.IsFreeTrial) { <span class="badge bg-success">@Localizer["Yes"]</span> }
+                        else { <span class="badge bg-secondary">@Localizer["No"]</span> }
+                    </td>
+                    <td>
+                        @if (v.IsScheduled)
+                        {
+                            <span class="badge" style="background:#8b5cf6;color:#fff;"><i class="fas fa-calendar-check me-1"></i>@(v.ScheduledPublishAt?.ToString("MMM dd, HH:mm") ?? "Yes")</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-secondary">@Localizer["No"]</span>
+                        }
+                    </td>
+                    <td>
+                        @if (v.IsScheduled)
+                        {
+                            <span class="badge" style="background:#8b5cf6;color:#fff;"><i class="fas fa-eye-slash me-1"></i>@Localizer["Hidden"]</span>
+                        }
+                        else if (hasVideo)
+                        {
+                            <span class="status-badge status-active"><span class="status-dot"></span> @Localizer["Uploaded"]</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-warning"><i class="fas fa-clock me-1"></i>@Localizer["NoVideo"]</span>
+                        }
+                    </td>
+                    <td>
+                        <div class="d-flex gap-1">
+                            @if (hasVideo)
+                            {
+                                <button class="btn btn-sm btn-success" onclick="playVideo('@v.VideoUrl', '@v.Title')" data-bs-toggle="tooltip" title="@Localizer["Play"]"><i class="fas fa-play"></i></button>
+                            }
+                            <a href="@Url.Action("Edit", new { id = v.Id })" class="btn btn-sm btn-primary" data-bs-toggle="tooltip" title="@Localizer["Edit"]"><i class="fas fa-edit"></i></a>
+                            <button class="btn btn-sm btn-danger" onclick="del(@v.Id)" data-bs-toggle="tooltip" title="@Localizer["Delete"]"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+<!-- VIDEO PLAYER MODAL -->
+<div class="modal fade" id="videoPlayerModal" tabindex="-1">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content" style="border-radius:16px;overflow:hidden;background:#000;">
+            <div class="modal-header border-0 py-2" style="background:rgba(0,0,0,0.8);">
+                <h6 class="modal-title text-white" id="videoPlayerTitle"></h6>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-0">
+                <video id="videoPlayer" class="w-100" controls style="max-height:70vh;background:#000;"></video>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script>
+    var dt, currentView = 'table';
+    $(function () {
+        dt = $('#dataTable').DataTable({ responsive: true, pageLength: 25, dom: 'rtip', order: [[0, 'asc']] });
+        $('#searchInput').on('keyup', function () {
+            var val = this.value.toLowerCase();
+            if (currentView === 'table') { dt.search(this.value).draw(); }
+            else { filterGrid(); }
+        });
+
+        $('#videoPlayerModal').on('hidden.bs.modal', function () {
+            var video = document.getElementById('videoPlayer');
+            video.pause();
+            video.removeAttribute('src');
+            video.load();
+            if (window._hls) { window._hls.destroy(); window._hls = null; }
+        });
+    });
+
+    function toggleView() {
+        if (currentView === 'table') {
+            currentView = 'grid';
+            $('#tableView').hide();
+            $('#gridView').show();
+            $('#btnToggleView').html('<i class="fas fa-list me-1"></i>@Localizer["Table"]');
+        } else {
+            currentView = 'table';
+            $('#gridView').hide();
+            $('#tableView').show();
+            $('#btnToggleView').html('<i class="fas fa-th me-1"></i>@Localizer["Grid"]');
+        }
+    }
+
+    function applyFilters() {
+        if (currentView === 'table') {
+            dt.search($('#searchInput').val()).draw();
+        } else {
+            filterGrid();
+        }
+    }
+
+    function filterGrid() {
+        var search = $('#searchInput').val().toLowerCase();
+        var status = $('#filterStatus').val();
+        var free = $('#filterFree').val();
+        $('.video-card-item').each(function () {
+            var $el = $(this);
+            var matchSearch = !search || $el.data('title').toString().indexOf(search) >= 0;
+            var matchStatus = !status || $el.data('status') === status;
+            var matchFree = !free || $el.data('free') === free;
+            $el.toggle(matchSearch && matchStatus && matchFree);
+        });
+    }
+
+    function resetFilters() {
+        $('#searchInput, #filterStatus, #filterFree').val('');
+        if (currentView === 'table') { dt.search('').columns().search('').draw(); }
+        else { $('.video-card-item').show(); }
+    }
+
+    function playVideo(url, title) {
+        if (!url) return;
+        var video = document.getElementById('videoPlayer');
+        $('#videoPlayerTitle').text(title);
+
+        if (url.endsWith('.m3u8') && Hls.isSupported()) {
+            if (window._hls) { window._hls.destroy(); }
+            window._hls = new Hls();
+            window._hls.loadSource(url);
+            window._hls.attachMedia(video);
+            window._hls.on(Hls.Events.MANIFEST_PARSED, function () { video.play(); });
+        } else {
+            video.src = url;
+            video.play();
+        }
+
+        var modal = new bootstrap.Modal(document.getElementById('videoPlayerModal'));
+        modal.show();
+    }
+
+    function del(id) {
+        confirmDelete('@Url.Action("Delete")', id, function () { location.reload(); });
+    }
+</script>
+}

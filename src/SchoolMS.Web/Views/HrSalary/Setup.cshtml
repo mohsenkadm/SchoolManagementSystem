@@ -1,0 +1,54 @@
+@model SchoolMS.Application.DTOs.HrSalaryDetailDto
+@{ ViewData["Title"] = Localizer["SalarySetup"].Value; }
+@Html.AntiForgeryToken()
+
+<div class="d-flex justify-content-between align-items-center mb-4" data-aos="fade-down">
+    <h4 class="mb-0"><i class="fas fa-money-bill-wave me-2 text-primary"></i>@Localizer["SalarySetup"] — @Model?.EmployeeName</h4>
+    <a href="@Url.Action("Details", "HrEmployees", new { id = Model?.EmployeeId ?? 0 })" class="btn btn-secondary"><i class="fas fa-arrow-left me-1"></i>@Localizer["Back"]</a>
+</div>
+
+<div class="dashboard-card card p-4" data-aos="fade-up">
+    <form asp-action="CreateSetup" method="post">
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="EmployeeId" value="@(Model?.EmployeeId > 0 ? Model.EmployeeId : ViewContext.HttpContext.Request.Query["employeeId"].ToString())" />
+        @if (Model?.Id > 0) { <input type="hidden" name="Id" value="@Model.Id" /> }
+        <div class="row g-3">
+            <div class="col-md-3"><label class="form-label">@Localizer["BaseSalary"] *</label><input type="number" step="0.01" name="BaseSalary" class="form-control" value="@Model?.BaseSalary" required /></div>
+            <div class="col-md-3"><label class="form-label">@Localizer["Currency"]</label><input type="text" name="Currency" class="form-control" value="@(Model?.Currency ?? "SAR")" /></div>
+            <div class="col-md-3">
+                <label class="form-label">@Localizer["SalaryType"]</label>
+                <select name="SalaryType" class="form-select">@foreach (var t in Enum.GetValues<SalaryType>()) { <option value="@t" selected="@(Model?.SalaryType == t)">@t</option> }</select>
+            </div>
+            <div class="col-md-3"><label class="form-label">@Localizer["EffectiveDate"] *</label><input type="date" name="EffectiveDate" class="form-control" value="@(Model?.EffectiveDate.ToString("yyyy-MM-dd") ?? DateTime.Today.ToString("yyyy-MM-dd"))" required /></div>
+            <div class="col-12"><label class="form-label">@Localizer["Notes"]</label><textarea name="Notes" class="form-control" rows="2">@Model?.Notes</textarea></div>
+        </div>
+        <div class="mt-4"><button type="submit" class="btn btn-accent"><i class="fas fa-save me-1"></i>@Localizer["Save"]</button></div>
+    </form>
+</div>
+
+@if (Model?.Allowances?.Any() == true || Model?.Deductions?.Any() == true)
+{
+    <div class="row g-3 mt-3" data-aos="fade-up">
+        <div class="col-md-6">
+            <div class="dashboard-card card p-3">
+                <h6><i class="fas fa-plus-circle me-1 text-success"></i>@Localizer["Allowances"]</h6>
+                <table class="table table-sm"><thead><tr><th>@Localizer["Name"]</th><th>@Localizer["Type"]</th><th>@Localizer["Amount"]</th></tr></thead>
+                    <tbody>@foreach (var a in Model.Allowances) { <tr><td>@a.AllowanceName</td><td><span class="badge bg-info">@a.CalculationType</span></td><td>@a.CalculatedAmount.ToString("N0")</td></tr> }</tbody>
+                </table>
+                <div class="text-end"><strong>@Localizer["Total"]: @Model.TotalAllowances.ToString("N0")</strong></div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="dashboard-card card p-3">
+                <h6><i class="fas fa-minus-circle me-1 text-danger"></i>@Localizer["Deductions"]</h6>
+                <table class="table table-sm"><thead><tr><th>@Localizer["Name"]</th><th>@Localizer["Type"]</th><th>@Localizer["Amount"]</th></tr></thead>
+                    <tbody>@foreach (var d in Model.Deductions) { <tr><td>@d.DeductionName</td><td><span class="badge bg-warning">@d.CalculationType</span></td><td>@d.CalculatedAmount.ToString("N0")</td></tr> }</tbody>
+                </table>
+                <div class="text-end"><strong>@Localizer["Total"]: @Model.TotalDeductions.ToString("N0")</strong></div>
+            </div>
+        </div>
+    </div>
+    <div class="dashboard-card card p-3 mt-3 text-center" data-aos="fade-up">
+        <h5>@Localizer["NetSalary"]: <span class="text-success">@Model.NetSalary.ToString("N0")</span></h5>
+    </div>
+}

@@ -1,0 +1,143 @@
+@using SchoolMS.Application.DTOs
+@{
+    var isEdit = Model != null;
+    var item = isEdit ? (FeeInstallmentDto)Model : null;
+    var students = ViewBag.Students as List<StudentDto> ?? new();
+    var years = ViewBag.AcademicYears as List<AcademicYearDto> ?? new();
+    var isSuperAdmin = (bool)(ViewBag.IsSuperAdmin ?? false);
+    var schools = ViewBag.Schools as List<SchoolDto> ?? new();
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4" data-aos="fade-down">
+    <h4 class="mb-0"><i class="fas @(isEdit ? "fa-edit" : "fa-plus-circle") me-2 text-primary"></i>@(isEdit ? Localizer["EditInstallment"] : Localizer["AddInstallment"])</h4>
+    <a href="@Url.Action("Index")" class="btn btn-secondary"><i class="fas fa-arrow-left me-1"></i>@Localizer["Back"]</a>
+</div>
+<div class="dashboard-card card p-4" data-aos="fade-up">
+    <form asp-action="@(isEdit ? "Edit" : "Create")" method="post" id="installmentForm">
+        @Html.AntiForgeryToken()
+        @if (isEdit) { <input type="hidden" name="Id" value="@item!.Id" /> }
+        <div class="row g-3">
+            @if (isSuperAdmin)
+            {
+                <div class="col-md-4">
+                    <label class="form-label">@Localizer["School"] *</label>
+                    <select name="SchoolId" class="form-select select2" required>
+                        <option value="">-- @Localizer["Select"] --</option>
+                        @foreach (var s in schools) { <option value="@s.Id" selected="@(item?.SchoolId == s.Id)">@s.Name</option> }
+                    </select>
+                </div>
+            }
+            <div class="col-md-4">
+                <label class="form-label">@Localizer["Student"] *</label>
+                <select name="StudentId" id="studentId" class="form-select select2" required>
+                    <option value="">-- @Localizer["SelectStudent"] --</option>
+                    @foreach (var s in students) { <option value="@s.Id" selected="@(item?.StudentId == s.Id)">@s.FullName</option> }
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">@Localizer["TotalAmount"] *</label>
+                <input type="number" step="0.01" name="TotalAmount" id="totalAmount" class="form-control" value="@(item?.TotalAmount ?? 0)" required />
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">@Localizer["NumberOfPayments"] *</label>
+                <input type="number" name="NumberOfPayments" id="numPayments" class="form-control" value="@(item?.NumberOfPayments ?? 1)" required min="1" max="36" />
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">@Localizer["AcademicYear"] *</label>
+                <select name="AcademicYearId" class="form-select" required>
+                    @foreach (var y in years) { <option value="@y.Id" selected="@(item?.AcademicYearId == y.Id)">@y.YearName</option> }
+                </select>
+            </div>
+        </div>
+
+        <div class="mt-4" id="paymentsPreview" style="display:none">
+            <h6 class="mb-3"><i class="fas fa-list-ol me-2 text-primary"></i>@Localizer["PaymentSchedule"]</h6>
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover" id="paymentsTable">
+                    <thead class="table-light">
+                        <tr><th>#</th><th>@Localizer["Amount"]</th><th>@Localizer["DueDate"]</th></tr>
+                    </thead>
+                    <tbody id="paymentsBody"></tbody>
+                    <tfoot><tr class="table-secondary fw-bold"><td>@Localizer["Total"]</td><td id="sumAmount">0</td><td></td></tr></tfoot>
+                </table>
+            </div>
+        </div>
+
+        <div class="mt-4 d-flex gap-2">
+            <button type="button" class="btn btn-info" id="btnGenerate"><i class="fas fa-calculator me-1"></i>@Localizer["GeneratePayments"]</button>
+            <button type="submit" class="btn btn-accent"><i class="fas fa-save me-1"></i>@Localizer["Save"]</button>
+            <a href="@Url.Action("Index")" class="btn btn-secondary">@Localizer["Cancel"]</a>
+        </div>
+    </form>
+</div>
+
+@if (isEdit && item!.Payments.Any())
+{
+    <div class="dashboard-card card p-4 mt-4" data-aos="fade-up">
+        <h6 class="mb-3"><i class="fas fa-money-check-alt me-2 text-primary"></i>@Localizer["CurrentPayments"]</h6>
+        <table class="table table-hover">
+            <thead><tr><th>#</th><th>@Localizer["Amount"]</th><th>@Localizer["DueDate"]</th><th>@Localizer["PaidDate"]</th><th>@Localizer["Status"]</th><th>@Localizer["Actions"]</th></tr></thead>
+            <tbody>
+                @foreach (var p in item.Payments.OrderBy(p => p.PaymentNumber))
+                {
+                    <tr>
+                        <td>@p.PaymentNumber</td>
+                        <td class="fw-bold">@p.Amount.ToString("N0")</td>
+                        <td>@p.DueDate.ToString("yyyy-MM-dd")</td>
+                        <td>@(p.PaidDate?.ToString("yyyy-MM-dd") ?? "—")</td>
+                        <td>
+                            @if (p.Status == PaymentStatus.Paid) { <span class="badge bg-success"><i class="fas fa-check me-1"></i>@Localizer["Paid"]</span> }
+                            else if (p.Status == PaymentStatus.Overdue) { <span class="badge bg-danger"><i class="fas fa-exclamation-triangle me-1"></i>@Localizer["Overdue"]</span> }
+                            else { <span class="badge bg-warning"><i class="fas fa-clock me-1"></i>@Localizer["Pending"]</span> }
+                        </td>
+                        <td>
+                            @if (p.Status != PaymentStatus.Paid)
+                            { <button class="btn btn-sm btn-success" onclick="payAction(@p.Id, 'record')"><i class="fas fa-check"></i></button> }
+                            else
+                            { <button class="btn btn-sm btn-outline-warning" onclick="payAction(@p.Id, 'cancel')"><i class="fas fa-undo"></i></button> }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+@section Scripts {
+<script>
+    $(function () { generatePayments(); });
+
+    $('#totalAmount, #numPayments').on('input', function () { generatePayments(); });
+    $('#btnGenerate').on('click', function () { generatePayments(); });
+
+    function generatePayments() {
+        var total = parseFloat($('#totalAmount').val()) || 0;
+        var num = parseInt($('#numPayments').val()) || 0;
+        if (total <= 0 || num <= 0) { $('#paymentsPreview').hide(); return; }
+        var perPayment = Math.round((total / num) * 100) / 100;
+        var body = '';
+        var sum = 0;
+        var now = new Date();
+        for (var i = 0; i < num; i++) {
+            var amt = (i === num - 1) ? Math.round((total - sum) * 100) / 100 : perPayment;
+            sum += amt;
+            var dueDate = new Date(now.getFullYear(), now.getMonth() + i + 1, 1);
+            var dateStr = dueDate.toISOString().split('T')[0];
+            body += '<tr><td>' + (i + 1) + '</td><td>' + amt.toLocaleString() + '</td><td><input type="date" class="form-control form-control-sm payDate" value="' + dateStr + '" style="width:160px" /></td></tr>';
+        }
+        $('#paymentsBody').html(body);
+        $('#sumAmount').text(total.toLocaleString());
+        $('#paymentsPreview').show();
+    }
+
+    function payAction(id, action) {
+        var url = action === 'record' ? '@Url.Action("RecordPayment")' : '@Url.Action("CancelPayment")';
+        $.ajax({
+            url: url, type: 'POST', data: { paymentId: id },
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            success: function () { toastr.success(action === 'record' ? 'Payment recorded!' : 'Payment cancelled!'); location.reload(); },
+            error: function () { toastr.error('Error occurred.'); }
+        });
+    }
+</script>
+}

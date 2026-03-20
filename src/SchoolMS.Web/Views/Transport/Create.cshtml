@@ -1,0 +1,67 @@
+@using SchoolMS.Application.DTOs
+@{
+    var isEdit = Model != null;
+    var item = isEdit ? (TransportRouteDto)Model : null;
+    var isSuperAdmin = (bool)(ViewBag.IsSuperAdmin ?? false);
+    var schools = ViewBag.Schools as List<SchoolDto> ?? new();
+    var branches = ViewBag.Branches as List<BranchDto> ?? new();
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4" data-aos="fade-down">
+    <h4 class="mb-0"><i class="fas @(isEdit ? "fa-edit" : "fa-plus-circle") me-2 text-primary"></i>@(isEdit ? Localizer["EditRoute"] : Localizer["AddRoute"])</h4>
+    <a href="@Url.Action("Index")" class="btn btn-secondary"><i class="fas fa-arrow-left me-1"></i>@Localizer["Back"]</a>
+</div>
+<div class="dashboard-card card p-4" data-aos="fade-up">
+    <form asp-action="@(isEdit ? "Edit" : "Create")" method="post">
+        @Html.AntiForgeryToken()
+        @if (isEdit) { <input type="hidden" name="Id" value="@item!.Id" /> }
+        <div class="row g-3">
+            @if (isSuperAdmin)
+            {
+                <div class="col-md-3">
+                    <label class="form-label">@Localizer["School"] *</label>
+                    <select id="schoolSelect" name="SchoolId" class="form-select select2" required>
+                        <option value="">-- @Localizer["Select"] --</option>
+                        @foreach (var s in schools) { <option value="@s.Id" selected="@(item?.SchoolId == s.Id)">@s.Name</option> }
+                    </select>
+                </div>
+            }
+            <div class="col-md-4"><label class="form-label">@Localizer["RouteName"] *</label><input type="text" name="RouteName" class="form-control" value="@item?.RouteName" required /></div>
+            <div class="col-md-4"><label class="form-label">@Localizer["DriverName"]</label><input type="text" name="DriverName" class="form-control" value="@item?.DriverName" /></div>
+            <div class="col-md-4"><label class="form-label">@Localizer["DriverPhone"]</label><input type="tel" name="DriverPhone" class="form-control" value="@item?.DriverPhone" /></div>
+            <div class="col-md-3"><label class="form-label">@Localizer["BusNumber"]</label><input type="text" name="BusNumber" class="form-control" value="@item?.BusNumber" /></div>
+            <div class="col-md-3"><label class="form-label">@Localizer["Capacity"]</label><input type="number" name="Capacity" class="form-control" value="@(item?.Capacity ?? 40)" /></div>
+            <div class="col-md-3"><label class="form-label">@Localizer["MonthlyFee"]</label><input type="number" step="0.01" name="MonthlyFee" class="form-control" value="@(item?.MonthlyFee ?? 0)" /></div>
+            <div class="col-md-3">
+                <label class="form-label">@Localizer["Branch"]</label>
+                <select id="branchSelect" name="BranchId" class="form-select select2" required>
+                    @foreach (var b in branches) { <option value="@b.Id" selected="@(item?.BranchId == b.Id)">@b.Name</option> }
+                </select>
+            </div>
+            <div class="col-md-3"><div class="form-check form-switch mt-4"><input class="form-check-input" type="checkbox" name="IsActive" value="true" @(item?.IsActive != false ? "checked" : "") /><label class="form-check-label">@Localizer["Active"]</label></div></div>
+        </div>
+        <div class="mt-4 d-flex gap-2">
+            <button type="submit" class="btn btn-accent"><i class="fas fa-save me-1"></i>@Localizer["Save"]</button>
+            <a href="@Url.Action("Index")" class="btn btn-secondary">@Localizer["Cancel"]</a>
+        </div>
+    </form>
+</div>
+@if (isSuperAdmin)
+{
+    @section Scripts {
+    <script>
+        $(function () {
+            $('#schoolSelect').on('change', function () {
+                var schoolId = $(this).val();
+                var $branch = $('#branchSelect');
+                $branch.html('');
+                if (schoolId) {
+                    $.getJSON('@Url.Action("GetBranchesBySchool")', { schoolId: schoolId }, function (data) {
+                        $.each(data, function (_, b) { $branch.append('<option value="' + b.id + '">' + b.name + '</option>'); });
+                    });
+                }
+            });
+        });
+    </script>
+    }
+}

@@ -1,0 +1,127 @@
+@model List<SchoolMS.Application.DTOs.SubscriptionPlanDto>
+
+@Html.AntiForgeryToken()
+
+<div class="container-fluid">
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="fas fa-tags me-2"></i>@Localizer["SubscriptionPlans"]</h5>
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#planModal" onclick="openCreate()">
+                <i class="fas fa-plus me-1"></i>@Localizer["AddPlan"]
+            </button>
+        </div>
+        <div class="card-body">
+            <div class="row g-4">
+                @foreach (var p in Model)
+                {
+                    <div class="col-md-4">
+                        <div class="card border shadow-sm h-100">
+                            <div class="card-body text-center">
+                                <h4 class="fw-bold text-primary">@p.PlanName</h4>
+                                <h2 class="fw-bold">$@p.Price</h2>
+                                <p class="text-muted">@p.DurationMonths @Localizer["Months"]</p>
+                                <hr />
+                                <p><i class="fas fa-users me-1"></i>@Localizer["MaxUsers"]: <strong>@p.MaxUsers</strong></p>
+                                <p><i class="fas fa-user-graduate me-1"></i>@Localizer["MaxStudents"]: <strong>@p.MaxStudents</strong></p>
+                                <p><i class="fas fa-school me-1"></i>@Localizer["ActiveSchools"]: <strong>@p.ActiveSchoolCount</strong></p>
+                                <p><i class="fas fa-briefcase me-1"></i>@Localizer["IncludesHR"]: <strong class="@(p.IncludesHrModule ? "text-success" : "text-danger")">@(p.IncludesHrModule ? Localizer["Yes"] : Localizer["No"])</strong></p>
+                                <p><i class="fas fa-book me-1"></i>@Localizer["IncludesCourses"]: <strong class="@(p.IncludesCourses ? "text-success" : "text-danger")">@(p.IncludesCourses ? Localizer["Yes"] : Localizer["No"])</strong></p>
+                                <p><i class="fas fa-broadcast-tower me-1"></i>@Localizer["IncludesLiveStream"]: <strong class="@(p.IncludesLiveStream ? "text-success" : "text-danger")">@(p.IncludesLiveStream ? Localizer["Yes"] : Localizer["No"])</strong></p>
+                                @if (p.IncludesCourses)
+                                {
+                                    <p><i class="fas fa-hdd me-1"></i>@Localizer["StorageLimit"]: <strong class="text-info">@p.StorageLimitGB GB</strong></p>
+                                }
+                            </div>
+                            <div class="card-footer bg-white text-center">
+                                <button class="btn btn-sm btn-outline-primary" onclick="editPlan(@p.Id, '@p.PlanName', @p.Price, @p.MaxUsers, @p.MaxStudents, @p.DurationMonths, @p.IncludesHrModule.ToString().ToLower(), @p.IncludesCourses.ToString().ToLower(), @p.IncludesLiveStream.ToString().ToLower(), @p.StorageLimitGB)"><i class="fas fa-edit me-1"></i>@Localizer["Edit"]</button>
+                                <button class="btn btn-sm btn-outline-danger" onclick="deletePlan(@p.Id)"><i class="fas fa-trash me-1"></i>@Localizer["Delete"]</button>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="planModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header"><h5 class="modal-title" id="planModalTitle">@Localizer["AddPlan"]</h5><button class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body">
+                <input type="hidden" id="planId" />
+                <div class="mb-3"><label class="form-label">@Localizer["PlanName"] *</label><input type="text" class="form-control" id="planName" required /></div>
+                <div class="row g-3">
+                    <div class="col-md-6"><label class="form-label">@Localizer["Price"] *</label><input type="number" step="0.01" class="form-control" id="planPrice" /></div>
+                    <div class="col-md-6"><label class="form-label">@Localizer["DurationMonths"] *</label><input type="number" class="form-control" id="planDuration" /></div>
+                </div>
+                <div class="row g-3 mt-1">
+                    <div class="col-md-6"><label class="form-label">@Localizer["MaxUsers"] *</label><input type="number" class="form-control" id="planMaxUsers" /></div>
+                    <div class="col-md-6"><label class="form-label">@Localizer["MaxStudents"] *</label><input type="number" class="form-control" id="planMaxStudents" /></div>
+                </div>
+                <div class="row g-3 mt-2">
+                    <div class="col-md-4"><div class="form-check"><input type="checkbox" class="form-check-input" id="planIncludesHr" /><label class="form-check-label">@Localizer["IncludesHR"]</label></div></div>
+                    <div class="col-md-4"><div class="form-check"><input type="checkbox" class="form-check-input" id="planIncludesCourses" onchange="toggleStorageField()" /><label class="form-check-label">@Localizer["IncludesCourses"]</label></div></div>
+                    <div class="col-md-4"><div class="form-check"><input type="checkbox" class="form-check-input" id="planIncludesLiveStream" /><label class="form-check-label">@Localizer["IncludesLiveStream"]</label></div></div>
+                </div>
+                <div class="mt-3" id="storageField" style="display:none;">
+                    <label class="form-label"><i class="fas fa-hdd me-1"></i>@Localizer["StorageLimitGB"] *</label>
+                    <div class="input-group">
+                        <input type="number" step="0.1" class="form-control" id="planStorageGB" placeholder="e.g. 50" />
+                        <span class="input-group-text">GB</span>
+                    </div>
+                    <small class="text-muted">@Localizer["StorageLimitDescription"]</small>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-bs-dismiss="modal">@Localizer["Cancel"]</button>
+                <button class="btn btn-primary" onclick="savePlan()"><i class="fas fa-save me-1"></i>@Localizer["Save"]</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    const token = $('input[name="__RequestVerificationToken"]').val();
+    function getHeaders() { return { 'Content-Type': 'application/json', 'RequestVerificationToken': token }; }
+    let isEditMode = false;
+
+    function toggleStorageField() {
+        $('#storageField').toggle($('#planIncludesCourses').is(':checked'));
+    }
+
+    function openCreate() {
+        isEditMode = false; $('#planModalTitle').text('@Localizer["AddPlan"]');
+        $('#planId,#planName,#planPrice,#planDuration,#planMaxUsers,#planMaxStudents,#planStorageGB').val('');
+        $('#planIncludesHr,#planIncludesCourses,#planIncludesLiveStream').prop('checked', false);
+        $('#storageField').hide();
+    }
+    function editPlan(id, name, price, maxUsers, maxStudents, duration, includesHr, includesCourses, includesLiveStream, storageGB) {
+        isEditMode = true; $('#planModalTitle').text('@Localizer["EditPlan"]');
+        $('#planId').val(id); $('#planName').val(name); $('#planPrice').val(price);
+        $('#planMaxUsers').val(maxUsers); $('#planMaxStudents').val(maxStudents); $('#planDuration').val(duration);
+        $('#planIncludesHr').prop('checked', includesHr); $('#planIncludesCourses').prop('checked', includesCourses);
+        $('#planIncludesLiveStream').prop('checked', includesLiveStream); $('#planStorageGB').val(storageGB);
+        toggleStorageField();
+        new bootstrap.Modal('#planModal').show();
+    }
+    function savePlan() {
+        const data = {
+            id: +$('#planId').val() || 0, planName: $('#planName').val(), price: +$('#planPrice').val(),
+            maxUsers: +$('#planMaxUsers').val(), maxStudents: +$('#planMaxStudents').val(), durationMonths: +$('#planDuration').val(),
+            includesHrModule: $('#planIncludesHr').is(':checked'), includesCourses: $('#planIncludesCourses').is(':checked'),
+            includesLiveStream: $('#planIncludesLiveStream').is(':checked'), storageLimitGB: +$('#planStorageGB').val() || 0
+        };
+        $.ajax({ url: isEditMode ? '@Url.Action("UpdatePlan", "Platform")' : '@Url.Action("CreatePlan", "Platform")',
+            method: isEditMode ? 'PUT' : 'POST', headers: getHeaders(), data: JSON.stringify(data),
+            success: () => location.reload(), error: () => toastr.error('Error saving plan')
+        });
+    }
+    function deletePlan(id) {
+        Swal.fire({ title: '@Localizer["DeletePlanConfirm"]', icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33' }).then(r => {
+            if (r.isConfirmed) $.ajax({ url: '/Platform/DeletePlan/' + id, method: 'DELETE', headers: getHeaders(), success: () => location.reload() });
+        });
+    }
+</script>
+}

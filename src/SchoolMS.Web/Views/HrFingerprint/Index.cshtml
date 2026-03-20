@@ -1,0 +1,36 @@
+@model List<SchoolMS.Application.DTOs.HrFingerprintRecordDto>
+@{ ViewData["Title"] = Localizer["Fingerprint"].Value; }
+
+<div class="page-header" data-aos="fade-down">
+    <div><h4 class="page-title"><i class="fas fa-hand-pointer text-primary"></i> @Localizer["Fingerprint"]</h4></div>
+    <div class="page-actions"><a href="@Url.Action("Devices")" class="btn btn-secondary"><i class="fas fa-server me-1"></i>@Localizer["Devices"]</a></div>
+</div>
+
+<div class="filter-panel" data-aos="fade-up">
+    <div class="row g-2 align-items-end">
+        <div class="col-md-3"><label class="form-label">@Localizer["FromDate"]</label><input type="date" id="fromDate" class="form-control" value="@DateTime.UtcNow.ToString("yyyy-MM-dd")" /></div>
+        <div class="col-md-3"><label class="form-label">@Localizer["ToDate"]</label><input type="date" id="toDate" class="form-control" value="@DateTime.UtcNow.ToString("yyyy-MM-dd")" /></div>
+        <div class="col-md-2"><button class="btn btn-filter w-100" onclick="location.href='?fromDate='+$('#fromDate').val()+'&toDate='+$('#toDate').val()"><i class="fas fa-search"></i></button></div>
+    </div>
+</div>
+
+<div class="table-card hover-lift" data-aos="fade-up">
+    <table id="dataTable" class="table table-hover" style="width:100%">
+        <thead><tr><th>#</th><th>@Localizer["Employee"]</th><th>@Localizer["DateTime"]</th><th>@Localizer["Type"]</th><th>@Localizer["Source"]</th></tr></thead>
+        <tbody>
+            @for (int i = 0; i < Model.Count; i++)
+            {
+                var r = Model[i];
+                <tr>
+                    <td>@(i + 1)</td><td>@r.EmployeeName</td><td>@r.RecordDateTime.ToString("dd/MM/yyyy hh:mm tt")</td>
+                    <td><span class="badge @(r.Type == FingerprintType.CheckIn ? "bg-success" : "bg-warning")">@r.Type</span></td>
+                    <td><span class="badge bg-info">@r.Source</span></td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@section Scripts {
+<script>$(function () { $('#dataTable').DataTable({ responsive: true, pageLength: 50, dom: 'rtip', order: [[2, 'desc']] }); });</script>
+}

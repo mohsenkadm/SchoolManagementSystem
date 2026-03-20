@@ -1,0 +1,523 @@
+﻿@{
+    var isRtl = System.Globalization.CultureInfo.CurrentUICulture.TextInfo.IsRightToLeft;
+    var langCode = System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
+    var dir = isRtl ? "rtl" : "ltr";
+}
+<!DOCTYPE html>
+<html lang="@langCode" dir="@dir">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - @Localizer["AppName"]</title>
+    <script>
+        (function () {
+            var t = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', t);
+        })();
+    </script>
+    @if (isRtl)
+    {
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.rtl.min.css" />
+    }
+    else
+    {
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
+    }
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+    <link rel="stylesheet" href="https://unpkg.com/aos@2.3.1/dist/aos.css" />
+    <link rel="stylesheet" href="~/css/design-tokens.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/advanced-components.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/dashboard.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/pages.css" asp-append-version="true" />
+    @if (isRtl)
+    {
+        <link rel="stylesheet" href="~/css/rtl.css" asp-append-version="true" />
+    }
+    @await RenderSectionAsync("Styles", required: false)
+</head>
+<body>
+    @if (User.Identity?.IsAuthenticated == true)
+    {
+        <!-- Sidebar -->
+        <nav id="sidebar" class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo-wrapper">
+                    <i class="fas fa-graduation-cap fa-2x text-white"></i>
+                    <span class="logo-text ms-2">@Localizer["SchoolMS"]</span>
+                </div>
+                <button class="btn btn-link text-white sidebar-toggle d-lg-none" id="sidebarClose">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <ul class="sidebar-nav">
+                @if (User.IsInRole("SuperAdmin"))
+                {
+                    <li class="nav-heading"><i class="fas fa-crown me-1 text-warning"></i>@Localizer["PlatformAdmin"]</li>
+                    <li class="nav-item">
+                        <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Platform" && ViewContext.RouteData.Values["action"]?.ToString() == "Index" ? "active" : "")" href="@Url.Action("Index", "Platform")">
+                            <i class="fas fa-tachometer-alt"></i><span>@Localizer["PlatformDashboard"]</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Platform" && ViewContext.RouteData.Values["action"]?.ToString() == "Schools" ? "active" : "")" href="@Url.Action("Schools", "Platform")">
+                            <i class="fas fa-school"></i><span>@Localizer["ManageSchools"]</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Platform" && ViewContext.RouteData.Values["action"]?.ToString() == "Plans" ? "active" : "")" href="@Url.Action("Plans", "Platform")">
+                            <i class="fas fa-tags"></i><span>@Localizer["SubscriptionPlans"]</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "RegistrationRequests" ? "active" : "")" href="@Url.Action("Index", "RegistrationRequests")">
+                            <i class="fas fa-clipboard-list"></i><span>@Localizer["RegistrationRequests"]</span>
+                        </a>
+                    </li>
+                    <li class="nav-heading">@Localizer["SchoolManagement"]</li>
+                }
+                <li class="nav-item">
+                    <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Home" ? "active" : "")" href="@Url.Action("Index", "Home")">
+                        <i class="fas fa-tachometer-alt"></i><span>@Localizer["Dashboard"]</span>
+                    </a>
+                </li>
+                <li class="nav-heading">@Localizer["Academic"]</li>
+                <li class="nav-item">
+                    <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Students" ? "active" : "")" href="@Url.Action("Index", "Students")">
+                        <i class="fas fa-user-graduate"></i><span>@Localizer["Students"]</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Teachers" ? "active" : "")" href="@Url.Action("Index", "Teachers")">
+                        <i class="fas fa-chalkboard-teacher"></i><span>@Localizer["Teachers"]</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Subjects" ? "active" : "")" href="@Url.Action("Index", "Subjects")">
+                        <i class="fas fa-book"></i><span>@Localizer["Subjects"]</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Divisions" ? "active" : "")" href="@Url.Action("Index", "Divisions")">
+                        <i class="fas fa-layer-group"></i><span>@Localizer["Divisions"]</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Grades" ? "active" : "")" href="@Url.Action("Index", "Grades")">
+                        <i class="fas fa-star"></i><span>@Localizer["Grades"]</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "TeacherAssignments" ? "active" : "")" href="@Url.Action("Index", "TeacherAssignments")">
+                        <i class="fas fa-tasks"></i><span>@Localizer["TeacherAssignments"]</span>
+                    </a>
+                </li>
+                <li class="nav-heading">@Localizer["Schedule"]</li>
+                <li class="nav-item">
+                    <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "ExamSchedule" ? "active" : "")" href="@Url.Action("Index", "ExamSchedule")">
+                        <i class="fas fa-clipboard-list"></i><span>@Localizer["ExamSchedule"]</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "ExamTypes" ? "active" : "")" href="@Url.Action("Index", "ExamTypes")">
+                        <i class="fas fa-file-alt"></i><span>@Localizer["ExamTypes"]</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "WeeklySchedule" ? "active" : "")" href="@Url.Action("Index", "WeeklySchedule")">
+                        <i class="fas fa-calendar-alt"></i><span>@Localizer["WeeklyTimetable"]</span>
+                    </a>
+                </li>
+                <li class="nav-heading">@Localizer["Finance"]</li>
+                <li class="nav-item">
+                    <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Installments" && ViewContext.RouteData.Values["action"]?.ToString() == "Index" ? "active" : "")" href="@Url.Action("Index", "Installments")">
+                        <i class="fas fa-money-bill-wave"></i><span>@Localizer["Installments"]</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Installments" && ViewContext.RouteData.Values["action"]?.ToString() == "PaymentsReport" ? "active" : "")" href="@Url.Action("PaymentsReport", "Installments")">
+                        <i class="fas fa-file-invoice"></i><span>@Localizer["PaymentsReport"]</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Installments" && ViewContext.RouteData.Values["action"]?.ToString() == "StudentReport" ? "active" : "")" href="@Url.Action("StudentReport", "Installments")">
+                        <i class="fas fa-user-graduate"></i><span>@Localizer["StudentFeeReport"]</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Salaries" ? "active" : "")" href="@Url.Action("Index", "Salaries")">
+                        <i class="fas fa-wallet"></i><span>@Localizer["Salaries"]</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Expenses" ? "active" : "")" href="@Url.Action("Index", "Expenses")">
+                        <i class="fas fa-receipt"></i><span>@Localizer["Expenses"]</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "ExpenseTypes" ? "active" : "")" href="@Url.Action("Index", "ExpenseTypes")">
+                        <i class="fas fa-tags"></i><span>@Localizer["ExpenseTypes"]</span>
+                    </a>
+                </li>
+                <li class="nav-heading">@Localizer["Operations"]</li>
+                <li class="nav-item">
+                    <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Attendance" && ViewContext.RouteData.Values["action"]?.ToString() == "Index" ? "active" : "")" href="@Url.Action("Index", "Attendance")">
+                        <i class="fas fa-fingerprint"></i><span>@Localizer["Attendance"]</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Attendance" && ViewContext.RouteData.Values["action"]?.ToString() == "Report" ? "active" : "")" href="@Url.Action("Report", "Attendance")">
+                        <i class="fas fa-clipboard-list"></i><span>@Localizer["AttendanceReport"]</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "StudentGrades" ? "active" : "")" href="@Url.Action("Index", "StudentGrades")">
+                        <i class="fas fa-chart-bar"></i><span>@Localizer["StudentGrades"]</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Leaves" ? "active" : "")" href="@Url.Action("Index", "Leaves")">
+                        <i class="fas fa-calendar-minus"></i><span>@Localizer["LeaveRequests"]</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Homework" ? "active" : "")" href="@Url.Action("Index", "Homework")">
+                        <i class="fas fa-pencil-alt"></i><span>@Localizer["Homework"]</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Quizzes" ? "active" : "")" href="@Url.Action("Index", "Quizzes")">
+                        <i class="fas fa-question-circle"></i><span>@Localizer["Quizzes"]</span>
+                    </a>
+                </li>
+                <li class="nav-heading">@Localizer["Communication"]</li>
+                <li class="nav-item">
+                    <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Notifications" ? "active" : "")" href="@Url.Action("Index", "Notifications")">
+                        <i class="fas fa-bell"></i><span>@Localizer["Notifications"]</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Chat" ? "active" : "")" href="@Url.Action("Index", "Chat")">
+                        <i class="fas fa-comments"></i><span>@Localizer["Chat"]</span>
+                    </a>
+                </li>
+                <li class="nav-heading">@Localizer["OnlinePlatform"]</li>
+                <li class="nav-item">
+                    <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Courses" ? "active" : "")" href="@Url.Action("Index", "Courses")">
+                        <i class="fas fa-graduation-cap"></i><span>@Localizer["Courses"]</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "LiveStreams" ? "active" : "")" href="@Url.Action("Index", "LiveStreams")">
+                        <i class="fas fa-broadcast-tower"></i><span>@Localizer["LiveStreams"]</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "OnlineSubscriptionPlans" ? "active" : "")" href="@Url.Action("Index", "OnlineSubscriptionPlans")">
+                        <i class="fas fa-tags"></i><span>@Localizer["OnlineSubscriptionPlans"]</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "StudentSubscriptions" ? "active" : "")" href="@Url.Action("Index", "StudentSubscriptions")">
+                        <i class="fas fa-id-card"></i><span>@Localizer["StudentSubscriptions"]</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "PromoCodes" ? "active" : "")" href="@Url.Action("Index", "PromoCodes")">
+                        <i class="fas fa-ticket-alt"></i><span>@Localizer["PromoCodes"]</span>
+                    </a>
+                </li>
+                <li class="nav-heading">@Localizer["Administration"]</li>
+                <li class="nav-item">
+                    <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Branches" ? "active" : "")" href="@Url.Action("Index", "Branches")">
+                        <i class="fas fa-building"></i><span>@Localizer["Branches"]</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Users" ? "active" : "")" href="@Url.Action("Index", "Users")">
+                        <i class="fas fa-users-cog"></i><span>@Localizer["UserManagement"]</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Promotion" ? "active" : "")" href="@Url.Action("Index", "Promotion")">
+                        <i class="fas fa-arrow-up"></i><span>@Localizer["Promotion"]</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Carousel" ? "active" : "")" href="@Url.Action("Index", "Carousel")">
+                        <i class="fas fa-images"></i><span>@Localizer["CarouselImages"]</span>
+                    </a>
+                </li>
+                <li class="nav-heading">@Localizer["NewModules"]</li>
+                <li class="nav-item">
+                    <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Parents" ? "active" : "")" href="@Url.Action("Index", "Parents")">
+                        <i class="fas fa-users"></i><span>@Localizer["Parents"]</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Events" ? "active" : "")" href="@Url.Action("Index", "Events")">
+                        <i class="fas fa-calendar-alt"></i><span>@Localizer["Events"]</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Announcements" ? "active" : "")" href="@Url.Action("Index", "Announcements")">
+                        <i class="fas fa-bullhorn"></i><span>@Localizer["Announcements"]</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Behavior" ? "active" : "")" href="@Url.Action("Index", "Behavior")">
+                        <i class="fas fa-star"></i><span>@Localizer["Behavior"]</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Health" ? "active" : "")" href="@Url.Action("Index", "Health")">
+                        <i class="fas fa-heartbeat"></i><span>@Localizer["HealthRecords"]</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Complaints" ? "active" : "")" href="@Url.Action("Index", "Complaints")">
+                        <i class="fas fa-comment-dots"></i><span>@Localizer["Complaints"]</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Visitors" ? "active" : "")" href="@Url.Action("Index", "Visitors")">
+                        <i class="fas fa-id-badge"></i><span>@Localizer["Visitors"]</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Library" ? "active" : "")" href="@Url.Action("Index", "Library")">
+                        <i class="fas fa-book-open"></i><span>@Localizer["Library"]</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Transport" ? "active" : "")" href="@Url.Action("Index", "Transport")">
+                        <i class="fas fa-bus"></i><span>@Localizer["Transport"]</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Assets" ? "active" : "")" href="@Url.Action("Index", "Assets")">
+                        <i class="fas fa-boxes"></i><span>@Localizer["Assets"]</span>
+                    </a>
+                </li>
+                <li class="nav-heading">@Localizer["Reports"]</li>
+                <li class="nav-item">
+                    <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Reports" ? "active" : "")" href="@Url.Action("Analytics", "Reports")">
+                        <i class="fas fa-chart-line"></i><span>@Localizer["SystemAnalytics"]</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "AuditLog" ? "active" : "")" href="@Url.Action("Index", "AuditLog")">
+                        <i class="fas fa-history"></i><span>@Localizer["AuditLog"]</span>
+                    </a>
+                </li>
+                @{ var ctrl = ViewContext.RouteData.Values["controller"]?.ToString() ?? ""; }
+                @if (ctrl.StartsWith("Hr") || true)
+                {
+                <li class="nav-heading"><i class="fas fa-id-card-alt me-1 text-info"></i>@Localizer["HrModule"]</li>
+                <li class="nav-item">
+                    <a class="nav-link @(ctrl == "HrDashboard" ? "active" : "")" href="@Url.Action("Index", "HrDashboard")">
+                        <i class="fas fa-tachometer-alt"></i><span>@Localizer["HrDashboard"]</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link @(ctrl == "HrEmployees" ? "active" : "")" href="@Url.Action("Index", "HrEmployees")">
+                        <i class="fas fa-users"></i><span>@Localizer["Employees"]</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link @(ctrl == "HrDepartments" ? "active" : "")" href="@Url.Action("Index", "HrDepartments")">
+                        <i class="fas fa-sitemap"></i><span>@Localizer["Departments"]</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link @(ctrl == "HrJobTitles" ? "active" : "")" href="@Url.Action("Index", "HrJobTitles")">
+                        <i class="fas fa-briefcase"></i><span>@Localizer["JobTitles"]</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link @(ctrl == "HrJobGrades" ? "active" : "")" href="@Url.Action("Index", "HrJobGrades")">
+                        <i class="fas fa-layer-group"></i><span>@Localizer["JobGrades"]</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link @(ctrl == "HrContracts" ? "active" : "")" href="@Url.Action("Index", "HrContracts")">
+                        <i class="fas fa-file-contract"></i><span>@Localizer["Contracts"]</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link @(ctrl == "HrWorkShifts" ? "active" : "")" href="@Url.Action("Index", "HrWorkShifts")">
+                        <i class="fas fa-clock"></i><span>@Localizer["WorkShifts"]</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link @(ctrl == "HrAttendance" ? "active" : "")" href="@Url.Action("Index", "HrAttendance")">
+                        <i class="fas fa-fingerprint"></i><span>@Localizer["HrAttendance"]</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link @(ctrl == "HrFingerprint" ? "active" : "")" href="@Url.Action("Index", "HrFingerprint")">
+                        <i class="fas fa-hand-pointer"></i><span>@Localizer["Fingerprint"]</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link @(ctrl == "HrLeaves" ? "active" : "")" href="@Url.Action("Index", "HrLeaves")">
+                        <i class="fas fa-calendar-minus"></i><span>@Localizer["HrLeaves"]</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link @(ctrl == "HrOvertime" ? "active" : "")" href="@Url.Action("Index", "HrOvertime")">
+                        <i class="fas fa-business-time"></i><span>@Localizer["Overtime"]</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link @(ctrl == "HrSalary" ? "active" : "")" href="@Url.Action("Payroll", "HrSalary")">
+                        <i class="fas fa-money-bill-wave"></i><span>@Localizer["HrSalary"]</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link @(ctrl == "HrPromotions" ? "active" : "")" href="@Url.Action("Index", "HrPromotions")">
+                        <i class="fas fa-arrow-up"></i><span>@Localizer["HrPromotions"]</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link @(ctrl == "HrPerformance" ? "active" : "")" href="@Url.Action("Reviews", "HrPerformance")">
+                        <i class="fas fa-chart-line"></i><span>@Localizer["Performance"]</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link @(ctrl == "HrTraining" ? "active" : "")" href="@Url.Action("Index", "HrTraining")">
+                        <i class="fas fa-chalkboard-teacher"></i><span>@Localizer["Training"]</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link @(ctrl == "HrDisciplinary" ? "active" : "")" href="@Url.Action("Index", "HrDisciplinary")">
+                        <i class="fas fa-gavel"></i><span>@Localizer["Disciplinary"]</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link @(ctrl == "HrEndOfService" ? "active" : "")" href="@Url.Action("Index", "HrEndOfService")">
+                        <i class="fas fa-door-open"></i><span>@Localizer["EndOfService"]</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link @(ctrl == "HrSettings" ? "active" : "")" href="@Url.Action("Index", "HrSettings")">
+                        <i class="fas fa-cog"></i><span>@Localizer["HrSettings"]</span>
+                    </a>
+                </li>
+                }
+            </ul>
+        </nav>
+
+        <!-- Main Content -->
+        <div id="content">
+            <!-- Top Navbar -->
+            <nav class="top-navbar">
+                <div class="d-flex align-items-center">
+                    <button class="btn btn-link text-dark sidebar-toggle" id="sidebarToggle">
+                        <i class="fas fa-bars fa-lg"></i>
+                    </button>
+                    <h5 class="page-title mb-0 ms-2">@ViewData["Title"]</h5>
+                </div>
+                <div class="d-flex align-items-center gap-3">
+                    <!-- Dark/Light Mode Toggle -->
+                    <button class="btn btn-outline-secondary btn-sm" id="themeToggle" onclick="toggleTheme()" title="@Localizer["DarkMode"]">
+                        <i class="fas fa-moon" id="themeIcon"></i>
+                    </button>
+                    <!-- Language Switcher -->
+                    <div class="dropdown">
+                        <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-globe me-1"></i>@(langCode == "ar" ? "العربية" : "English")
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end shadow">
+                            <li>
+                                <a class="dropdown-item @(langCode == "en" ? "active" : "")"
+                                   href="@Url.Action("SetLanguage", "Language", new { culture = "en", returnUrl = Context.Request.Path })">
+                                    <span class="fi fi-us me-2"></span>English
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item @(langCode == "ar" ? "active" : "")"
+                                   href="@Url.Action("SetLanguage", "Language", new { culture = "ar", returnUrl = Context.Request.Path })">
+                                    <span class="fi fi-sa me-2"></span>العربية
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="notification-bell position-relative">
+                        <i class="fas fa-bell fa-lg text-muted"></i>
+                        <span class="badge bg-danger notification-count">0</span>
+                    </div>
+                    <div class="dropdown">
+                        <a class="d-flex align-items-center text-decoration-none dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            <div class="avatar-sm bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-2">
+                                <i class="fas fa-user"></i>
+                            </div>
+                            <span class="d-none d-md-inline text-dark">@User.Identity?.Name</span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end shadow">
+                            <li><a class="dropdown-item" href="#"><i class="fas fa-user me-2"></i>@Localizer["Profile"]</a></li>
+                            <li><hr class="dropdown-divider" /></li>
+                            <li>
+                                <form asp-controller="Account" asp-action="Logout" method="post">
+                                    <button type="submit" class="dropdown-item text-danger">
+                                        <i class="fas fa-sign-out-alt me-2"></i>@Localizer["SignOut"]
+                                    </button>
+                                </form>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </nav>
+
+            <!-- Page Content -->
+            <div class="content-wrapper animate__animated animate__fadeInUp">
+                @RenderBody()
+            </div>
+        </div>
+    }
+    else
+    {
+        @RenderBody()
+    }
+
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.print.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    <script>
+        // Dark/Light mode toggle
+        function toggleTheme() {
+            const html = document.documentElement;
+            const current = html.getAttribute('data-theme');
+            const next = current === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', next);
+            localStorage.setItem('theme', next);
+            updateThemeIcon(next);
+        }
+        function updateThemeIcon(theme) {
+            const icon = document.getElementById('themeIcon');
+            if (icon) {
+                icon.className = theme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+            }
+        }
+        document.addEventListener('DOMContentLoaded', function() {
+            updateThemeIcon(document.documentElement.getAttribute('data-theme') || 'light');
+        });
+    </script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

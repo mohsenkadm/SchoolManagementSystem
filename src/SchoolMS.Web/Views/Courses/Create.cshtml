@@ -1,0 +1,106 @@
+@using SchoolMS.Application.DTOs
+@{
+    var isEdit = Model != null;
+    var course = isEdit ? (CourseDto)Model : null;
+    var subjects = ViewBag.Subjects as List<SubjectDto> ?? new();
+    var teachers = ViewBag.Teachers as List<TeacherDto> ?? new();
+    var isSuperAdmin = (bool)(ViewBag.IsSuperAdmin ?? false);
+    var schools = ViewBag.Schools as List<SchoolDto> ?? new();
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4" data-aos="fade-down">
+    <h4 class="mb-0">
+        <i class="fas @(isEdit ? "fa-edit" : "fa-plus-circle") me-2 text-primary"></i>
+        @(isEdit ? Localizer["EditCourse"] : Localizer["AddCourse"])
+    </h4>
+    <a href="@Url.Action("Index")" class="btn btn-secondary"><i class="fas fa-arrow-left me-1"></i>@Localizer["Back"]</a>
+</div>
+
+<div class="dashboard-card card p-4" data-aos="fade-up">
+    <form asp-action="@(isEdit ? "Edit" : "Create")" method="post" enctype="multipart/form-data">
+        @Html.AntiForgeryToken()
+        @if (isEdit)
+        {
+            <input type="hidden" name="Id" value="@course!.Id" />
+        }
+
+        <div class="row g-3">
+            @if (isSuperAdmin)
+            {
+                <div class="col-md-12">
+                    <label class="form-label">@Localizer["School"] *</label>
+                    <select name="SchoolId" id="schoolSelect" class="form-select select2" required>
+                        <option value="">-- @Localizer["SelectSchool"] --</option>
+                        @foreach (var s in schools)
+                        {
+                            <option value="@s.Id">@s.Name</option>
+                        }
+                    </select>
+                </div>
+            }
+            <div class="col-md-8">
+                <label class="form-label">@Localizer["Title"] *</label>
+                <input type="text" name="Title" class="form-control" value="@course?.Title" required />
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">@Localizer["Published"]</label>
+                <div class="form-check form-switch mt-2">
+                    <input class="form-check-input" type="checkbox" name="IsPublished" value="true"
+                           @(course?.IsPublished == true ? "checked" : "") />
+                    <label class="form-check-label">@Localizer["Active"]</label>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">@Localizer["Subject"] *</label>
+                <select name="SubjectId" class="form-select select2" required>
+                    <option value="">-- @Localizer["SelectSubject"] --</option>
+                    @foreach (var s in subjects)
+                    {
+                        <option value="@s.Id" selected="@(course?.SubjectId == s.Id)">@s.SubjectName</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">@Localizer["Teacher"] *</label>
+                <select name="TeacherId" class="form-select select2" required>
+                    <option value="">-- @Localizer["SelectTeacher"] --</option>
+                    @foreach (var t in teachers)
+                    {
+                        <option value="@t.Id" selected="@(course?.TeacherId == t.Id)">@t.FullName</option>
+                    }
+                </select>
+            </div>
+            <div class="col-12">
+                <label class="form-label">@Localizer["Description"]</label>
+                <textarea name="Description" class="form-control" rows="3">@course?.Description</textarea>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label"><i class="fas fa-image me-1 text-info"></i>@Localizer["ThumbnailImage"]</label>
+                <input type="file" name="ThumbnailImageFile" class="form-control" accept="image/*" />
+                @if (isEdit && !string.IsNullOrEmpty(course?.ThumbnailImage))
+                {
+                    <input type="hidden" name="ThumbnailImage" value="@course.ThumbnailImage" />
+                    <div class="mt-2">
+                        <img src="@course.ThumbnailImage" alt="Thumbnail" style="max-height:100px;border-radius:8px;object-fit:cover;" />
+                    </div>
+                }
+            </div>
+            <div class="col-md-6">
+                <label class="form-label"><i class="fas fa-panorama me-1 text-primary"></i>@Localizer["BackgroundImage"]</label>
+                <input type="file" name="BackgroundImageFile" class="form-control" accept="image/*" />
+                @if (isEdit && !string.IsNullOrEmpty(course?.BackgroundImage))
+                {
+                    <input type="hidden" name="BackgroundImage" value="@course.BackgroundImage" />
+                    <div class="mt-2">
+                        <img src="@course.BackgroundImage" alt="Background" style="max-height:100px;border-radius:8px;object-fit:cover;" />
+                    </div>
+                }
+            </div>
+        </div>
+
+        <div class="mt-4 d-flex gap-2">
+            <button type="submit" class="btn btn-accent"><i class="fas fa-save me-1"></i>@Localizer["Save"]</button>
+            <a href="@Url.Action("Index")" class="btn btn-secondary">@Localizer["Cancel"]</a>
+        </div>
+    </form>
+</div>

@@ -1,0 +1,43 @@
+﻿@model ErrorViewModel
+@{
+    ViewData["Title"] = "خطأ";
+}
+
+<nav class="website-navbar scrolled" style="position:fixed">
+    <div class="container">
+        <a href="/" class="navbar-brand">
+            <i class="fas fa-graduation-cap" style="color:#6366f1;font-size:1.6rem;"></i>
+            <span class="gradient-text">SchoolMS</span>
+        </a>
+        <div class="nav-actions">
+            <a href="/" class="btn-glass-website">الصفحة الرئيسية</a>
+        </div>
+    </div>
+</nav>
+
+<section style="padding-top:140px;min-height:80vh;text-align:center;">
+    <div class="container" style="max-width:600px;">
+        <div style="font-size:5rem;margin-bottom:16px;">⚠️</div>
+        <h1 class="section-title">حدث <span class="gradient-text">خطأ</span></h1>
+        <p style="color:#94a3b8;font-size:1.1rem;margin-bottom:32px;">عذراً، حدث خطأ أثناء معالجة طلبك. يرجى المحاولة مرة أخرى.</p>
+        @if (Model.ShowRequestId)
+        {
+            <p style="color:#64748b;font-size:0.85rem;">
+                معرّف الطلب: <code style="color:#6366f1;">@Model.RequestId</code>
+            </p>
+        }
+        <a href="/" class="btn-hero-primary" style="display:inline-flex;">
+            <i class="fas fa-home"></i>
+            <span>العودة للرئيسية</span>
+        </a>
+    </div>
+</section>
+
+<footer class="website-footer">
+    <div class="container">
+        <div class="footer-bottom">
+            <p>© 2026 SchoolMS. جميع الحقوق محفوظة.</p>
+            <p>صنع بـ ❤️ في العراق</p>
+        </div>
+    </div>
+</footer>

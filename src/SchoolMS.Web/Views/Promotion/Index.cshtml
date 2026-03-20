@@ -1,0 +1,82 @@
+@using SchoolMS.Application.DTOs
+@{
+    ViewData["Title"] = Localizer["Promotion"].Value;
+    var academicYears = ViewBag.AcademicYears as List<AcademicYearDto> ?? new();
+    var classRooms = ViewBag.ClassRooms as List<ClassRoomDto> ?? new();
+}
+
+<div class="page-header" data-aos="fade-down">
+    <div>
+        <h4 class="page-title"><i class="fas fa-level-up-alt text-primary"></i>@Localizer["Promotion"]</h4>
+    </div>
+</div>
+
+<div class="dashboard-card card p-4 mb-4 hover-lift" data-aos="fade-up">
+    <h5 class="mb-3"><i class="fas fa-exchange-alt me-2"></i>Promote Students</h5>
+    <form id="promotionForm">@Html.AntiForgeryToken()
+        <div class="row g-3 align-items-end">
+            <div class="col-md-3">
+                <label class="form-label">From Academic Year</label>
+                <select class="form-select" id="fromAcademicYearId">@foreach(var y in academicYears){<option value="@y.Id">@y.YearName</option>}</select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">From Class</label>
+                <select class="form-select" id="fromClassRoomId">@foreach(var c in classRooms){<option value="@c.Id">@c.GradeName - @c.DivisionName</option>}</select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">To Academic Year</label>
+                <select class="form-select" id="toAcademicYearId">@foreach(var y in academicYears){<option value="@y.Id">@y.YearName</option>}</select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">To Class</label>
+                <select class="form-select" id="toClassRoomId">@foreach(var c in classRooms){<option value="@c.Id">@c.GradeName - @c.DivisionName</option>}</select>
+            </div>
+        </div>
+        <div class="mt-4 d-flex gap-2">
+            <button type="button" class="btn btn-accent" onclick="loadStudents()"><i class="fas fa-search me-1"></i>Load Students</button>
+            <button type="button" class="btn btn-success" onclick="promoteSelected()" id="promoteBtn" disabled><i class="fas fa-level-up-alt me-1"></i>Promote Selected</button>
+        </div>
+    </form>
+</div>
+
+<div class="table-card hover-lift" data-aos="fade-up" id="studentSection" style="display:none">
+    <h5 class="mb-3">Students to Promote</h5>
+    <div class="mb-2"><label><input type="checkbox" id="selectAll" onchange="$('.student-check').prop('checked',this.checked)"> Select All</label></div>
+    <table class="table table-hover" id="studentTable" style="width:100%">
+        <thead><tr><th><input type="checkbox" onchange="$('.student-check').prop('checked',this.checked)"></th><th>Name</th><th>Badge</th><th>Current Grade</th></tr></thead>
+        <tbody></tbody>
+    </table>
+</div>
+
+@section Scripts {
+<script>
+    var token=$('input[name="__RequestVerificationToken"]').val();
+    function loadStudents(){
+        $.ajax({
+            url:'@Url.Action("GetStudents")',type:'POST',contentType:'application/json',
+            data:JSON.stringify({fromAcademicYearId:+$('#fromAcademicYearId').val(),fromClassRoomId:+$('#fromClassRoomId').val()}),
+            headers:{'RequestVerificationToken':token},
+            success:function(data){
+                var tbody=$('#studentTable tbody');tbody.empty();
+                if(!data.length){toastr.info('No students found');$('#studentSection').hide();return;}
+                data.forEach(function(s){
+                    tbody.append('<tr><td><input type="checkbox" class="student-check" value="'+s.studentId+'"></td><td>'+s.fullName+'</td><td>'+(s.badgeCardNumber||'-')+'</td><td>'+(s.gradeName||'')+' - '+(s.divisionName||'')+'</td></tr>');
+                });
+                $('#studentSection').show();$('#promoteBtn').prop('disabled',false);
+            },
+            error:function(x){toastr.error(x.responseText||'Error');}
+        });
+    }
+    function promoteSelected(){
+        var ids=[];$('.student-check:checked').each(function(){ids.push(+$(this).val());});
+        if(!ids.length){toastr.warning('Please select students to promote.');return;}
+        $.ajax({
+            url:'@Url.Action("Promote")',type:'POST',contentType:'application/json',
+            data:JSON.stringify({studentIds:ids,toAcademicYearId:+$('#toAcademicYearId').val(),toClassRoomId:+$('#toClassRoomId').val()}),
+            headers:{'RequestVerificationToken':token},
+            success:function(d){toastr.success(d.count+' students promoted successfully!');$('#studentSection').hide();},
+            error:function(x){toastr.error(x.responseText||'Error');}
+        });
+    }
+</script>
+}

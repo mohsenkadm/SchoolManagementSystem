@@ -1,0 +1,380 @@
+@using SchoolMS.Application.DTOs
+@{
+    var plans = ViewBag.Plans as List<SubscriptionPlanDto> ?? new();
+    var schools = ViewBag.Schools as List<SchoolDto> ?? new();
+    var storageRequests = ViewBag.StorageRequests as List<StorageRequestDto> ?? new();
+}
+
+@Html.AntiForgeryToken()
+
+<div class="page-header" data-aos="fade-down">
+    <div>
+        <h4 class="page-title"><i class="fas fa-file-contract text-primary"></i> @Localizer["SchoolSubscriptions"]</h4>
+    </div>
+</div>
+
+<!-- Assign Subscription -->
+<div class="dashboard-card card p-4 mb-4" data-aos="fade-up">
+    <h6 class="mb-3"><i class="fas fa-plus-circle me-2 text-success"></i>@Localizer["AssignSubscription"]</h6>
+    <div class="row g-3 align-items-end">
+        <div class="col-md-4">
+            <label class="form-label">@Localizer["School"] *</label>
+            <select id="assignSchool" class="form-select">
+                <option value="">@Localizer["SelectSchool"]</option>
+                @foreach (var s in schools)
+                {
+                    <option value="@s.Id">@s.Name</option>
+                }
+            </select>
+        </div>
+        <div class="col-md-4">
+            <label class="form-label">@Localizer["SubscriptionPlan"] *</label>
+            <select id="assignPlan" class="form-select">
+                <option value="">@Localizer["SelectPlan"]</option>
+                @foreach (var p in plans)
+                {
+                    <option value="@p.Id">@p.PlanName ($@p.Price / @p.DurationMonths mo) @(p.IncludesCourses ? $"— {p.StorageLimitGB} GB" : "")</option>
+                }
+            </select>
+        </div>
+        <div class="col-md-4">
+            <button class="btn btn-success w-100" onclick="assignSub()"><i class="fas fa-check me-1"></i>@Localizer["Assign"]</button>
+        </div>
+    </div>
+</div>
+
+<!-- View School Subscriptions -->
+<div class="dashboard-card card p-4 mb-4" data-aos="fade-up">
+    <h6 class="mb-3"><i class="fas fa-search me-2 text-info"></i>@Localizer["ViewSubscriptions"]</h6>
+    <div class="row g-3 align-items-end mb-3">
+        <div class="col-md-6">
+            <select id="viewSchool" class="form-select" onchange="loadSubscriptions()">
+                <option value="">@Localizer["SelectSchool"]</option>
+                @foreach (var s in schools)
+                {
+                    <option value="@s.Id">@s.Name @(s.CurrentPlan != null ? $"({s.CurrentPlan})" : "")</option>
+                }
+            </select>
+        </div>
+        <div class="col-md-6" id="quotaInfo" style="display:none;"></div>
+    </div>
+    <div id="subsContainer"></div>
+</div>
+
+<!-- Add Extra Storage Modal -->
+<div class="modal fade" id="extraStorageModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-hdd me-2 text-info"></i>@Localizer["AddExtraStorage"]</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="extraStorageSubId" />
+                <div class="mb-3">
+                    <label class="form-label">@Localizer["ExtraGB"] *</label>
+                    <input type="number" id="extraGB" class="form-control" min="1" step="1" value="10" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">@Localizer["PricePerGB"] ($) *</label>
+                    <input type="number" id="pricePerGB" class="form-control" min="0" step="0.01" value="0.50" />
+                </div>
+                <div class="p-3" style="background:#f0f9ff;border-radius:8px;">
+                    <strong>@Localizer["Total"]: $<span id="extraTotalPrice">5.00</span></strong>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@Localizer["Cancel"]</button>
+                <button type="button" class="btn btn-info" onclick="submitExtraStorage()"><i class="fas fa-plus me-1"></i>@Localizer["Add"]</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Pending Storage Requests -->
+<div class="dashboard-card card p-4 mb-4" data-aos="fade-up">
+    <h6 class="mb-3"><i class="fas fa-hdd me-2 text-warning"></i>@Localizer["PendingStorageRequests"] <span class="badge bg-warning">@storageRequests.Count</span></h6>
+    @if (storageRequests.Count > 0)
+    {
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>@Localizer["School"]</th>
+                        <th>@Localizer["Plan"]</th>
+                        <th>@Localizer["RequestedGB"]</th>
+                        <th>@Localizer["PricePerGB"]</th>
+                        <th>@Localizer["TotalPrice"]</th>
+                        <th>@Localizer["Notes"]</th>
+                        <th>@Localizer["Date"]</th>
+                        <th>@Localizer["Actions"]</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var r in storageRequests)
+                    {
+                        <tr>
+                            <td>@r.SchoolName</td>
+                            <td>@r.PlanName</td>
+                            <td><strong>@r.RequestedGB GB</strong></td>
+                            <td>$@r.PricePerGB</td>
+                            <td><strong>$@r.TotalPrice</strong></td>
+                            <td>@r.Notes</td>
+                            <td>@r.CreatedAt.ToString("MMM dd, yyyy")</td>
+                            <td>
+                                <div class="d-flex gap-1">
+                                    <button class="btn btn-sm btn-success" onclick="approveRequest(@r.Id)"><i class="fas fa-check me-1"></i>@Localizer["Approve"]</button>
+                                    <button class="btn btn-sm btn-danger" onclick="rejectRequest(@r.Id)"><i class="fas fa-times me-1"></i>@Localizer["Reject"]</button>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-info mb-0"><i class="fas fa-info-circle me-1"></i>@Localizer["NoPendingStorageRequests"]</div>
+    }
+</div>
+
+<!-- Quick Add Extra Storage to School -->
+<div class="dashboard-card card p-4 mb-4" data-aos="fade-up">
+    <h6 class="mb-3"><i class="fas fa-plus-circle me-2 text-info"></i>@Localizer["AddExtraStorageToSchool"]</h6>
+    <div class="row g-3 align-items-end">
+        <div class="col-md-3">
+            <label class="form-label">@Localizer["School"] *</label>
+            <select id="extraSchoolSelect" class="form-select" onchange="loadSchoolActiveSub()">
+                <option value="">@Localizer["SelectSchool"]</option>
+                @foreach (var s in schools)
+                {
+                    <option value="@s.Id">@s.Name</option>
+                }
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label class="form-label">@Localizer["ActiveSubscription"]</label>
+            <select id="extraSubSelect" class="form-select" disabled>
+                <option value="">--</option>
+            </select>
+        </div>
+        <div class="col-md-2">
+            <label class="form-label">@Localizer["ExtraGB"] *</label>
+            <input type="number" id="quickExtraGB" class="form-control" min="1" step="1" value="10" oninput="updateQuickTotal()" />
+        </div>
+        <div class="col-md-2">
+            <label class="form-label">@Localizer["PricePerGB"] ($)</label>
+            <input type="number" id="quickPricePerGB" class="form-control" min="0" step="0.01" value="0.50" oninput="updateQuickTotal()" />
+        </div>
+        <div class="col-md-2">
+            <label class="form-label">@Localizer["Total"]: $<span id="quickTotal">5.00</span></label>
+            <button class="btn btn-info w-100" onclick="quickAddExtraStorage()"><i class="fas fa-plus me-1"></i>@Localizer["Add"]</button>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    const token = $('input[name="__RequestVerificationToken"]').val();
+    function getHeaders() { return { 'Content-Type': 'application/json', 'RequestVerificationToken': token }; }
+
+    function assignSub() {
+        var schoolId = +$('#assignSchool').val();
+        var planId = +$('#assignPlan').val();
+        if (!schoolId || !planId) { toastr.warning('Please select school and plan.'); return; }
+        $.ajax({
+            url: '@Url.Action("AssignSubscription", "Platform")',
+            method: 'POST', headers: getHeaders(),
+            data: JSON.stringify({ schoolId: schoolId, systemSubscriptionPlanId: planId }),
+            success: function () { toastr.success('Subscription assigned!'); location.reload(); },
+            error: function () { toastr.error('Error assigning subscription.'); }
+        });
+    }
+
+    function loadSubscriptions() {
+        var schoolId = +$('#viewSchool').val();
+        if (!schoolId) { $('#subsContainer').html(''); $('#quotaInfo').hide(); return; }
+
+        // Load subscriptions
+        $.get('@Url.Action("GetSubscriptions", "Platform")?schoolId=' + schoolId, function (data) {
+            if (!data || data.length === 0) {
+                $('#subsContainer').html('<div class="alert alert-info">No subscriptions found.</div>');
+                return;
+            }
+            var html = '<table class="table table-hover"><thead><tr><th>Plan</th><th>Activated</th><th>Expires</th><th>Storage (Base)</th><th>Extra Storage</th><th>Total Storage</th><th>Status</th><th>Actions</th></tr></thead><tbody>';
+            data.forEach(function (s) {
+                var totalGB = s.storageLimitGB + s.extraStorageGB;
+                var isExpired = new Date(s.expiryDate) < new Date();
+
+                html += '<tr>'
+                    + '<td><strong>' + s.planName + '</strong></td>'
+                    + '<td>' + new Date(s.activatedAt).toLocaleDateString() + '</td>'
+                    + '<td>' + new Date(s.expiryDate).toLocaleDateString()
+                        + (isExpired ? ' <span class="badge bg-danger">Expired</span>' : '') + '</td>'
+                    + '<td>' + s.storageLimitGB + ' GB</td>'
+                    + '<td>'
+                        + (s.extraStorageGB > 0
+                            ? '<span class="badge bg-info">+' + s.extraStorageGB + ' GB</span> <small class="text-muted">($' + s.extraStoragePrice.toFixed(2) + ')</small>'
+                            : '<span class="text-muted">—</span>')
+                    + '</td>'
+                    + '<td><strong>' + totalGB.toFixed(2) + ' GB</strong></td>'
+                    + '<td>' + (s.isActive ? '<span class="badge bg-success">Active</span>' : '<span class="badge bg-secondary">Inactive</span>') + '</td>'
+                    + '<td>'
+                        + '<div class="d-flex gap-1 flex-wrap">';
+
+                if (s.isActive) {
+                    html += '<button class="btn btn-sm btn-outline-info" onclick="openExtraStorage(' + s.id + ')" title="Add Extra Storage"><i class="fas fa-hdd me-1"></i>+Storage</button>'
+                        + '<button class="btn btn-sm btn-outline-success" onclick="renewSub(' + s.id + ')" title="Renew"><i class="fas fa-redo me-1"></i>Renew</button>'
+                        + '<button class="btn btn-sm btn-outline-danger" onclick="cancelSub(' + s.id + ')" title="Cancel"><i class="fas fa-times"></i></button>';
+                } else {
+                    html += '<button class="btn btn-sm btn-outline-success" onclick="renewSub(' + s.id + ')" title="Reactivate"><i class="fas fa-redo me-1"></i>Reactivate</button>';
+                }
+
+                html += '</div></td></tr>';
+            });
+            html += '</tbody></table>';
+            $('#subsContainer').html(html);
+        });
+
+        // Load storage quota
+        $.get('@Url.Action("GetSchoolStorageQuota", "Platform")?schoolId=' + schoolId, function (q) {
+            if (q) {
+                var pct = q.totalStorageGB > 0 ? Math.min(100, Math.round(q.usedStorageGB / q.totalStorageGB * 100)) : 0;
+                var color = pct > 90 ? 'bg-danger' : pct > 70 ? 'bg-warning' : 'bg-info';
+                var extraInfo = q.extraStorageGB > 0 ? ' <small class="text-success">(+' + q.extraStorageGB.toFixed(2) + ' GB extra)</small>' : '';
+                $('#quotaInfo').show().html(
+                    '<div class="p-2" style="background:#f8fafc;border-radius:8px;">'
+                    + '<small class="fw-semibold"><i class="fas fa-hdd me-1"></i>Storage: ' + q.usedStorageGB.toFixed(2) + ' / ' + q.totalStorageGB.toFixed(2) + ' GB (' + pct + '%)' + extraInfo + '</small>'
+                    + '<div class="progress mt-1" style="height:6px;"><div class="progress-bar ' + color + '" style="width:' + pct + '%;"></div></div>'
+                    + '</div>'
+                );
+            } else {
+                $('#quotaInfo').hide();
+            }
+        }).fail(function () { $('#quotaInfo').hide(); });
+    }
+
+    function cancelSub(id) {
+        Swal.fire({ title: 'Cancel subscription?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33' }).then(r => {
+            if (r.isConfirmed) {
+                $.ajax({ url: '@Url.Action("CancelSubscription", "Platform")?id=' + id, method: 'POST', headers: getHeaders(),
+                    success: function () { toastr.success('Cancelled.'); loadSubscriptions(); },
+                    error: function () { toastr.error('Error.'); }
+                });
+            }
+        });
+    }
+
+    function renewSub(id) {
+        Swal.fire({ title: 'Renew this subscription?', text: 'This will extend the expiry date by the plan duration.', icon: 'question', showCancelButton: true, confirmButtonColor: '#22c55e' }).then(r => {
+            if (r.isConfirmed) {
+                $.ajax({ url: '@Url.Action("RenewSubscription", "Platform")?id=' + id, method: 'POST', headers: getHeaders(),
+                    success: function () { toastr.success('Subscription renewed!'); loadSubscriptions(); },
+                    error: function () { toastr.error('Error renewing subscription.'); }
+                });
+            }
+        });
+    }
+
+    function openExtraStorage(subId) {
+        $('#extraStorageSubId').val(subId);
+        $('#extraGB').val(10);
+        $('#pricePerGB').val(0.50);
+        updateExtraTotal();
+        new bootstrap.Modal(document.getElementById('extraStorageModal')).show();
+    }
+
+    function updateExtraTotal() {
+        var gb = parseFloat($('#extraGB').val()) || 0;
+        var price = parseFloat($('#pricePerGB').val()) || 0;
+        $('#extraTotalPrice').text((gb * price).toFixed(2));
+    }
+
+    $('#extraGB, #pricePerGB').on('input', updateExtraTotal);
+
+    function submitExtraStorage() {
+        var subId = +$('#extraStorageSubId').val();
+        var gb = parseFloat($('#extraGB').val());
+        var ppgb = parseFloat($('#pricePerGB').val());
+        if (!subId || !gb || gb <= 0) { toastr.warning('Please enter valid values.'); return; }
+
+        $.ajax({
+            url: '@Url.Action("AddExtraStorage", "Platform")',
+            method: 'POST', headers: getHeaders(),
+            data: JSON.stringify({ subscriptionId: subId, extraGB: gb, pricePerGB: ppgb }),
+            success: function () {
+                toastr.success('Extra storage added!');
+                bootstrap.Modal.getInstance(document.getElementById('extraStorageModal')).hide();
+                loadSubscriptions();
+            },
+            error: function () { toastr.error('Error adding extra storage.'); }
+        });
+    }
+
+    function approveRequest(id) {
+        $.ajax({ url: '@Url.Action("ApproveStorageRequest", "Platform")?id=' + id, method: 'POST', headers: getHeaders(),
+            success: function () { toastr.success('Storage request approved!'); location.reload(); },
+            error: function () { toastr.error('Error.'); }
+        });
+    }
+
+    function rejectRequest(id) {
+        Swal.fire({ title: 'Reject this request?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33' }).then(r => {
+            if (r.isConfirmed) {
+                $.ajax({ url: '@Url.Action("RejectStorageRequest", "Platform")?id=' + id, method: 'POST', headers: getHeaders(),
+                    success: function () { toastr.success('Request rejected.'); location.reload(); },
+                    error: function () { toastr.error('Error.'); }
+                });
+            }
+        });
+    }
+
+    // Quick Add Extra Storage
+    function loadSchoolActiveSub() {
+        var schoolId = +$('#extraSchoolSelect').val();
+        var sel = $('#extraSubSelect');
+        sel.html('<option value="">--</option>').prop('disabled', true);
+        if (!schoolId) return;
+
+        $.get('@Url.Action("GetSubscriptions", "Platform")?schoolId=' + schoolId, function (data) {
+            if (!data || data.length === 0) {
+                sel.html('<option value="">No subscriptions</option>');
+                return;
+            }
+            var html = '<option value="">-- Select --</option>';
+            data.forEach(function (s) {
+                var label = s.planName + (s.isActive ? ' (Active)' : ' (Inactive)');
+                html += '<option value="' + s.id + '"' + (s.isActive ? ' selected' : '') + '>' + label + '</option>';
+            });
+            sel.html(html).prop('disabled', false);
+        });
+    }
+
+    function updateQuickTotal() {
+        var gb = parseFloat($('#quickExtraGB').val()) || 0;
+        var ppgb = parseFloat($('#quickPricePerGB').val()) || 0;
+        $('#quickTotal').text((gb * ppgb).toFixed(2));
+    }
+
+    function quickAddExtraStorage() {
+        var subId = +$('#extraSubSelect').val();
+        var gb = parseFloat($('#quickExtraGB').val());
+        var ppgb = parseFloat($('#quickPricePerGB').val());
+        if (!subId) { toastr.warning('Please select a school and an active subscription.'); return; }
+        if (!gb || gb <= 0) { toastr.warning('Please enter a valid GB amount.'); return; }
+
+        Swal.fire({ title: 'Add ' + gb + ' GB extra storage?', text: 'Total cost: $' + (gb * ppgb).toFixed(2), icon: 'question', showCancelButton: true, confirmButtonColor: '#0ea5e9' }).then(r => {
+            if (r.isConfirmed) {
+                $.ajax({
+                    url: '@Url.Action("AddExtraStorage", "Platform")',
+                    method: 'POST', headers: getHeaders(),
+                    data: JSON.stringify({ subscriptionId: subId, extraGB: gb, pricePerGB: ppgb }),
+                    success: function () { toastr.success('Extra storage added!'); location.reload(); },
+                    error: function () { toastr.error('Error adding extra storage.'); }
+                });
+            }
+        });
+    }
+</script>
+}

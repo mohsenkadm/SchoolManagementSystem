@@ -1,0 +1,54 @@
+@using SchoolMS.Domain.Enums
+
+<div class="d-flex justify-content-between align-items-center mb-4" data-aos="fade-down">
+    <h4 class="mb-0"><i class="fas fa-plus-circle me-2 text-primary"></i>@Localizer["AddNotification"]</h4>
+    <a href="@Url.Action("Index")" class="btn btn-secondary"><i class="fas fa-arrow-left me-1"></i>@Localizer["Back"]</a>
+</div>
+<div class="dashboard-card card p-4" data-aos="fade-up">
+    <form asp-action="Create" method="post">
+        @Html.AntiForgeryToken()
+        <div class="row g-3">
+            <div class="col-md-6"><label class="form-label">@Localizer["Title"] *</label><input type="text" name="Title" class="form-control" required /></div>
+            <div class="col-md-6">
+                <label class="form-label">@Localizer["Target"] *</label>
+                <select id="targetSelect" name="Target" class="form-select" required>
+                    <option value="">-- @Localizer["Select"] --</option>
+                    @foreach (var t in Enum.GetValues<NotificationTarget>()) { <option value="@t">@t</option> }
+                </select>
+            </div>
+            <div class="col-md-6" id="targetDataContainer" style="display:none">
+                <label class="form-label" id="targetDataLabel">@Localizer["Select"]</label>
+                <select id="targetDataSelect" name="TargetPersonId" class="form-select select2">
+                    <option value="">-- @Localizer["Select"] --</option>
+                </select>
+            </div>
+            <div class="col-md-12"><label class="form-label">@Localizer["Message"] *</label><textarea name="Message" class="form-control" rows="3" required></textarea></div>
+        </div>
+        <div class="mt-4 d-flex gap-2">
+            <button type="submit" class="btn btn-accent"><i class="fas fa-save me-1"></i>@Localizer["Save"]</button>
+            <a href="@Url.Action("Index")" class="btn btn-secondary">@Localizer["Cancel"]</a>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+<script>
+    var targetLabels = { 'Individual': '@Localizer["Person"]', 'Class': '@Localizer["ClassRoom"]', 'Branch': '@Localizer["Branch"]', 'Division': '@Localizer["Division"]', 'All': '' };
+
+    $('#targetSelect').on('change', function () {
+        var target = $(this).val();
+        if (target === 'All' || target === '' || target === 'Division') {
+            $('#targetDataContainer').hide();
+            return;
+        }
+        $('#targetDataContainer').show();
+        $('#targetDataLabel').text(targetLabels[target] || '@Localizer["Select"]');
+        $.get('@Url.Action("GetTargetData")', { target: target }, function (data) {
+            var html = '<option value="">-- @Localizer["Select"] --</option>';
+            $.each(data, function (i, item) { html += '<option value="' + item.id + '">' + item.name + '</option>'; });
+            $('#targetDataSelect').html(html);
+            if (typeof $.fn.select2 !== 'undefined') { $('#targetDataSelect').select2({ theme: 'bootstrap-5', width: '100%' }); }
+        });
+    });
+</script>
+}

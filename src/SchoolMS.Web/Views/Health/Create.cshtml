@@ -1,0 +1,50 @@
+@using SchoolMS.Application.DTOs
+@{
+    var isEdit = Model != null;
+    var item = isEdit ? (HealthRecordDto)Model : null;
+    var students = ViewBag.Students as List<StudentDto> ?? new();
+    var isSuperAdmin = (bool)(ViewBag.IsSuperAdmin ?? false);
+    var schools = ViewBag.Schools as List<SchoolDto> ?? new();
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4" data-aos="fade-down">
+    <h4 class="mb-0"><i class="fas @(isEdit ? "fa-edit" : "fa-plus-circle") me-2 text-primary"></i>@(isEdit ? Localizer["EditRecord"] : Localizer["AddRecord"])</h4>
+    <a href="@Url.Action("Index")" class="btn btn-secondary"><i class="fas fa-arrow-left me-1"></i>@Localizer["Back"]</a>
+</div>
+<div class="dashboard-card card p-4" data-aos="fade-up">
+    <form asp-action="@(isEdit ? "Edit" : "Create")" method="post">
+        @Html.AntiForgeryToken()
+        @if (isEdit) { <input type="hidden" name="Id" value="@item!.Id" /> }
+        <div class="row g-3">
+            @if (isSuperAdmin)
+            {
+                <div class="col-md-4">
+                    <label class="form-label">@Localizer["School"] *</label>
+                    <select name="SchoolId" class="form-select select2" required>
+                        <option value="">-- @Localizer["Select"] --</option>
+                        @foreach (var s in schools) { <option value="@s.Id" selected="@(item?.SchoolId == s.Id)">@s.Name</option> }
+                    </select>
+                </div>
+            }
+            <div class="col-md-4">
+                <label class="form-label">@Localizer["Student"] *</label>
+                <select name="StudentId" class="form-select select2" required>
+                    <option value="">-- @Localizer["SelectStudent"] --</option>
+                    @foreach (var s in students) { <option value="@s.Id" selected="@(item?.StudentId == s.Id)">@s.FullName</option> }
+                </select>
+            </div>
+            <div class="col-md-4"><label class="form-label">@Localizer["Title"] *</label><input type="text" name="Title" class="form-control" value="@item?.Title" required /></div>
+            <div class="col-md-4"><label class="form-label">@Localizer["RecordType"]</label><input type="text" name="RecordType" class="form-control" value="@item?.RecordType" /></div>
+            <div class="col-md-4"><label class="form-label">@Localizer["Doctor"]</label><input type="text" name="DoctorName" class="form-control" value="@item?.DoctorName" /></div>
+            <div class="col-md-4"><label class="form-label">@Localizer["Date"] *</label><input type="date" name="RecordDate" class="form-control" value="@(item?.RecordDate.ToString("yyyy-MM-dd") ?? DateTime.Today.ToString("yyyy-MM-dd"))" required /></div>
+            <div class="col-md-4"><label class="form-label">@Localizer["FollowUpDate"]</label><input type="date" name="FollowUpDate" class="form-control" value="@item?.FollowUpDate?.ToString("yyyy-MM-dd")" /></div>
+            <div class="col-md-6"><label class="form-label">@Localizer["Description"]</label><textarea name="Description" class="form-control" rows="2">@item?.Description</textarea></div>
+            <div class="col-md-6"><label class="form-label">@Localizer["Prescription"]</label><textarea name="Prescription" class="form-control" rows="2">@item?.Prescription</textarea></div>
+            <div class="col-md-3"><div class="form-check form-switch mt-2"><input class="form-check-input" type="checkbox" name="NotifyParent" value="true" @(item?.NotifyParent == true ? "checked" : "") /><label class="form-check-label">@Localizer["NotifyParent"]</label></div></div>
+        </div>
+        <div class="mt-4 d-flex gap-2">
+            <button type="submit" class="btn btn-accent"><i class="fas fa-save me-1"></i>@Localizer["Save"]</button>
+            <a href="@Url.Action("Index")" class="btn btn-secondary">@Localizer["Cancel"]</a>
+        </div>
+    </form>
+</div>

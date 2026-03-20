@@ -1,0 +1,137 @@
+@using SchoolMS.Application.DTOs
+@{
+    var isEdit = Model != null;
+    var item = isEdit ? (HrEmployeeDto)Model : null;
+    var departments = ViewBag.Departments as List<HrDepartmentDto> ?? new();
+    var jobTitles = ViewBag.JobTitles as List<HrJobTitleDto> ?? new();
+    var jobGrades = ViewBag.JobGrades as List<HrJobGradeDto> ?? new();
+    var branches = ViewBag.Branches as List<BranchDto> ?? new();
+    var shifts = ViewBag.WorkShifts as List<HrWorkShiftDto> ?? new();
+    var employees = ViewBag.Employees as List<HrEmployeeDto> ?? new();
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4" data-aos="fade-down">
+    <h4 class="mb-0"><i class="fas @(isEdit ? "fa-edit" : "fa-plus-circle") me-2 text-primary"></i>@(isEdit ? Localizer["EditEmployee"] : Localizer["AddEmployee"])</h4>
+    <a href="@Url.Action("Index")" class="btn btn-secondary"><i class="fas fa-arrow-left me-1"></i>@Localizer["Back"]</a>
+</div>
+<div class="dashboard-card card p-4" data-aos="fade-up">
+    <form asp-action="@(isEdit ? "Edit" : "Create")" method="post">
+        @Html.AntiForgeryToken()
+        @if (isEdit) { <input type="hidden" name="Id" value="@item!.Id" /> }
+
+        <h6 class="text-primary mb-3"><i class="fas fa-user me-1"></i> @Localizer["PersonalInfo"]</h6>
+        <div class="row g-3 mb-4">
+            <div class="col-md-3"><label class="form-label">@Localizer["EmployeeNo"] *</label><input type="text" name="EmployeeNumber" class="form-control" value="@item?.EmployeeNumber" required /></div>
+            <div class="col-md-3"><label class="form-label">@Localizer["FirstName"] *</label><input type="text" name="FirstName" class="form-control" value="@item?.FirstName" required /></div>
+            <div class="col-md-3"><label class="form-label">@Localizer["SecondName"]</label><input type="text" name="SecondName" class="form-control" value="@item?.SecondName" /></div>
+            <div class="col-md-3"><label class="form-label">@Localizer["LastName"] *</label><input type="text" name="LastName" class="form-control" value="@item?.LastName" required /></div>
+            <div class="col-md-3"><label class="form-label">@Localizer["FullName"] *</label><input type="text" name="FullName" class="form-control" value="@item?.FullName" required /></div>
+            <div class="col-md-3"><label class="form-label">@Localizer["FullNameAr"]</label><input type="text" name="FullNameAr" class="form-control" value="@item?.FullNameAr" /></div>
+            <div class="col-md-3"><label class="form-label">@Localizer["DateOfBirth"]</label><input type="date" name="DateOfBirth" class="form-control" value="@item?.DateOfBirth.ToString("yyyy-MM-dd")" /></div>
+            <div class="col-md-3">
+                <label class="form-label">@Localizer["Gender"]</label>
+                <select name="Gender" class="form-select"><option value="">—</option><option value="Male" selected="@(item?.Gender == "Male")">@Localizer["Male"]</option><option value="Female" selected="@(item?.Gender == "Female")">@Localizer["Female"]</option></select>
+            </div>
+            <div class="col-md-3"><label class="form-label">@Localizer["NationalId"]</label><input type="text" name="NationalId" class="form-control" value="@item?.NationalId" /></div>
+            <div class="col-md-3"><label class="form-label">@Localizer["Nationality"]</label><input type="text" name="Nationality" class="form-control" value="@item?.Nationality" /></div>
+            <div class="col-md-3"><label class="form-label">@Localizer["MaritalStatus"]</label><input type="text" name="MaritalStatus" class="form-control" value="@item?.MaritalStatus" /></div>
+            <div class="col-md-3"><label class="form-label">@Localizer["BloodType"]</label><input type="text" name="BloodType" class="form-control" value="@item?.BloodType" /></div>
+        </div>
+
+        <h6 class="text-primary mb-3"><i class="fas fa-phone me-1"></i> @Localizer["ContactInfo"]</h6>
+        <div class="row g-3 mb-4">
+            <div class="col-md-3"><label class="form-label">@Localizer["Phone"]</label><input type="text" name="Phone" class="form-control" value="@item?.Phone" /></div>
+            <div class="col-md-3"><label class="form-label">@Localizer["Email"]</label><input type="email" name="Email" class="form-control" value="@item?.Email" /></div>
+            <div class="col-md-6"><label class="form-label">@Localizer["Address"]</label><input type="text" name="Address" class="form-control" value="@item?.Address" /></div>
+            <div class="col-md-3"><label class="form-label">@Localizer["EmergencyContact"]</label><input type="text" name="EmergencyContactName" class="form-control" value="@item?.EmergencyContactName" /></div>
+            <div class="col-md-3"><label class="form-label">@Localizer["EmergencyPhone"]</label><input type="text" name="EmergencyContactPhone" class="form-control" value="@item?.EmergencyContactPhone" /></div>
+        </div>
+
+        <h6 class="text-primary mb-3"><i class="fas fa-briefcase me-1"></i> @Localizer["EmploymentInfo"]</h6>
+        <div class="row g-3 mb-4">
+            <div class="col-md-3">
+                <label class="form-label">@Localizer["Department"] *</label>
+                <select name="DepartmentId" class="form-select select2" required>
+                    <option value="">—</option>
+                    @foreach (var d in departments) { <option value="@d.Id" selected="@(item?.DepartmentId == d.Id)">@d.DepartmentName</option> }
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">@Localizer["JobTitle"] *</label>
+                <select name="JobTitleId" class="form-select select2" required>
+                    <option value="">—</option>
+                    @foreach (var j in jobTitles) { <option value="@j.Id" selected="@(item?.JobTitleId == j.Id)">@j.TitleName</option> }
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">@Localizer["JobGrade"]</label>
+                <select name="JobGradeId" class="form-select select2">
+                    <option value="">—</option>
+                    @foreach (var g in jobGrades) { <option value="@g.Id" selected="@(item?.JobGradeId == g.Id)">@g.GradeName</option> }
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">@Localizer["Branch"] *</label>
+                <select name="BranchId" class="form-select select2" required>
+                    @foreach (var b in branches) { <option value="@b.Id" selected="@(item?.BranchId == b.Id)">@b.Name</option> }
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">@Localizer["WorkShift"]</label>
+                <select name="WorkShiftId" class="form-select select2">
+                    <option value="">—</option>
+                    @foreach (var s in shifts) { <option value="@s.Id" selected="@(item?.WorkShiftId == s.Id)">@s.ShiftName</option> }
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">@Localizer["EmployeeType"] *</label>
+                <select name="EmployeeType" class="form-select" required>
+                    @foreach (var t in Enum.GetValues<EmployeeType>()) { <option value="@t" selected="@(item?.EmployeeType == t)">@t</option> }
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">@Localizer["Category"] *</label>
+                <select name="Category" class="form-select" required>
+                    @foreach (var c in Enum.GetValues<EmployeeCategory>()) { <option value="@c" selected="@(item?.Category == c)">@c</option> }
+                </select>
+            </div>
+            <div class="col-md-3"><label class="form-label">@Localizer["HireDate"] *</label><input type="date" name="HireDate" class="form-control" value="@(item?.HireDate.ToString("yyyy-MM-dd") ?? DateTime.Today.ToString("yyyy-MM-dd"))" required /></div>
+            <div class="col-md-3">
+                <label class="form-label">@Localizer["Status"]</label>
+                <select name="Status" class="form-select">
+                    @foreach (var s in Enum.GetValues<HrEmployeeStatus>()) { <option value="@s" selected="@(item?.Status == s)">@s</option> }
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">@Localizer["DirectManager"]</label>
+                <select name="DirectManagerId" class="form-select select2">
+                    <option value="">—</option>
+                    @foreach (var m in employees.Where(e => e.Id != item?.Id)) { <option value="@m.Id" selected="@(item?.DirectManagerId == m.Id)">@m.FullName</option> }
+                </select>
+            </div>
+        </div>
+
+        <h6 class="text-primary mb-3"><i class="fas fa-university me-1"></i> @Localizer["FinancialInfo"]</h6>
+        <div class="row g-3 mb-4">
+            <div class="col-md-3"><label class="form-label">@Localizer["BankName"]</label><input type="text" name="BankName" class="form-control" value="@item?.BankName" /></div>
+            <div class="col-md-3"><label class="form-label">@Localizer["BankAccount"]</label><input type="text" name="BankAccountNumber" class="form-control" value="@item?.BankAccountNumber" /></div>
+            <div class="col-md-3"><label class="form-label">IBAN</label><input type="text" name="IBAN" class="form-control" value="@item?.IBAN" /></div>
+            <div class="col-md-3"><label class="form-label">@Localizer["TaxNumber"]</label><input type="text" name="TaxNumber" class="form-control" value="@item?.TaxNumber" /></div>
+        </div>
+
+        <h6 class="text-primary mb-3"><i class="fas fa-graduation-cap me-1"></i> @Localizer["Education"]</h6>
+        <div class="row g-3 mb-4">
+            <div class="col-md-3"><label class="form-label">@Localizer["Qualification"]</label><input type="text" name="HighestQualification" class="form-control" value="@item?.HighestQualification" /></div>
+            <div class="col-md-3"><label class="form-label">@Localizer["University"]</label><input type="text" name="University" class="form-control" value="@item?.University" /></div>
+            <div class="col-md-3"><label class="form-label">@Localizer["Major"]</label><input type="text" name="Major" class="form-control" value="@item?.Major" /></div>
+            <div class="col-md-3"><label class="form-label">@Localizer["YearsOfExperience"]</label><input type="number" name="YearsOfExperience" class="form-control" value="@item?.YearsOfExperience" /></div>
+        </div>
+
+        <div class="row g-3"><div class="col-12"><label class="form-label">@Localizer["Notes"]</label><textarea name="Notes" class="form-control" rows="2">@item?.Notes</textarea></div></div>
+
+        <div class="mt-4 d-flex gap-2">
+            <button type="submit" class="btn btn-accent"><i class="fas fa-save me-1"></i>@Localizer["Save"]</button>
+            <a href="@Url.Action("Index")" class="btn btn-secondary">@Localizer["Cancel"]</a>
+        </div>
+    </form>
+</div>

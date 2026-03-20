@@ -1,0 +1,156 @@
+@using SchoolMS.Application.DTOs
+@{
+    ViewData["Title"] = Localizer["BulkAddExams"].Value;
+    var examTypes = ViewBag.ExamTypes as List<ExamTypeDto> ?? new();
+    var classRooms = ViewBag.ClassRooms as List<ClassRoomDto> ?? new();
+    var subjects = ViewBag.Subjects as List<SubjectDto> ?? new();
+    var teachers = ViewBag.Teachers as List<TeacherDto> ?? new();
+    var years = ViewBag.AcademicYears as List<AcademicYearDto> ?? new();
+    var isSuperAdmin = (bool)(ViewBag.IsSuperAdmin ?? false);
+    var schools = ViewBag.Schools as List<SchoolDto> ?? new();
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4" data-aos="fade-down">
+    <h4 class="mb-0"><i class="fas fa-layer-group me-2 text-primary"></i>@Localizer["BulkAddExams"]</h4>
+    <a href="@Url.Action("Index")" class="btn btn-secondary"><i class="fas fa-arrow-left me-1"></i>@Localizer["Back"]</a>
+</div>
+
+<div class="dashboard-card card p-4" data-aos="fade-up">
+    @if (isSuperAdmin)
+    {
+        <div class="row mb-3">
+            <div class="col-md-4">
+                <label class="form-label">@Localizer["School"] *</label>
+                <select id="bulkSchoolId" class="form-select select2">
+                    <option value="">-- @Localizer["Select"] --</option>
+                    @foreach (var s in schools) { <option value="@s.Id">@s.Name</option> }
+                </select>
+            </div>
+        </div>
+    }
+
+    <div class="row mb-3 g-2 align-items-end bg-light rounded p-3">
+        <div class="col-md-2">
+            <label class="form-label fw-bold">@Localizer["ExamType"]</label>
+            <select id="addExamType" class="form-select">
+                <option value="">--</option>
+                @foreach (var e in examTypes) { <option value="@e.Id" data-name="@e.TypeName">@e.TypeName</option> }
+            </select>
+        </div>
+        <div class="col-md-2">
+            <label class="form-label fw-bold">@Localizer["ClassRoom"]</label>
+            <select id="addClassRoom" class="form-select">
+                <option value="">--</option>
+                @foreach (var c in classRooms) { <option value="@c.Id" data-name="@c.GradeName - @c.DivisionName">@c.GradeName - @c.DivisionName</option> }
+            </select>
+        </div>
+        <div class="col-md-2">
+            <label class="form-label fw-bold">@Localizer["Subject"]</label>
+            <select id="addSubject" class="form-select">
+                <option value="">--</option>
+                @foreach (var s in subjects) { <option value="@s.Id" data-name="@s.SubjectName">@s.SubjectName</option> }
+            </select>
+        </div>
+        <div class="col-md-2">
+            <label class="form-label fw-bold">@Localizer["Teacher"]</label>
+            <select id="addTeacher" class="form-select">
+                <option value="">--</option>
+                @foreach (var t in teachers) { <option value="@t.Id" data-name="@t.FullName">@t.FullName</option> }
+            </select>
+        </div>
+        <div class="col-md-1">
+            <label class="form-label fw-bold">@Localizer["Date"]</label>
+            <input type="date" id="addDate" class="form-control" value="@DateTime.Today.ToString("yyyy-MM-dd")" />
+        </div>
+        <div class="col-md-1">
+            <label class="form-label fw-bold">@Localizer["Start"]</label>
+            <input type="time" id="addStart" class="form-control" value="09:00" />
+        </div>
+        <div class="col-md-1">
+            <label class="form-label fw-bold">@Localizer["End"]</label>
+            <input type="time" id="addEnd" class="form-control" value="11:00" />
+        </div>
+        <div class="col-md-1">
+            <button type="button" class="btn btn-accent w-100" onclick="addRow()"><i class="fas fa-plus"></i></button>
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <div class="col-md-4">
+            <label class="form-label">@Localizer["AcademicYear"]</label>
+            <select id="bulkAcademicYear" class="form-select">
+                @foreach (var y in years) { <option value="@y.Id" selected="@y.IsCurrent">@y.YearName</option> }
+            </select>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-bordered table-sm" id="bulkTable">
+            <thead class="table-primary">
+                <tr>
+                    <th>#</th><th>@Localizer["ExamType"]</th><th>@Localizer["ClassRoom"]</th><th>@Localizer["Subject"]</th><th>@Localizer["Teacher"]</th><th>@Localizer["Date"]</th><th>@Localizer["Start"]</th><th>@Localizer["End"]</th><th></th>
+                </tr>
+            </thead>
+            <tbody id="bulkBody"></tbody>
+        </table>
+    </div>
+
+    <div class="mt-3 d-flex gap-2">
+        <button type="button" class="btn btn-accent btn-lg" onclick="saveAll()" id="btnSave" disabled>
+            <i class="fas fa-save me-1"></i>@Localizer["SaveAll"] (<span id="rowCount">0</span>)
+        </button>
+        <button type="button" class="btn btn-danger" onclick="clearAll()"><i class="fas fa-trash me-1"></i>@Localizer["ClearAll"]</button>
+    </div>
+</div>
+
+@section Scripts {
+@Html.AntiForgeryToken()
+<script>
+    var isSuperAdmin = @(isSuperAdmin ? "true" : "false");
+    var rows = [];
+    function addRow() {
+        var et = $('#addExamType'), cr = $('#addClassRoom'), sb = $('#addSubject'), tc = $('#addTeacher');
+        if (!et.val() || !cr.val() || !sb.val() || !tc.val()) { toastr.warning('Please fill all fields'); return; }
+        rows.push({
+            examTypeId: +et.val(), examTypeName: et.find(':selected').data('name'),
+            classRoomId: +cr.val(), classRoomName: cr.find(':selected').data('name'),
+            subjectId: +sb.val(), subjectName: sb.find(':selected').data('name'),
+            teacherId: +tc.val(), teacherName: tc.find(':selected').data('name'),
+            examDate: $('#addDate').val(), startTime: $('#addStart').val(), endTime: $('#addEnd').val()
+        });
+        renderTable();
+    }
+    function removeRow(idx) { rows.splice(idx, 1); renderTable(); }
+    function clearAll() { rows = []; renderTable(); }
+    function renderTable() {
+        var html = '';
+        rows.forEach(function (r, i) {
+            html += '<tr><td>' + (i + 1) + '</td><td>' + r.examTypeName + '</td><td>' + r.classRoomName + '</td><td>' + r.subjectName + '</td><td>' + r.teacherName + '</td><td>' + r.examDate + '</td><td>' + r.startTime + '</td><td>' + r.endTime + '</td><td><button class="btn btn-sm btn-danger" onclick="removeRow(' + i + ')"><i class="fas fa-times"></i></button></td></tr>';
+        });
+        $('#bulkBody').html(html);
+        $('#rowCount').text(rows.length);
+        $('#btnSave').prop('disabled', rows.length === 0);
+    }
+    function saveAll() {
+        var yearId = +$('#bulkAcademicYear').val();
+        var schoolId = isSuperAdmin ? +($('#bulkSchoolId').val() || 0) : 0;
+        var payload = rows.map(function (r) {
+            return {
+                examTypeId: r.examTypeId, classRoomId: r.classRoomId, subjectId: r.subjectId,
+                teacherId: r.teacherId, examDate: r.examDate,
+                startTime: r.startTime + ':00', endTime: r.endTime + ':00',
+                academicYearId: yearId, schoolId: schoolId
+            };
+        });
+        $.ajax({
+            url: '@Url.Action("BulkCreate")',
+            type: 'POST',
+            contentType: 'application/json',
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            data: JSON.stringify(payload),
+            success: function () { toastr.success('Saved successfully'); window.location.href = '@Url.Action("Index")'; },
+            error: function () { toastr.error('An error occurred'); }
+        });
+    }
+</script>
+}

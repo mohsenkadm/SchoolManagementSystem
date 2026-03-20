@@ -1,0 +1,72 @@
+@using SchoolMS.Application.DTOs
+@{
+    var isEdit = Model != null;
+    var item = isEdit ? (TeacherDto)Model : null;
+    var branches = ViewBag.Branches as List<BranchDto> ?? new();
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4" data-aos="fade-down">
+    <h4 class="mb-0"><i class="fas @(isEdit ? "fa-user-edit" : "fa-user-plus") me-2 text-primary"></i>@(isEdit ? Localizer["EditTeacher"] : Localizer["AddTeacher"])</h4>
+    <a href="@Url.Action("Index")" class="btn btn-secondary"><i class="fas fa-arrow-left me-1"></i>@Localizer["Back"]</a>
+</div>
+
+@if (!ViewData.ModelState.IsValid)
+{
+    <div class="alert alert-danger" data-aos="fade-up">
+        @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+        {
+            <div>@error.ErrorMessage</div>
+        }
+    </div>
+}
+
+<div class="dashboard-card card p-4" data-aos="fade-up">
+    <form asp-action="@(isEdit ? "Edit" : "Create")" method="post">
+        @Html.AntiForgeryToken()
+        @if (isEdit) { <input type="hidden" name="Id" value="@item!.Id" /> }
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label class="form-label">@Localizer["FullName"] *</label>
+                <input type="text" name="FullName" class="form-control" value="@item?.FullName" required />
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">@Localizer["Specialization"]</label>
+                <input type="text" name="Specialization" class="form-control" value="@item?.Specialization" />
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">@Localizer["Phone"]</label>
+                <input type="tel" name="Phone" class="form-control" value="@item?.Phone" />
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">@Localizer["Email"]</label>
+                <input type="email" name="Email" class="form-control" value="@item?.Email" />
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Badge Card</label>
+                <input type="text" name="BadgeCardNumber" class="form-control" value="@item?.BadgeCardNumber" />
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Username</label>
+                <input type="text" name="Username" class="form-control" value="@item?.Username" />
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">@Localizer["Password"]</label>
+                <input type="password" name="Password" class="form-control" />
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">@Localizer["Branch"] *</label>
+                <select name="BranchId" class="form-select" required>
+                    @foreach (var b in branches) { <option value="@b.Id" selected="@(item?.BranchId == b.Id)">@b.Name</option> }
+                </select>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">@Localizer["Salary"]</label>
+                <input type="number" name="BaseSalary" class="form-control" step="0.01" value="@(item?.BaseSalary ?? 0)" />
+            </div>
+        </div>
+        <div class="mt-4 d-flex gap-2">
+            <button type="submit" class="btn btn-accent"><i class="fas fa-save me-1"></i>@Localizer["Save"]</button>
+            <a href="@Url.Action("Index")" class="btn btn-secondary">@Localizer["Cancel"]</a>
+        </div>
+    </form>
+</div>

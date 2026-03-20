@@ -1,0 +1,361 @@
+@model SchoolMS.Application.DTOs.AnalyticsDto
+@using SchoolMS.Application.DTOs
+@{
+    ViewData["Title"] = Localizer["SystemAnalytics"].Value;
+    var netProfit = Model.TotalRevenue - Model.TotalExpenses - Model.TotalSalaries;
+    var totalPeople = Model.TotalStudents + Model.TotalTeachers + Model.TotalStaff;
+    var absent = Math.Max(0, totalPeople - Model.TotalAttendanceToday);
+    var resolvedComplaints = Model.TotalComplaints - Model.OpenComplaints;
+    var isSuperAdmin = (bool)(ViewBag.IsSuperAdmin ?? false);
+    var schools = ViewBag.Schools as List<SchoolDto> ?? new();
+    var branches = ViewBag.Branches as List<BranchDto> ?? new();
+    var selectedSchoolId = ViewBag.SelectedSchoolId as int?;
+    var selectedBranchId = ViewBag.SelectedBranchId as int?;
+}
+
+<div class="page-header" data-aos="fade-down">
+    <div>
+        <h4 class="page-title"><i class="fas fa-chart-line text-primary"></i> @Localizer["SystemAnalytics"]</h4>
+    </div>
+    <div class="page-actions">
+        <a href="@Url.Action("ExportAnalyticsExcel", new { schoolId = selectedSchoolId, branchId = selectedBranchId })" class="btn btn-success"><i class="fas fa-file-excel me-1"></i>@Localizer["ExportExcel"]</a>
+        <button class="btn btn-outline-primary" onclick="window.print()"><i class="fas fa-print me-1"></i>@Localizer["Print"]</button>
+    </div>
+</div>
+
+<!-- ══════════════ FILTERS ══════════════ -->
+<div class="dashboard-card card p-3 mb-4" data-aos="fade-up">
+    <form method="get" asp-action="Analytics" class="row g-3 align-items-end">
+        @if (isSuperAdmin)
+        {
+            <div class="col-md-4">
+                <label class="form-label"><i class="fas fa-school me-1"></i>@Localizer["School"]</label>
+                <select id="filterSchool" name="schoolId" class="form-select select2">
+                    <option value="">@Localizer["AllSchools"]</option>
+                    @foreach (var s in schools) { <option value="@s.Id" selected="@(selectedSchoolId == s.Id)">@s.Name</option> }
+                </select>
+            </div>
+        }
+        <div class="col-md-4">
+            <label class="form-label"><i class="fas fa-code-branch me-1"></i>@Localizer["Branch"]</label>
+            <select id="filterBranch" name="branchId" class="form-select select2">
+                <option value="">@Localizer["AllBranches"]</option>
+                @foreach (var b in branches) { <option value="@b.Id" selected="@(selectedBranchId == b.Id)">@b.Name</option> }
+            </select>
+        </div>
+        <div class="col-md-2">
+            <button type="submit" class="btn btn-primary w-100"><i class="fas fa-filter me-1"></i>@Localizer["Filter"]</button>
+        </div>
+    </form>
+</div>
+
+<!-- ══════════════ SECTION 1 : PEOPLE ══════════════ -->
+<h5 class="mt-4 mb-3" data-aos="fade-right"><i class="fas fa-users me-2 text-primary"></i>@Localizer["PeopleOverview"]</h5>
+
+<div class="stat-ribbon" data-aos="fade-up">
+    <div class="stat-item stagger-item">
+        <div class="stat-icon bg-primary-soft"><i class="fas fa-user-graduate"></i></div>
+        <div class="stat-info"><h6>@Localizer["Students"]</h6><div class="stat-value">@Model.TotalStudents</div></div>
+    </div>
+    <div class="stat-item stagger-item">
+        <div class="stat-icon bg-info-soft"><i class="fas fa-chalkboard-teacher"></i></div>
+        <div class="stat-info"><h6>@Localizer["Teachers"]</h6><div class="stat-value">@Model.TotalTeachers</div></div>
+    </div>
+    <div class="stat-item stagger-item">
+        <div class="stat-icon bg-success-soft"><i class="fas fa-user-tie"></i></div>
+        <div class="stat-info"><h6>@Localizer["Staff"]</h6><div class="stat-value">@Model.TotalStaff</div></div>
+    </div>
+    <div class="stat-item stagger-item">
+        <div class="stat-icon bg-warning-soft"><i class="fas fa-users"></i></div>
+        <div class="stat-info"><h6>@Localizer["Parents"]</h6><div class="stat-value">@Model.TotalParents</div></div>
+    </div>
+</div>
+
+<div class="row mb-4" data-aos="fade-up">
+    <div class="col-lg-6">
+        <div class="dashboard-card card p-3 hover-lift">
+            <h6 class="mb-3"><i class="fas fa-chart-bar me-2 text-primary"></i>@Localizer["StudentsByGrade"]</h6>
+            <canvas id="chartStudentGrade" height="260"></canvas>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="dashboard-card card p-3 hover-lift">
+            <h6 class="mb-3"><i class="fas fa-chart-pie me-2 text-primary"></i>@Localizer["StudentsByBranch"]</h6>
+            <canvas id="chartStudentBranch" height="260"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- ══════════════ SECTION 2 : FINANCE ══════════════ -->
+<h5 class="mt-4 mb-3" data-aos="fade-right"><i class="fas fa-coins me-2 text-success"></i>@Localizer["FinancialOverview"]</h5>
+
+<div class="stat-ribbon" data-aos="fade-up">
+    <div class="stat-item stagger-item">
+        <div class="stat-icon bg-primary-soft"><i class="fas fa-file-invoice-dollar"></i></div>
+        <div class="stat-info"><h6>@Localizer["TotalFees"]</h6><div class="stat-value">@Model.TotalFees.ToString("N0")</div></div>
+    </div>
+    <div class="stat-item stagger-item">
+        <div class="stat-icon bg-success-soft"><i class="fas fa-check-circle"></i></div>
+        <div class="stat-info"><h6>@Localizer["PaidFees"]</h6><div class="stat-value text-success">@Model.TotalPaidFees.ToString("N0")</div></div>
+    </div>
+    <div class="stat-item stagger-item">
+        <div class="stat-icon bg-danger-soft"><i class="fas fa-times-circle"></i></div>
+        <div class="stat-info"><h6>@Localizer["UnpaidFees"]</h6><div class="stat-value text-danger">@Model.TotalUnpaidFees.ToString("N0")</div></div>
+    </div>
+    <div class="stat-item stagger-item">
+        <div class="stat-icon bg-warning-soft"><i class="fas fa-receipt"></i></div>
+        <div class="stat-info"><h6>@Localizer["Expenses"]</h6><div class="stat-value">@Model.TotalExpenses.ToString("N0")</div></div>
+    </div>
+    <div class="stat-item stagger-item">
+        <div class="stat-icon bg-info-soft"><i class="fas fa-wallet"></i></div>
+        <div class="stat-info"><h6>@Localizer["Salaries"]</h6><div class="stat-value">@Model.TotalSalaries.ToString("N0")</div></div>
+    </div>
+</div>
+
+<div class="row mb-4" data-aos="fade-up">
+    <div class="col-lg-8">
+        <div class="dashboard-card card p-3 hover-lift">
+            <h6 class="mb-3"><i class="fas fa-chart-area me-2 text-primary"></i>@Localizer["MonthlyRevVsExp"]</h6>
+            <canvas id="chartMonthly" height="300"></canvas>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="dashboard-card card p-3 hover-lift">
+            <h6 class="mb-3"><i class="fas fa-chart-pie me-2 text-primary"></i>@Localizer["ExpensesByType"]</h6>
+            <canvas id="chartExpType" height="300"></canvas>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4" data-aos="fade-up">
+    <div class="col-lg-5">
+        <div class="dashboard-card card p-3 hover-lift">
+            <h6 class="mb-3"><i class="fas fa-chart-pie me-2 text-success"></i>@Localizer["FeeCollection"]</h6>
+            <canvas id="chartFees" height="260"></canvas>
+        </div>
+    </div>
+    <div class="col-lg-7">
+        <div class="dashboard-card card p-3 hover-lift">
+            <h6 class="mb-3"><i class="fas fa-balance-scale me-2 text-primary"></i>@Localizer["FinancialSummary"]</h6>
+            <table class="table table-bordered mb-0">
+                <tbody>
+                    <tr>
+                        <td><i class="fas fa-arrow-up text-success me-2"></i>@Localizer["TotalRevenue"]</td>
+                        <td class="fw-bold text-success text-end">@Model.TotalRevenue.ToString("N0")</td>
+                    </tr>
+                    <tr>
+                        <td><i class="fas fa-arrow-down text-danger me-2"></i>@Localizer["TotalExpenses"]</td>
+                        <td class="fw-bold text-danger text-end">@Model.TotalExpenses.ToString("N0")</td>
+                    </tr>
+                    <tr>
+                        <td><i class="fas fa-wallet text-warning me-2"></i>@Localizer["TotalSalaries"]</td>
+                        <td class="fw-bold text-warning text-end">@Model.TotalSalaries.ToString("N0")</td>
+                    </tr>
+                    <tr class="table-light">
+                        <td><strong><i class="fas fa-coins text-primary me-2"></i>@Localizer["NetProfit"]</strong></td>
+                        <td class="fw-bold text-end fs-5 @(netProfit >= 0 ? "text-primary" : "text-danger")">@netProfit.ToString("N0")</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- ══════════════ SECTION 3 : ACADEMIC ══════════════ -->
+<h5 class="mt-4 mb-3" data-aos="fade-right"><i class="fas fa-graduation-cap me-2 text-info"></i>@Localizer["AcademicOverview"]</h5>
+
+<div class="stat-ribbon" data-aos="fade-up">
+    <div class="stat-item stagger-item">
+        <div class="stat-icon bg-primary-soft"><i class="fas fa-graduation-cap"></i></div>
+        <div class="stat-info"><h6>@Localizer["Courses"]</h6><div class="stat-value">@Model.TotalCourses</div></div>
+    </div>
+    <div class="stat-item stagger-item">
+        <div class="stat-icon bg-info-soft"><i class="fas fa-book"></i></div>
+        <div class="stat-info"><h6>@Localizer["Subjects"]</h6><div class="stat-value">@Model.TotalSubjects</div></div>
+    </div>
+    <div class="stat-item stagger-item">
+        <div class="stat-icon bg-success-soft"><i class="fas fa-pencil-alt"></i></div>
+        <div class="stat-info"><h6>@Localizer["Homework"]</h6><div class="stat-value">@Model.TotalHomework</div></div>
+    </div>
+    <div class="stat-item stagger-item">
+        <div class="stat-icon bg-warning-soft"><i class="fas fa-question-circle"></i></div>
+        <div class="stat-info"><h6>@Localizer["Quizzes"]</h6><div class="stat-value">@Model.TotalQuizzes</div></div>
+    </div>
+    <div class="stat-item stagger-item">
+        <div class="stat-icon bg-danger-soft"><i class="fas fa-percentage"></i></div>
+        <div class="stat-info"><h6>@Localizer["AvgGrade"]</h6><div class="stat-value">@Model.AverageGrade%</div></div>
+    </div>
+</div>
+
+<div class="row mb-4" data-aos="fade-up">
+    <div class="col-lg-12">
+        <div class="dashboard-card card p-3 hover-lift">
+            <h6 class="mb-3"><i class="fas fa-chart-bar me-2 text-info"></i>@Localizer["AverageBySubject"]</h6>
+            <canvas id="chartSubjectAvg" height="220"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- ══════════════ SECTION 4 : OPERATIONS ══════════════ -->
+<h5 class="mt-4 mb-3" data-aos="fade-right"><i class="fas fa-cogs me-2 text-warning"></i>@Localizer["OperationsOverview"]</h5>
+
+<div class="stat-ribbon" data-aos="fade-up">
+    <div class="stat-item stagger-item">
+        <div class="stat-icon bg-primary-soft"><i class="fas fa-fingerprint"></i></div>
+        <div class="stat-info"><h6>@Localizer["AttendanceToday"]</h6><div class="stat-value">@Model.TotalAttendanceToday</div></div>
+    </div>
+    <div class="stat-item stagger-item">
+        <div class="stat-icon bg-info-soft"><i class="fas fa-chart-pie"></i></div>
+        <div class="stat-info"><h6>@Localizer["AttendanceRate"]</h6><div class="stat-value">@Model.AttendanceRate%</div></div>
+    </div>
+    <div class="stat-item stagger-item">
+        <div class="stat-icon bg-warning-soft"><i class="fas fa-calendar-minus"></i></div>
+        <div class="stat-info"><h6>@Localizer["PendingLeaves"]</h6><div class="stat-value">@Model.PendingLeaves / @Model.TotalLeaves</div></div>
+    </div>
+    <div class="stat-item stagger-item">
+        <div class="stat-icon bg-danger-soft"><i class="fas fa-comment-dots"></i></div>
+        <div class="stat-info"><h6>@Localizer["OpenComplaints"]</h6><div class="stat-value">@Model.OpenComplaints / @Model.TotalComplaints</div></div>
+    </div>
+    <div class="stat-item stagger-item">
+        <div class="stat-icon bg-success-soft"><i class="fas fa-calendar-alt"></i></div>
+        <div class="stat-info"><h6>@Localizer["UpcomingEvents"]</h6><div class="stat-value">@Model.UpcomingEvents</div></div>
+    </div>
+</div>
+
+<div class="row mb-4" data-aos="fade-up">
+    <div class="col-lg-4">
+        <div class="dashboard-card card p-3 hover-lift">
+            <h6 class="mb-3"><i class="fas fa-chart-pie me-2 text-primary"></i>@Localizer["AttendanceBreakdown"]</h6>
+            <canvas id="chartAttendance" height="240"></canvas>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="dashboard-card card p-3 hover-lift">
+            <h6 class="mb-3"><i class="fas fa-chart-pie me-2 text-warning"></i>@Localizer["Complaints"]</h6>
+            <canvas id="chartComplaints" height="240"></canvas>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="dashboard-card card p-3 hover-lift">
+            <h6 class="mb-3"><i class="fas fa-boxes me-2 text-info"></i>@Localizer["Resources"]</h6>
+            <table class="table table-sm mb-0">
+                <tbody>
+                    <tr><td><i class="fas fa-book-open text-primary me-2"></i>@Localizer["TotalBooks"]</td><td class="fw-bold text-end">@Model.TotalBooks</td></tr>
+                    <tr><td><i class="fas fa-hand-holding text-warning me-2"></i>@Localizer["Borrowed"]</td><td class="fw-bold text-end">@Model.BorrowedBooks</td></tr>
+                    <tr><td><i class="fas fa-bus text-info me-2"></i>@Localizer["Routes"]</td><td class="fw-bold text-end">@Model.TotalRoutes</td></tr>
+                    <tr><td><i class="fas fa-boxes text-success me-2"></i>@Localizer["Assets"]</td><td class="fw-bold text-end">@Model.TotalAssets</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    // palette
+    var P = ['#6366f1','#ec4899','#22c55e','#f59e0b','#06b6d4','#8b5cf6','#ef4444','#14b8a6','#f97316','#64748b','#a855f7','#0ea5e9'];
+
+    $(function () {
+
+        /* ── 1. Students by Grade (Bar) ── */
+        var gradeL = [@Html.Raw(string.Join(",", Model.StudentsByGrade.Select(x => "\"" + x.Name + "\"")))];
+        var gradeD = [@Html.Raw(string.Join(",", Model.StudentsByGrade.Select(x => x.Count)))];
+        new Chart(document.getElementById('chartStudentGrade'), {
+            type: 'bar',
+            data: { labels: gradeL, datasets: [{ label: '@Localizer["Students"]', data: gradeD, backgroundColor: P.slice(0, gradeL.length), borderRadius: 8 }] },
+            options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
+        });
+
+        /* ── 2. Students by Branch (Doughnut) ── */
+        var branchL = [@Html.Raw(string.Join(",", Model.StudentsByBranch.Select(x => "\"" + x.Name + "\"")))];
+        var branchD = [@Html.Raw(string.Join(",", Model.StudentsByBranch.Select(x => x.Count)))];
+        new Chart(document.getElementById('chartStudentBranch'), {
+            type: 'doughnut',
+            data: { labels: branchL, datasets: [{ data: branchD, backgroundColor: P.slice(0, branchL.length), borderWidth: 0 }] },
+            options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+        });
+
+        /* ── 3. Monthly Revenue vs Expenses (Line / Area) ── */
+        var monthL = [@Html.Raw(string.Join(",", Model.MonthlyFinancials.Select(x => "\"" + x.Month + "\"")))];
+        var monthR = [@Html.Raw(string.Join(",", Model.MonthlyFinancials.Select(x => x.Revenue.ToString("F0"))))];
+        var monthE = [@Html.Raw(string.Join(",", Model.MonthlyFinancials.Select(x => x.Expenses.ToString("F0"))))];
+        new Chart(document.getElementById('chartMonthly'), {
+            type: 'line',
+            data: {
+                labels: monthL,
+                datasets: [
+                    { label: '@Localizer["Revenue"]', data: monthR, borderColor: '#22c55e', backgroundColor: 'rgba(34,197,94,0.12)', fill: true, tension: 0.4, pointRadius: 5, pointBackgroundColor: '#22c55e' },
+                    { label: '@Localizer["Expenses"]', data: monthE, borderColor: '#ef4444', backgroundColor: 'rgba(239,68,68,0.12)', fill: true, tension: 0.4, pointRadius: 5, pointBackgroundColor: '#ef4444' }
+                ]
+            },
+            options: { responsive: true, scales: { y: { beginAtZero: true } }, plugins: { legend: { position: 'top' } } }
+        });
+
+        /* ── 4. Expenses by Type (Doughnut) ── */
+        var expL = [@Html.Raw(string.Join(",", Model.ExpensesByType.Select(x => "\"" + x.Name + "\"")))];
+        var expD = [@Html.Raw(string.Join(",", Model.ExpensesByType.Select(x => x.Amount.ToString("F0"))))];
+        new Chart(document.getElementById('chartExpType'), {
+            type: 'doughnut',
+            data: { labels: expL, datasets: [{ data: expD, backgroundColor: P.slice(0, expL.length), borderWidth: 0 }] },
+            options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+        });
+
+        /* ── 5. Fee Collection (Doughnut) ── */
+        new Chart(document.getElementById('chartFees'), {
+            type: 'doughnut',
+            data: {
+                labels: ['@Localizer["Paid"]', '@Localizer["Unpaid"]'],
+                datasets: [{ data: [@Model.TotalPaidFees.ToString("F0"), @Model.TotalUnpaidFees.ToString("F0")], backgroundColor: ['#22c55e', '#ef4444'], borderWidth: 0 }]
+            },
+            options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+        });
+
+        /* ── 6. Subject Averages (Horizontal Bar) ── */
+        var subL = [@Html.Raw(string.Join(",", Model.GradesBySubject.Select(x => "\"" + x.Name + "\"")))];
+        var subD = [@Html.Raw(string.Join(",", Model.GradesBySubject.Select(x => x.Value.ToString("F1"))))];
+        var subC = subD.map(function (v) { return v >= 85 ? '#22c55e' : v >= 60 ? '#06b6d4' : v >= 40 ? '#f59e0b' : '#ef4444'; });
+        new Chart(document.getElementById('chartSubjectAvg'), {
+            type: 'bar',
+            data: { labels: subL, datasets: [{ label: '@Localizer["Average"] %', data: subD, backgroundColor: subC, borderRadius: 8 }] },
+            options: { responsive: true, indexAxis: 'y', plugins: { legend: { display: false } }, scales: { x: { beginAtZero: true, max: 100 } } }
+        });
+
+        /* ── 7. Attendance Breakdown (Doughnut) ── */
+        new Chart(document.getElementById('chartAttendance'), {
+            type: 'doughnut',
+            data: {
+                labels: ['@Localizer["Present"]', '@Localizer["Absent"]'],
+                datasets: [{ data: [@Model.TotalAttendanceToday, @absent], backgroundColor: ['#22c55e', '#ef4444'], borderWidth: 0 }]
+            },
+            options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+        });
+
+        /* ── 8. Complaints (Doughnut) ── */
+        new Chart(document.getElementById('chartComplaints'), {
+            type: 'doughnut',
+            data: {
+                labels: ['@Localizer["Open"]', '@Localizer["Resolved"]'],
+                datasets: [{ data: [@Model.OpenComplaints, @resolvedComplaints], backgroundColor: ['#f59e0b', '#22c55e'], borderWidth: 0 }]
+            },
+            options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+        });
+
+        @if (isSuperAdmin)
+        {
+            <text>
+        /* ── School → Branch cascade ── */
+        $('#filterSchool').on('change', function () {
+            var schoolId = $(this).val();
+            var $branch = $('#filterBranch');
+            $branch.html('<option value="">@Localizer["AllBranches"]</option>');
+            if (schoolId) {
+                $.getJSON('@Url.Action("GetBranchesBySchool")', { schoolId: schoolId }, function (data) {
+                    $.each(data, function (_, b) { $branch.append('<option value="' + b.id + '">' + b.name + '</option>'); });
+                });
+            }
+        });
+            </text>
+        }
+    });
+</script>
+}

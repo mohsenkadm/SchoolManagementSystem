@@ -1,0 +1,203 @@
+@using SchoolMS.Application.DTOs
+@using SchoolMS.Domain.Enums
+@{
+    ViewData["Title"] = Localizer["Attendance"].Value;
+    var isSuperAdmin = (bool)(ViewBag.IsSuperAdmin ?? false);
+    var schools = ViewBag.Schools as List<SchoolDto> ?? new();
+    var branches = ViewBag.Branches as List<BranchDto> ?? new();
+}
+
+@Html.AntiForgeryToken()
+
+<div class="page-header" data-aos="fade-down">
+    <div>
+        <h4 class="page-title"><i class="fas fa-fingerprint text-primary"></i> @Localizer["Attendance"] — @Localizer["CheckInOut"]</h4>
+    </div>
+    <div class="page-actions">
+        <a href="@Url.Action("Report")" class="btn btn-info"><i class="fas fa-chart-bar me-1"></i>@Localizer["Reports"]</a>
+    </div>
+</div>
+
+<!-- Scanner Card -->
+<div class="dashboard-card card p-4 mb-4 hover-lift" data-aos="fade-up">
+    <h5 class="mb-3"><i class="fas fa-id-card me-2 text-primary"></i>@Localizer["BadgeScanner"]</h5>
+    <div class="row g-3 align-items-end">
+        @if (isSuperAdmin)
+        {
+            <div class="col-md-3">
+                <label class="form-label">@Localizer["School"]</label>
+                <select id="schoolSelect" class="form-select select2">
+                    <option value="">-- @Localizer["SelectSchool"] --</option>
+                    @foreach (var s in schools) { <option value="@s.Id">@s.Name</option> }
+                </select>
+            </div>
+        }
+        <div class="col-md-2">
+            <label class="form-label">@Localizer["Branch"] *</label>
+            <select id="branchId" class="form-select">
+                @foreach (var b in branches) { <option value="@b.Id">@b.Name</option> }
+            </select>
+        </div>
+        <div class="col-md-2">
+            <label class="form-label">@Localizer["Type"] *</label>
+            <select id="attendanceType" class="form-select">
+                <option value="0">@Localizer["CheckIn"]</option>
+                <option value="1">@Localizer["CheckOut"]</option>
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label class="form-label">@Localizer["BadgeCardNumber"]</label>
+            <input type="text" id="badgeCard" class="form-control" placeholder="@Localizer["ScanOrEnterBadge"]..." autofocus />
+        </div>
+        <div class="col-md-2">
+            <button class="btn btn-accent w-100" id="btnAddToBatch"><i class="fas fa-plus me-1"></i>@Localizer["Add"]</button>
+        </div>
+    </div>
+</div>
+
+<!-- Batch Table (Front-end only before save) -->
+<div class="dashboard-card card p-4 mb-4 hover-lift" data-aos="fade-up">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="mb-0">
+            <i class="fas fa-list me-2 text-info"></i>@Localizer["PendingRecords"]
+            <span class="badge bg-primary ms-2" id="batchCount">0</span>
+        </h5>
+        <div class="d-flex gap-2">
+            <button class="btn btn-outline-danger" id="btnClearBatch"><i class="fas fa-trash me-1"></i>@Localizer["ClearAll"]</button>
+            <button class="btn btn-success btn-lg" id="btnSaveBatch"><i class="fas fa-save me-1"></i>@Localizer["SaveAll"]</button>
+        </div>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover" id="batchTable">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>@Localizer["Name"]</th>
+                    <th>@Localizer["PersonType"]</th>
+                    <th>@Localizer["BadgeCardNumber"]</th>
+                    <th>@Localizer["Time"]</th>
+                    <th>@Localizer["Actions"]</th>
+                </tr>
+            </thead>
+            <tbody id="batchBody"></tbody>
+        </table>
+        <div id="emptyMsg" class="text-center text-muted py-4">
+            <i class="fas fa-inbox fa-2x mb-2 d-block"></i>@Localizer["ScanBadgeToStart"]
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    var batchItems = [];
+    var token = $('input[name="__RequestVerificationToken"]').val();
+
+    @if (isSuperAdmin)
+    {
+        @:$('#schoolSelect').on('change', function() {
+        @:    var sid = $(this).val();
+        @:    var brSel = $('#branchId');
+        @:    brSel.html('');
+        @:    if (!sid) return;
+        @:    $.get('@Url.Action("GetBranchesBySchool")?schoolId=' + sid, function(data) {
+        @:        data.forEach(function(b) { brSel.append('<option value="' + b.id + '">' + b.name + '</option>'); });
+        @:    });
+        @:});
+    }
+
+    $('#btnAddToBatch').on('click', addToBatch);
+    $('#badgeCard').on('keypress', function(e) { if (e.which === 13) { e.preventDefault(); addToBatch(); } });
+    $('#btnClearBatch').on('click', function() { batchItems = []; renderBatch(); });
+    $('#btnSaveBatch').on('click', saveBatch);
+
+    function addToBatch() {
+        var badge = $('#badgeCard').val().trim();
+        if (!badge) { toastr.warning('@Localizer["PleaseEnterBadge"]'); return; }
+        if (batchItems.some(function(x) { return x.badgeCardNumber === badge; })) {
+            toastr.info('@Localizer["AlreadyInList"]');
+            $('#badgeCard').val('').focus();
+            return;
+        }
+        $.ajax({
+            url: '@Url.Action("ResolveBadge")', type: 'POST', contentType: 'application/json',
+            data: JSON.stringify(badge),
+            headers: { 'RequestVerificationToken': token },
+            success: function(data) {
+                data.addedTime = new Date().toLocaleTimeString();
+                batchItems.push(data);
+                renderBatch();
+                toastr.success(data.personName + ' — @Localizer["Added"]');
+                $('#badgeCard').val('').focus();
+            },
+            error: function() { toastr.error('@Localizer["BadgeNotFound"]'); $('#badgeCard').val('').focus(); }
+        });
+    }
+
+    function removeFromBatch(idx) {
+        batchItems.splice(idx, 1);
+        renderBatch();
+    }
+
+    function renderBatch() {
+        var body = $('#batchBody');
+        body.empty();
+        var typeNames = ['Student', 'Teacher', 'Staff'];
+        var typeBadges = ['bg-info', 'bg-success', 'bg-warning text-dark'];
+        batchItems.forEach(function(item, i) {
+            body.append(
+                '<tr>' +
+                '<td>' + (i + 1) + '</td>' +
+                '<td><strong>' + item.personName + '</strong></td>' +
+                '<td><span class="badge ' + typeBadges[item.personType] + '">' + typeNames[item.personType] + '</span></td>' +
+                '<td><code>' + item.badgeCardNumber + '</code></td>' +
+                '<td>' + item.addedTime + '</td>' +
+                '<td><button class="btn btn-sm btn-outline-danger" onclick="removeFromBatch(' + i + ')"><i class="fas fa-times"></i></button></td>' +
+                '</tr>'
+            );
+        });
+        $('#batchCount').text(batchItems.length);
+        $('#emptyMsg').toggle(batchItems.length === 0);
+    }
+
+    function saveBatch() {
+        if (batchItems.length === 0) { toastr.warning('@Localizer["NoRecordsToSave"]'); return; }
+        var branchId = +$('#branchId').val();
+        if (!branchId) { toastr.warning('@Localizer["SelectBranch"]'); return; }
+        var payload = {
+            type: +$('#attendanceType').val(),
+            branchId: branchId,
+            items: batchItems.map(function(x) {
+                return { personId: x.personId, personName: x.personName, personType: x.personType, badgeCardNumber: x.badgeCardNumber };
+            })
+        };
+        Swal.fire({
+            title: '@Localizer["SaveAttendance"]?',
+            text: batchItems.length + ' @Localizer["RecordsWillBeSaved"]',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: '<i class="fas fa-save me-1"></i>@Localizer["Save"]',
+            cancelButtonText: '@Localizer["Cancel"]'
+        }).then(function(r) {
+            if (!r.isConfirmed) return;
+            $.ajax({
+                url: '@Url.Action("SaveBulk")', type: 'POST', contentType: 'application/json',
+                data: JSON.stringify(payload),
+                headers: { 'RequestVerificationToken': token },
+                success: function(data) {
+                    var msg = data.count + ' @Localizer["RecordsSavedSuccessfully"]';
+                    if (data.skipped > 0) msg += ' (' + data.skipped + ' @Localizer["SkippedDuplicate"])';
+                    toastr.success(msg);
+                    batchItems = [];
+                    renderBatch();
+                },
+                error: function(x) {
+                    var err = x.responseJSON && x.responseJSON.error ? x.responseJSON.error : '@Localizer["ErrorSavingRecords"]';
+                    toastr.error(err);
+                }
+            });
+        });
+    }
+
+    renderBatch();
+</script>
+}

@@ -1,0 +1,40 @@
+@using SchoolMS.Application.DTOs
+@{
+    var isEdit = Model != null;
+    var item = isEdit ? (HrEmployeeContractDto)Model : null;
+    var employees = ViewBag.Employees as List<HrEmployeeDto> ?? new();
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4" data-aos="fade-down">
+    <h4 class="mb-0"><i class="fas @(isEdit ? "fa-edit" : "fa-plus-circle") me-2 text-primary"></i>@(isEdit ? Localizer["Edit"] : Localizer["Add"]) @Localizer["Contract"]</h4>
+    <a href="@Url.Action("Index")" class="btn btn-secondary"><i class="fas fa-arrow-left me-1"></i>@Localizer["Back"]</a>
+</div>
+<div class="dashboard-card card p-4" data-aos="fade-up">
+    <form asp-action="@(isEdit ? "Edit" : "Create")" method="post">
+        @Html.AntiForgeryToken()
+        @if (isEdit) { <input type="hidden" name="Id" value="@item!.Id" /> }
+        <div class="row g-3">
+            <div class="col-md-4">
+                <label class="form-label">@Localizer["Employee"] *</label>
+                <select name="EmployeeId" class="form-select select2" required>
+                    <option value="">—</option>
+                    @foreach (var e in employees) { <option value="@e.Id" selected="@(item?.EmployeeId == e.Id)">@e.FullName</option> }
+                </select>
+            </div>
+            <div class="col-md-4"><label class="form-label">@Localizer["ContractNo"]</label><input type="text" name="ContractNumber" class="form-control" value="@item?.ContractNumber" /></div>
+            <div class="col-md-4">
+                <label class="form-label">@Localizer["Type"]</label>
+                <select name="ContractType" class="form-select">@foreach (var t in Enum.GetValues<ContractType>()) { <option value="@t" selected="@(item?.ContractType == t)">@t</option> }</select>
+            </div>
+            <div class="col-md-3"><label class="form-label">@Localizer["StartDate"] *</label><input type="date" name="StartDate" class="form-control" value="@(item?.StartDate.ToString("yyyy-MM-dd") ?? DateTime.Today.ToString("yyyy-MM-dd"))" required /></div>
+            <div class="col-md-3"><label class="form-label">@Localizer["EndDate"]</label><input type="date" name="EndDate" class="form-control" value="@item?.EndDate?.ToString("yyyy-MM-dd")" /></div>
+            <div class="col-md-3"><label class="form-label">@Localizer["AgreedSalary"]</label><input type="number" step="0.01" name="AgreedSalary" class="form-control" value="@item?.AgreedSalary" /></div>
+            <div class="col-md-3"><label class="form-label">@Localizer["SignedBy"]</label><input type="text" name="SignedBy" class="form-control" value="@item?.SignedBy" /></div>
+            <div class="col-12"><label class="form-label">@Localizer["Notes"]</label><textarea name="Notes" class="form-control" rows="2">@item?.Notes</textarea></div>
+        </div>
+        <div class="mt-4 d-flex gap-2">
+            <button type="submit" class="btn btn-accent"><i class="fas fa-save me-1"></i>@Localizer["Save"]</button>
+            <a href="@Url.Action("Index")" class="btn btn-secondary">@Localizer["Cancel"]</a>
+        </div>
+    </form>
+</div>

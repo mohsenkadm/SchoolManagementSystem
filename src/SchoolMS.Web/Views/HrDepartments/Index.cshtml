@@ -1,0 +1,48 @@
+@model List<SchoolMS.Application.DTOs.HrDepartmentDto>
+@{ ViewData["Title"] = Localizer["Departments"].Value; }
+@Html.AntiForgeryToken()
+
+<div class="page-header" data-aos="fade-down">
+    <div><h4 class="page-title"><i class="fas fa-sitemap text-primary"></i> @Localizer["Departments"]</h4><span class="record-count"><i class="fas fa-layer-group"></i> @Model.Count</span></div>
+    <div class="page-actions"><a href="@Url.Action("Create")" class="btn btn-accent"><i class="fas fa-plus me-1"></i>@Localizer["Add"]</a></div>
+</div>
+
+<div class="stat-ribbon" data-aos="fade-up">
+    <div class="stat-item stagger-item"><div class="stat-icon bg-primary-soft"><i class="fas fa-sitemap"></i></div><div class="stat-info"><h6>@Localizer["Total"]</h6><div class="stat-value">@Model.Count</div></div></div>
+    <div class="stat-item stagger-item"><div class="stat-icon bg-success-soft"><i class="fas fa-check-circle"></i></div><div class="stat-info"><h6>@Localizer["Active"]</h6><div class="stat-value">@Model.Count(d => d.IsActive)</div></div></div>
+    <div class="stat-item stagger-item"><div class="stat-icon bg-info-soft"><i class="fas fa-users"></i></div><div class="stat-info"><h6>@Localizer["TotalEmployees"]</h6><div class="stat-value">@Model.Sum(d => d.EmployeeCount)</div></div></div>
+</div>
+
+<div class="table-card hover-lift" data-aos="fade-up">
+    <table id="dataTable" class="table table-hover" style="width:100%">
+        <thead><tr><th>#</th><th>@Localizer["Name"]</th><th>@Localizer["Code"]</th><th>@Localizer["Branch"]</th><th>@Localizer["Parent"]</th><th>@Localizer["Employees"]</th><th>@Localizer["Active"]</th><th>@Localizer["Actions"]</th></tr></thead>
+        <tbody>
+            @for (int i = 0; i < Model.Count; i++)
+            {
+                <tr>
+                    <td>@(i + 1)</td>
+                    <td>@if (Model[i].Color != null) { <span class="badge me-1" style="background-color:@Model[i].Color">&nbsp;</span> } @Model[i].DepartmentName</td>
+                    <td>@Model[i].DepartmentCode</td>
+                    <td>@Model[i].BranchName</td>
+                    <td>@Model[i].ParentDepartmentName</td>
+                    <td><span class="badge bg-info">@Model[i].EmployeeCount</span></td>
+                    <td>@if (Model[i].IsActive) { <span class="status-badge status-active"><span class="status-dot"></span> @Localizer["Active"]</span> } else { <span class="badge bg-secondary">@Localizer["Inactive"]</span> }</td>
+                    <td>
+                        <div class="d-flex gap-1">
+                            <a href="@Url.Action("Edit", new { id = Model[i].Id })" class="btn btn-sm btn-primary"><i class="fas fa-edit"></i></a>
+                            <button class="btn btn-sm btn-danger" onclick="del(@Model[i].Id)"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@section Scripts {
+<script>
+    var dt;
+    $(function () { dt = $('#dataTable').DataTable({ responsive: true, pageLength: 25, dom: 'rtip' }); });
+    function del(id) { confirmDelete('@Url.Action("Delete")', id, function () { location.reload(); }); }
+</script>
+}

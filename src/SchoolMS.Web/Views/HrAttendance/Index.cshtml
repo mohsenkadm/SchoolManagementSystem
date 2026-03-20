@@ -1,0 +1,49 @@
+@model List<SchoolMS.Application.DTOs.HrDailyAttendanceDto>
+@{ ViewData["Title"] = Localizer["HrAttendance"].Value; }
+
+<div class="page-header" data-aos="fade-down">
+    <div><h4 class="page-title"><i class="fas fa-fingerprint text-primary"></i> @Localizer["HrAttendance"]</h4></div>
+    <div class="page-actions">
+        <form asp-action="Process" method="post" class="d-inline">
+            <input type="hidden" name="date" value="@(ViewContext.HttpContext.Request.Query["date"].FirstOrDefault() ?? DateTime.UtcNow.ToString("yyyy-MM-dd"))" />
+            <button type="submit" class="btn btn-accent"><i class="fas fa-sync me-1"></i>@Localizer["ProcessAttendance"]</button>
+        </form>
+    </div>
+</div>
+
+<div class="filter-panel" data-aos="fade-up">
+    <div class="row g-2 align-items-end">
+        <div class="col-md-3"><label class="form-label">@Localizer["Date"]</label><input type="date" id="filterDate" class="form-control" value="@(ViewContext.HttpContext.Request.Query["date"].FirstOrDefault() ?? DateTime.UtcNow.ToString("yyyy-MM-dd"))" /></div>
+        <div class="col-md-2"><button class="btn btn-filter w-100" onclick="location.href='?date='+$('#filterDate').val()"><i class="fas fa-search"></i> @Localizer["Filter"]</button></div>
+    </div>
+</div>
+
+<div class="stat-ribbon" data-aos="fade-up">
+    <div class="stat-item stagger-item"><div class="stat-icon bg-primary-soft"><i class="fas fa-users"></i></div><div class="stat-info"><h6>@Localizer["Total"]</h6><div class="stat-value">@Model.Count</div></div></div>
+    <div class="stat-item stagger-item"><div class="stat-icon bg-success-soft"><i class="fas fa-check"></i></div><div class="stat-info"><h6>@Localizer["Present"]</h6><div class="stat-value">@Model.Count(a => a.Status == DailyAttendanceStatus.Present)</div></div></div>
+    <div class="stat-item stagger-item"><div class="stat-icon bg-danger-soft"><i class="fas fa-times"></i></div><div class="stat-info"><h6>@Localizer["Absent"]</h6><div class="stat-value">@Model.Count(a => a.Status == DailyAttendanceStatus.Absent)</div></div></div>
+    <div class="stat-item stagger-item"><div class="stat-icon bg-warning-soft"><i class="fas fa-clock"></i></div><div class="stat-info"><h6>@Localizer["Late"]</h6><div class="stat-value">@Model.Count(a => a.Status == DailyAttendanceStatus.Late)</div></div></div>
+</div>
+
+<div class="table-card hover-lift" data-aos="fade-up">
+    <table id="dataTable" class="table table-hover" style="width:100%">
+        <thead><tr><th>#</th><th>@Localizer["Employee"]</th><th>@Localizer["CheckIn"]</th><th>@Localizer["CheckOut"]</th><th>@Localizer["WorkedHours"]</th><th>@Localizer["LateMinutes"]</th><th>@Localizer["Status"]</th></tr></thead>
+        <tbody>
+            @for (int i = 0; i < Model.Count; i++)
+            {
+                var a = Model[i];
+                var cls = a.Status switch { DailyAttendanceStatus.Present => "bg-success", DailyAttendanceStatus.Absent => "bg-danger", DailyAttendanceStatus.Late => "bg-warning", DailyAttendanceStatus.OnLeave => "bg-info", _ => "bg-secondary" };
+                <tr>
+                    <td>@(i + 1)</td><td>@a.EmployeeName</td>
+                    <td>@a.FirstCheckIn?.ToString("hh:mm tt")</td><td>@a.LastCheckOut?.ToString("hh:mm tt")</td>
+                    <td>@a.TotalWorkHours?.ToString("F1") h</td><td>@a.LateMinutes min</td>
+                    <td><span class="badge @cls">@a.Status</span></td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@section Scripts {
+<script>$(function () { $('#dataTable').DataTable({ responsive: true, pageLength: 50, dom: 'rtip' }); });</script>
+}

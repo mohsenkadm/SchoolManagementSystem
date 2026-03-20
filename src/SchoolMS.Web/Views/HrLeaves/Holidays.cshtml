@@ -1,0 +1,49 @@
+@model List<SchoolMS.Application.DTOs.HrHolidayDto>
+@{ ViewData["Title"] = Localizer["Holidays"].Value; }
+@Html.AntiForgeryToken()
+
+<div class="page-header" data-aos="fade-down">
+    <div><h4 class="page-title"><i class="fas fa-calendar text-primary"></i> @Localizer["Holidays"]</h4></div>
+    <div class="page-actions"><a href="@Url.Action("Index")" class="btn btn-secondary"><i class="fas fa-arrow-left me-1"></i>@Localizer["Back"]</a></div>
+</div>
+
+<div class="row g-3" data-aos="fade-up">
+    <div class="col-md-8">
+        <div class="table-card hover-lift">
+            <table id="dataTable" class="table table-hover" style="width:100%">
+                <thead><tr><th>#</th><th>@Localizer["Name"]</th><th>@Localizer["Type"]</th><th>@Localizer["From"]</th><th>@Localizer["To"]</th><th>@Localizer["Days"]</th><th>@Localizer["Actions"]</th></tr></thead>
+                <tbody>
+                    @for (int i = 0; i < Model.Count; i++)
+                    {
+                        var h = Model[i];
+                        <tr>
+                            <td>@(i + 1)</td><td>@h.HolidayName</td><td><span class="badge bg-info">@h.Type</span></td>
+                            <td>@h.StartDate.ToString("dd/MM/yyyy")</td><td>@h.EndDate.ToString("dd/MM/yyyy")</td><td>@h.TotalDays</td>
+                            <td><button class="btn btn-sm btn-danger" onclick="delH(@h.Id)"><i class="fas fa-trash"></i></button></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="dashboard-card card p-3">
+            <h6><i class="fas fa-plus me-1"></i>@Localizer["Add"] @Localizer["Holiday"]</h6>
+            <form asp-action="CreateHoliday" method="post">
+                @Html.AntiForgeryToken()
+                <div class="mb-2"><input type="text" name="HolidayName" class="form-control form-control-sm" placeholder="@Localizer["Name"] *" required /></div>
+                <div class="mb-2"><select name="Type" class="form-select form-select-sm">@foreach (var t in Enum.GetValues<HolidayType>()) { <option value="@t">@t</option> }</select></div>
+                <div class="mb-2"><input type="date" name="StartDate" class="form-control form-control-sm" required /></div>
+                <div class="mb-2"><input type="date" name="EndDate" class="form-control form-control-sm" required /></div>
+                <button type="submit" class="btn btn-accent btn-sm w-100"><i class="fas fa-save me-1"></i>@Localizer["Save"]</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    $(function () { $('#dataTable').DataTable({ responsive: true, dom: 'rtip' }); });
+    function delH(id) { confirmDelete('@Url.Action("DeleteHoliday")', id, function () { location.reload(); }); }
+</script>
+}

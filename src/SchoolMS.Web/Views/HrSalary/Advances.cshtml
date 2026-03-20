@@ -1,0 +1,63 @@
+@model List<SchoolMS.Application.DTOs.HrSalaryAdvanceDto>
+@{ ViewData["Title"] = Localizer["Advances"].Value; }
+@Html.AntiForgeryToken()
+
+<div class="page-header" data-aos="fade-down">
+    <div><h4 class="page-title"><i class="fas fa-hand-holding-usd text-primary"></i> @Localizer["Advances"]</h4><span class="record-count"><i class="fas fa-layer-group"></i> @Model.Count</span></div>
+    <div class="page-actions">
+        <a href="@Url.Action("Payroll")" class="btn btn-secondary"><i class="fas fa-arrow-left me-1"></i>@Localizer["Back"]</a>
+        <a href="@Url.Action("CreateAdvance")" class="btn btn-accent"><i class="fas fa-plus me-1"></i>@Localizer["NewRequest"]</a>
+    </div>
+</div>
+
+<div class="stat-ribbon" data-aos="fade-up">
+    <div class="stat-item stagger-item"><div class="stat-icon bg-warning-soft"><i class="fas fa-hourglass-half"></i></div><div class="stat-info"><h6>@Localizer["Pending"]</h6><div class="stat-value">@Model.Count(a => a.Status == AdvanceStatus.Pending)</div></div></div>
+    <div class="stat-item stagger-item"><div class="stat-icon bg-success-soft"><i class="fas fa-check"></i></div><div class="stat-info"><h6>@Localizer["Approved"]</h6><div class="stat-value">@Model.Count(a => a.Status == AdvanceStatus.Approved)</div></div></div>
+    <div class="stat-item stagger-item"><div class="stat-icon bg-primary-soft"><i class="fas fa-money-bill"></i></div><div class="stat-info"><h6>@Localizer["TotalAmount"]</h6><div class="stat-value">@Model.Sum(a => a.ApprovedAmount).ToString("N0")</div></div></div>
+</div>
+
+<div class="table-card hover-lift" data-aos="fade-up">
+    <table id="dataTable" class="table table-hover" style="width:100%">
+        <thead><tr><th>#</th><th>@Localizer["Employee"]</th><th>@Localizer["Requested"]</th><th>@Localizer["Approved"]</th><th>@Localizer["Monthly"]</th><th>@Localizer["Remaining"]</th><th>@Localizer["Status"]</th><th>@Localizer["Actions"]</th></tr></thead>
+        <tbody>
+            @for (int i = 0; i < Model.Count; i++)
+            {
+                var a = Model[i];
+                var cls = a.Status switch { AdvanceStatus.Pending => "bg-warning", AdvanceStatus.Approved => "bg-success", AdvanceStatus.Rejected => "bg-danger", AdvanceStatus.FullyDeducted => "bg-dark", _ => "bg-secondary" };
+                <tr>
+                    <td>@(i + 1)</td><td>@a.EmployeeName</td><td>@a.RequestedAmount.ToString("N0")</td>
+                    <td>@a.ApprovedAmount.ToString("N0")</td><td>@a.MonthlyDeduction.ToString("N0")</td><td>@a.RemainingAmount.ToString("N0")</td>
+                    <td><span class="badge @cls">@a.Status</span></td>
+                    <td>
+                        @if (a.Status == AdvanceStatus.Pending)
+                        {
+                            <button class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#approveModal" onclick="setApprove(@a.Id, @a.RequestedAmount)"><i class="fas fa-check"></i></button>
+                            <form asp-action="RejectAdvance" method="post" class="d-inline"><input type="hidden" name="id" value="@a.Id" /><input type="hidden" name="reason" value="Rejected" /><button class="btn btn-sm btn-danger"><i class="fas fa-times"></i></button></form>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+<div class="modal fade" id="approveModal" tabindex="-1">
+    <div class="modal-dialog">
+        <form asp-action="ApproveAdvance" method="post" class="modal-content">
+            <div class="modal-header"><h5>@Localizer["ApproveAdvance"]</h5></div>
+            <div class="modal-body">
+                <input type="hidden" name="id" id="approveId" />
+                <div class="mb-3"><label class="form-label">@Localizer["ApprovedAmount"]</label><input type="number" step="0.01" name="approvedAmount" id="approvedAmount" class="form-control" required /></div>
+                <div class="mb-3"><label class="form-label">@Localizer["DeductionMonths"]</label><input type="number" name="deductionMonths" class="form-control" value="3" required /></div>
+            </div>
+            <div class="modal-footer"><button type="submit" class="btn btn-success">@Localizer["Approve"]</button></div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    $(function () { $('#dataTable').DataTable({ responsive: true, pageLength: 25, dom: 'rtip' }); });
+    function setApprove(id, amt) { $('#approveId').val(id); $('#approvedAmount').val(amt); }
+</script>
+}

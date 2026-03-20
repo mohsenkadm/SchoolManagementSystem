@@ -1,0 +1,73 @@
+@using SchoolMS.Application.DTOs
+@{
+    var isEdit = Model != null;
+    var item = isEdit ? (WeeklyScheduleDto)Model : null;
+    var classRooms = ViewBag.ClassRooms as List<ClassRoomDto> ?? new();
+    var subjects = ViewBag.Subjects as List<SubjectDto> ?? new();
+    var teachers = ViewBag.Teachers as List<TeacherDto> ?? new();
+    var years = ViewBag.AcademicYears as List<AcademicYearDto> ?? new();
+    var isSuperAdmin = (bool)(ViewBag.IsSuperAdmin ?? false);
+    var schools = ViewBag.Schools as List<SchoolDto> ?? new();
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4" data-aos="fade-down">
+    <h4 class="mb-0"><i class="fas @(isEdit ? "fa-edit" : "fa-plus-circle") me-2 text-primary"></i>@(isEdit ? Localizer["EditSchedule"] : Localizer["AddSchedule"])</h4>
+    <a href="@Url.Action("Index")" class="btn btn-secondary"><i class="fas fa-arrow-left me-1"></i>@Localizer["Back"]</a>
+</div>
+<div class="dashboard-card card p-4" data-aos="fade-up">
+    <form asp-action="@(isEdit ? "Edit" : "Create")" method="post">
+        @Html.AntiForgeryToken()
+        @if (isEdit) { <input type="hidden" name="Id" value="@item!.Id" /> }
+        <div class="row g-3">
+            @if (isSuperAdmin)
+            {
+                <div class="col-md-4">
+                    <label class="form-label">@Localizer["School"] *</label>
+                    <select name="SchoolId" class="form-select select2" required>
+                        <option value="">-- @Localizer["Select"] --</option>
+                        @foreach (var s in schools) { <option value="@s.Id" selected="@(item?.SchoolId == s.Id)">@s.Name</option> }
+                    </select>
+                </div>
+            }
+            <div class="col-md-4">
+                <label class="form-label">@Localizer["Day"] *</label>
+                <select name="DayOfWeek" class="form-select" required>
+                    @foreach (var d in Enum.GetValues<DayOfWeek>()) { <option value="@d" selected="@(item?.DayOfWeek == d)">@d</option> }
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">@Localizer["ClassRoom"] *</label>
+                <select name="ClassRoomId" class="form-select select2" required>
+                    <option value="">-- @Localizer["Select"] --</option>
+                    @foreach (var c in classRooms) { <option value="@c.Id" selected="@(item?.ClassRoomId == c.Id)">@c.GradeName - @c.DivisionName</option> }
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">@Localizer["Subject"] *</label>
+                <select name="SubjectId" class="form-select select2" required>
+                    <option value="">-- @Localizer["Select"] --</option>
+                    @foreach (var s in subjects) { <option value="@s.Id" selected="@(item?.SubjectId == s.Id)">@s.SubjectName</option> }
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">@Localizer["Teacher"] *</label>
+                <select name="TeacherId" class="form-select select2" required>
+                    <option value="">-- @Localizer["Select"] --</option>
+                    @foreach (var t in teachers) { <option value="@t.Id" selected="@(item?.TeacherId == t.Id)">@t.FullName</option> }
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">@Localizer["AcademicYear"] *</label>
+                <select name="AcademicYearId" class="form-select" required>
+                    @foreach (var y in years) { <option value="@y.Id" selected="@(item?.AcademicYearId == y.Id)">@y.YearName</option> }
+                </select>
+            </div>
+            <div class="col-md-2"><label class="form-label">@Localizer["StartTime"] *</label><input type="time" name="StartTime" class="form-control" value="@item?.StartTime.ToString(@"hh\:mm")" required /></div>
+            <div class="col-md-2"><label class="form-label">@Localizer["EndTime"] *</label><input type="time" name="EndTime" class="form-control" value="@item?.EndTime.ToString(@"hh\:mm")" required /></div>
+        </div>
+        <div class="mt-4 d-flex gap-2">
+            <button type="submit" class="btn btn-accent"><i class="fas fa-save me-1"></i>@Localizer["Save"]</button>
+            <a href="@Url.Action("Index")" class="btn btn-secondary">@Localizer["Cancel"]</a>
+        </div>
+    </form>
+</div>

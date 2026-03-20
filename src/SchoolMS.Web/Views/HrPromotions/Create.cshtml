@@ -1,0 +1,42 @@
+@using SchoolMS.Application.DTOs
+@{
+    var employees = ViewBag.Employees as List<HrEmployeeDto> ?? new();
+    var jobTitles = ViewBag.JobTitles as List<HrJobTitleDto> ?? new();
+    var jobGrades = ViewBag.JobGrades as List<HrJobGradeDto> ?? new();
+    var departments = ViewBag.Departments as List<HrDepartmentDto> ?? new();
+    ViewData["Title"] = Localizer["AddPromotion"].Value;
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4" data-aos="fade-down">
+    <h4 class="mb-0"><i class="fas fa-plus-circle me-2 text-primary"></i>@Localizer["AddPromotion"]</h4>
+    <a href="@Url.Action("Index")" class="btn btn-secondary"><i class="fas fa-arrow-left me-1"></i>@Localizer["Back"]</a>
+</div>
+<div class="dashboard-card card p-4" data-aos="fade-up">
+    <form asp-action="Create" method="post">
+        @Html.AntiForgeryToken()
+        <div class="row g-3">
+            <div class="col-md-4">
+                <label class="form-label">@Localizer["Employee"] *</label>
+                <select name="EmployeeId" class="form-select select2" required><option value="">—</option>@foreach (var e in employees) { <option value="@e.Id">@e.FullName</option> }</select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">@Localizer["Type"] *</label>
+                <select name="Type" class="form-select">@foreach (var t in Enum.GetValues<PromotionType>()) { <option value="@t">@t</option> }</select>
+            </div>
+            <div class="col-md-4"><label class="form-label">@Localizer["EffectiveDate"] *</label><input type="date" name="EffectiveDate" class="form-control" value="@DateTime.Today.ToString("yyyy-MM-dd")" required /></div>
+            <div class="col-md-3">
+                <label class="form-label">@Localizer["FromJobTitle"]</label>
+                <select name="FromJobTitleId" class="form-select select2"><option value="">—</option>@foreach (var j in jobTitles) { <option value="@j.Id">@j.TitleName</option> }</select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">@Localizer["ToJobTitle"]</label>
+                <select name="ToJobTitleId" class="form-select select2"><option value="">—</option>@foreach (var j in jobTitles) { <option value="@j.Id">@j.TitleName</option> }</select>
+            </div>
+            <div class="col-md-3"><label class="form-label">@Localizer["FromSalary"]</label><input type="number" step="0.01" name="FromSalary" class="form-control" /></div>
+            <div class="col-md-3"><label class="form-label">@Localizer["ToSalary"]</label><input type="number" step="0.01" name="ToSalary" class="form-control" /></div>
+            <div class="col-md-4"><label class="form-label">@Localizer["DecisionNumber"]</label><input type="text" name="DecisionNumber" class="form-control" /></div>
+            <div class="col-md-8"><label class="form-label">@Localizer["Reason"]</label><textarea name="Reason" class="form-control" rows="2"></textarea></div>
+        </div>
+        <div class="mt-4"><button type="submit" class="btn btn-accent"><i class="fas fa-save me-1"></i>@Localizer["Save"]</button></div>
+    </form>
+</div>

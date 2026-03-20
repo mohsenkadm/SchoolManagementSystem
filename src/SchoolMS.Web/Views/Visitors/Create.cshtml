@@ -1,0 +1,63 @@
+@using SchoolMS.Application.DTOs
+@{
+    var isSuperAdmin = (bool)(ViewBag.IsSuperAdmin ?? false);
+    var schools = ViewBag.Schools as List<SchoolDto> ?? new();
+    var branches = ViewBag.Branches as List<BranchDto> ?? new();
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4" data-aos="fade-down">
+    <h4 class="mb-0"><i class="fas fa-plus-circle me-2 text-primary"></i>@Localizer["CheckIn"]</h4>
+    <a href="@Url.Action("Index")" class="btn btn-secondary"><i class="fas fa-arrow-left me-1"></i>@Localizer["Back"]</a>
+</div>
+<div class="dashboard-card card p-4" data-aos="fade-up">
+    <form asp-action="Create" method="post">
+        @Html.AntiForgeryToken()
+        <div class="row g-3">
+            @if (isSuperAdmin)
+            {
+                <div class="col-md-4">
+                    <label class="form-label">@Localizer["School"] *</label>
+                    <select id="schoolSelect" name="SchoolId" class="form-select select2" required>
+                        <option value="">-- @Localizer["Select"] --</option>
+                        @foreach (var s in schools) { <option value="@s.Id">@s.Name</option> }
+                    </select>
+                </div>
+            }
+            <div class="col-md-4"><label class="form-label">@Localizer["VisitorName"] *</label><input type="text" name="VisitorName" class="form-control" required /></div>
+            <div class="col-md-4"><label class="form-label">@Localizer["Phone"]</label><input type="text" name="Phone" class="form-control" /></div>
+            <div class="col-md-4"><label class="form-label">@Localizer["NationalId"]</label><input type="text" name="NationalId" class="form-control" /></div>
+            <div class="col-md-4"><label class="form-label">@Localizer["Purpose"]</label><input type="text" name="Purpose" class="form-control" /></div>
+            <div class="col-md-4"><label class="form-label">@Localizer["VisitingPerson"]</label><input type="text" name="VisitingPerson" class="form-control" /></div>
+            <div class="col-md-4">
+                <label class="form-label">@Localizer["Branch"] *</label>
+                <select id="branchSelect" name="BranchId" class="form-select" required>
+                    @foreach (var b in branches) { <option value="@b.Id">@b.Name</option> }
+                </select>
+            </div>
+            <div class="col-md-12"><label class="form-label">@Localizer["Notes"]</label><textarea name="Notes" class="form-control" rows="2"></textarea></div>
+        </div>
+        <div class="mt-4 d-flex gap-2">
+            <button type="submit" class="btn btn-accent"><i class="fas fa-sign-in-alt me-1"></i>@Localizer["CheckIn"]</button>
+            <a href="@Url.Action("Index")" class="btn btn-secondary">@Localizer["Cancel"]</a>
+        </div>
+    </form>
+</div>
+@if (isSuperAdmin)
+{
+    @section Scripts {
+    <script>
+        $(function () {
+            $('#schoolSelect').on('change', function () {
+                var schoolId = $(this).val();
+                var $branch = $('#branchSelect');
+                $branch.html('');
+                if (schoolId) {
+                    $.getJSON('@Url.Action("GetBranchesBySchool")', { schoolId: schoolId }, function (data) {
+                        $.each(data, function (_, b) { $branch.append('<option value="' + b.id + '">' + b.name + '</option>'); });
+                    });
+                }
+            });
+        });
+    </script>
+    }
+}

@@ -1,0 +1,39 @@
+@model List<SchoolMS.Application.DTOs.HrCareerHistoryDto>
+@{ ViewData["Title"] = Localizer["CareerHistory"].Value; }
+
+<div class="page-header" data-aos="fade-down">
+    <div><h4 class="page-title"><i class="fas fa-history text-primary"></i> @Localizer["CareerHistory"]</h4></div>
+    <div class="page-actions"><a href="@Url.Action("Index")" class="btn btn-secondary"><i class="fas fa-arrow-left me-1"></i>@Localizer["Back"]</a></div>
+</div>
+
+<div class="dashboard-card card p-4" data-aos="fade-up">
+    @if (Model.Any())
+    {
+        <div class="timeline">
+            @foreach (var h in Model.OrderByDescending(x => x.EventDate))
+            {
+                <div class="d-flex mb-4">
+                    <div class="me-3 text-center" style="min-width:80px">
+                        <div class="badge bg-primary rounded-pill">@h.EventDate.ToString("dd MMM")</div>
+                        <div class="small text-muted">@h.EventDate.Year</div>
+                    </div>
+                    <div class="flex-grow-1">
+                        <div class="dashboard-card card p-3">
+                            <h6 class="mb-1"><span class="badge bg-info me-1">@h.EventType</span> @h.Title</h6>
+                            <p class="mb-1 text-muted">@h.Description</p>
+                            @if (h.OldValue != null || h.NewValue != null)
+                            {
+                                <small class="text-muted">@h.OldValue → <strong>@h.NewValue</strong></small>
+                            }
+                            @if (h.ProcessedBy != null) { <div class="small text-muted mt-1"><i class="fas fa-user me-1"></i>@h.ProcessedBy</div> }
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="text-center text-muted py-5"><i class="fas fa-history fa-3x mb-3"></i><p>@Localizer["NoRecords"]</p></div>
+    }
+</div>

@@ -1,0 +1,51 @@
+@model SchoolMS.Application.DTOs.HrMonthlyPayrollDto
+@{ ViewData["Title"] = $"{Localizer["PayrollDetails"].Value} — {Model?.PayrollPeriod}"; }
+
+<div class="page-header" data-aos="fade-down">
+    <div><h4 class="page-title"><i class="fas fa-file-invoice-dollar text-primary"></i> @Localizer["PayrollDetails"] — @Model?.PayrollPeriod</h4></div>
+    <div class="page-actions"><a href="@Url.Action("Payroll")" class="btn btn-secondary"><i class="fas fa-arrow-left me-1"></i>@Localizer["Back"]</a></div>
+</div>
+
+@if (Model != null)
+{
+    <div class="stat-ribbon" data-aos="fade-up">
+        <div class="stat-item stagger-item"><div class="stat-icon bg-primary-soft"><i class="fas fa-users"></i></div><div class="stat-info"><h6>@Localizer["Employees"]</h6><div class="stat-value">@Model.TotalEmployees</div></div></div>
+        <div class="stat-item stagger-item"><div class="stat-icon bg-info-soft"><i class="fas fa-money-bill"></i></div><div class="stat-info"><h6>@Localizer["GrossSalary"]</h6><div class="stat-value">@Model.TotalGrossSalary.ToString("N0")</div></div></div>
+        <div class="stat-item stagger-item"><div class="stat-icon bg-danger-soft"><i class="fas fa-minus-circle"></i></div><div class="stat-info"><h6>@Localizer["Deductions"]</h6><div class="stat-value">@Model.TotalDeductions.ToString("N0")</div></div></div>
+        <div class="stat-item stagger-item"><div class="stat-icon bg-success-soft"><i class="fas fa-wallet"></i></div><div class="stat-info"><h6>@Localizer["NetSalary"]</h6><div class="stat-value">@Model.TotalNetSalary.ToString("N0")</div></div></div>
+    </div>
+
+    <div class="table-card hover-lift" data-aos="fade-up">
+        <table id="dataTable" class="table table-hover table-sm" style="width:100%">
+            <thead>
+                <tr>
+                    <th>#</th><th>@Localizer["EmployeeNo"]</th><th>@Localizer["Name"]</th><th>@Localizer["Department"]</th>
+                    <th>@Localizer["BaseSalary"]</th><th>@Localizer["Allowances"]</th><th>@Localizer["Deductions"]</th>
+                    <th>@Localizer["Overtime"]</th><th>@Localizer["Bonus"]</th><th>@Localizer["Penalty"]</th>
+                    <th>@Localizer["Absent"]</th><th>@Localizer["NetSalary"]</th><th>@Localizer["Paid"]</th>
+                </tr>
+            </thead>
+            <tbody>
+                @for (int i = 0; i < Model.PayrollItems.Count; i++)
+                {
+                    var item = Model.PayrollItems[i];
+                    <tr>
+                        <td>@(i + 1)</td><td><span class="badge bg-dark">@item.EmployeeNumber</span></td><td>@item.EmployeeName</td><td>@item.DepartmentName</td>
+                        <td>@item.BaseSalary.ToString("N0")</td><td class="text-success">+@item.TotalAllowances.ToString("N0")</td>
+                        <td class="text-danger">-@item.TotalFixedDeductions.ToString("N0")</td>
+                        <td class="text-info">+@item.OvertimeAmount.ToString("N0")</td>
+                        <td class="text-success">+@item.BonusAmount.ToString("N0")</td>
+                        <td class="text-danger">-@item.PenaltyAmount.ToString("N0")</td>
+                        <td>@item.AbsentDays d</td>
+                        <td class="fw-bold text-success">@item.NetSalary.ToString("N0")</td>
+                        <td>@(item.IsPaid ? "✅" : "❌")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+@section Scripts {
+<script>$(function () { $('#dataTable').DataTable({ responsive: true, pageLength: 50, dom: 'rtip' }); });</script>
+}

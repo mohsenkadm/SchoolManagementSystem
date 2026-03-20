@@ -1,0 +1,42 @@
+@model List<SchoolMS.Application.DTOs.HrPromotionDto>
+@{ ViewData["Title"] = Localizer["HrPromotions"].Value; }
+@Html.AntiForgeryToken()
+
+<div class="page-header" data-aos="fade-down">
+    <div><h4 class="page-title"><i class="fas fa-arrow-up text-primary"></i> @Localizer["HrPromotions"]</h4><span class="record-count"><i class="fas fa-layer-group"></i> @Model.Count</span></div>
+    <div class="page-actions"><a href="@Url.Action("Create")" class="btn btn-accent"><i class="fas fa-plus me-1"></i>@Localizer["Add"]</a></div>
+</div>
+
+<div class="stat-ribbon" data-aos="fade-up">
+    <div class="stat-item stagger-item"><div class="stat-icon bg-warning-soft"><i class="fas fa-hourglass-half"></i></div><div class="stat-info"><h6>@Localizer["Pending"]</h6><div class="stat-value">@Model.Count(p => p.Status == HrPromotionStatus.Pending)</div></div></div>
+    <div class="stat-item stagger-item"><div class="stat-icon bg-success-soft"><i class="fas fa-check"></i></div><div class="stat-info"><h6>@Localizer["Effective"]</h6><div class="stat-value">@Model.Count(p => p.Status == HrPromotionStatus.Effective)</div></div></div>
+</div>
+
+<div class="table-card hover-lift" data-aos="fade-up">
+    <table id="dataTable" class="table table-hover" style="width:100%">
+        <thead><tr><th>#</th><th>@Localizer["Employee"]</th><th>@Localizer["Type"]</th><th>@Localizer["From"]</th><th>@Localizer["To"]</th><th>@Localizer["SalaryIncrease"]</th><th>@Localizer["EffectiveDate"]</th><th>@Localizer["Status"]</th><th>@Localizer["Actions"]</th></tr></thead>
+        <tbody>
+            @for (int i = 0; i < Model.Count; i++)
+            {
+                var p = Model[i];
+                var cls = p.Status switch { HrPromotionStatus.Pending => "bg-warning", HrPromotionStatus.Approved => "bg-primary", HrPromotionStatus.Effective => "bg-success", HrPromotionStatus.Rejected => "bg-danger", _ => "bg-secondary" };
+                <tr>
+                    <td>@(i + 1)</td><td>@p.EmployeeName</td><td><span class="badge bg-info">@p.Type</span></td>
+                    <td>@p.FromJobTitle</td><td>@p.ToJobTitle</td><td class="text-success fw-bold">+@(p.SalaryIncrease?.ToString("N0"))</td>
+                    <td>@p.EffectiveDate.ToString("dd/MM/yyyy")</td><td><span class="badge @cls">@p.Status</span></td>
+                    <td>
+                        @if (p.Status == HrPromotionStatus.Pending)
+                        {
+                            <form asp-action="Approve" method="post" class="d-inline"><input type="hidden" name="id" value="@p.Id" /><button class="btn btn-sm btn-success"><i class="fas fa-check"></i></button></form>
+                            <form asp-action="Reject" method="post" class="d-inline"><input type="hidden" name="id" value="@p.Id" /><input type="hidden" name="reason" value="Rejected" /><button class="btn btn-sm btn-danger"><i class="fas fa-times"></i></button></form>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@section Scripts {
+<script>$(function () { $('#dataTable').DataTable({ responsive: true, pageLength: 25, dom: 'rtip' }); });</script>
+}

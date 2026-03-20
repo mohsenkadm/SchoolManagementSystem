@@ -1,0 +1,309 @@
+@using SchoolMS.Application.DTOs
+@{
+    ViewData["Title"] = Localizer["Chat"].Value;
+    var isSuperAdmin = (bool)(ViewBag.IsSuperAdmin ?? false);
+    var schools = ViewBag.Schools as List<SchoolDto> ?? new();
+    var branches = ViewBag.Branches as List<BranchDto> ?? new();
+    var subjects = ViewBag.Subjects as List<SubjectDto> ?? new();
+    var classRooms = ViewBag.ClassRooms as List<ClassRoomDto> ?? new();
+    var currentBranchId = ViewBag.CurrentBranchId as int?;
+    var currentSchoolId = ViewBag.CurrentSchoolId as int?;
+}
+@Html.AntiForgeryToken()
+
+<div class="page-header" data-aos="fade-down">
+    <div>
+        <h4 class="page-title"><i class="fas fa-comments text-primary"></i>@Localizer["Chat"]</h4>
+    </div>
+    <div class="page-actions">
+        <button class="btn btn-accent" onclick="showCreateRoom()"><i class="fas fa-plus me-1"></i>@Localizer["NewRoom"]</button>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="dashboard-card card p-3 mb-3" data-aos="fade-up">
+    <div class="row g-2 align-items-end">
+        @if (isSuperAdmin)
+        {
+            <div class="col-md-3">
+                <label class="form-label"><i class="fas fa-school me-1"></i>@Localizer["School"]</label>
+                <select id="filterSchool" class="form-select select2">
+                    <option value="">@Localizer["AllSchools"]</option>
+                    @foreach (var s in schools) { <option value="@s.Id">@s.Name</option> }
+                </select>
+            </div>
+        }
+        <div class="col-md-3">
+            <label class="form-label"><i class="fas fa-code-branch me-1"></i>@Localizer["Branch"]</label>
+            <select id="filterBranch" class="form-select">
+                <option value="">@Localizer["AllBranches"]</option>
+                @foreach (var b in branches) { <option value="@b.Id" selected="@(currentBranchId == b.Id)">@b.Name</option> }
+            </select>
+        </div>
+        <div class="col-md-2">
+            <button class="btn btn-primary w-100" onclick="loadRooms()"><i class="fas fa-filter me-1"></i>@Localizer["Filter"]</button>
+        </div>
+    </div>
+</div>
+
+<div class="row" data-aos="fade-up">
+    <!-- Room List -->
+    <div class="col-md-4">
+        <div class="dashboard-card card" style="height:600px;overflow-y:auto">
+            <div class="card-header bg-transparent"><h6 class="mb-0"><i class="fas fa-list me-1"></i>Chat Rooms</h6></div>
+            <div class="card-body p-0" id="roomList">
+                <div class="text-center text-muted py-5"><i class="fas fa-spinner fa-spin me-1"></i>Loading rooms...</div>
+            </div>
+        </div>
+    </div>
+    <!-- Messages -->
+    <div class="col-md-8">
+        <div class="dashboard-card card" style="height:600px;display:flex;flex-direction:column">
+            <div class="card-header bg-transparent d-flex justify-content-between align-items-center">
+                <h6 class="mb-0" id="chatTitle"><i class="fas fa-comment-dots me-1"></i>Select a room</h6>
+                <span class="badge bg-success" id="onlineStatus" style="display:none">Connected</span>
+            </div>
+            <div class="card-body" id="messageArea" style="flex:1;overflow-y:auto;background:#f8f9fa">
+                <div class="text-center text-muted py-5">Select a chat room to start messaging.</div>
+            </div>
+            <div class="card-footer bg-transparent">
+                <div class="input-group">
+                    <input type="text" id="messageInput" class="form-control" placeholder="Type a message..." disabled />
+                    <button class="btn btn-accent" id="sendBtn" onclick="sendMessage()" disabled><i class="fas fa-paper-plane"></i></button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Create Room Modal -->
+<div class="modal fade" id="createRoomModal" tabindex="-1">
+    <div class="modal-dialog"><div class="modal-content">
+        <div class="modal-header"><h5 class="modal-title"><i class="fas fa-plus-circle me-2"></i>Create Chat Room</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+        <div class="modal-body">
+            <div class="row g-3">
+                @if (isSuperAdmin)
+                {
+                    <div class="col-md-12">
+                        <label class="form-label">@Localizer["School"] *</label>
+                        <select id="newRoomSchool" class="form-select select2" required>
+                            <option value="">-- @Localizer["Select"] --</option>
+                            @foreach (var s in schools) { <option value="@s.Id">@s.Name</option> }
+                        </select>
+                    </div>
+                }
+                <div class="col-md-12">
+                    <label class="form-label">@Localizer["Branch"] *</label>
+                    <select id="newRoomBranch" class="form-select" required>
+                        <option value="">-- @Localizer["Select"] --</option>
+                        @foreach (var b in branches) { <option value="@b.Id">@b.Name</option> }
+                    </select>
+                </div>
+                <div class="col-md-12"><label class="form-label">Room Name *</label><input type="text" id="newRoomName" class="form-control" required /></div>
+                <div class="col-md-6">
+                    <label class="form-label">@Localizer["Type"]</label>
+                    <select id="newRoomType" class="form-select">
+                        <option value="0">Private</option>
+                        <option value="1">Group</option>
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">@Localizer["Subject"]</label>
+                    <select id="newRoomSubject" class="form-select">
+                        <option value="">-- @Localizer["Select"] --</option>
+                        @if (!isSuperAdmin)
+                        {
+                            @foreach (var s in subjects) { <option value="@s.Id">@s.SubjectName</option> }
+                        }
+                    </select>
+                </div>
+                <div class="col-md-12">
+                    <label class="form-label">@Localizer["ClassRoom"]</label>
+                    <select id="newRoomClassRoom" class="form-select">
+                        <option value="">-- @Localizer["Select"] --</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button class="btn btn-accent" onclick="createRoom()"><i class="fas fa-plus me-1"></i>Create</button>
+        </div>
+    </div></div>
+</div>
+
+@section Scripts {
+<script src="~/lib/microsoft/signalr/dist/browser/signalr.min.js"></script>
+<script>
+    var isSuperAdmin = @Json.Serialize(isSuperAdmin);
+    var connection = new signalR.HubConnectionBuilder().withUrl('/hubs/chat').build();
+    var currentRoom = null;
+    var currentRoomId = null;
+
+    connection.on('ReceiveMessage', function (user, msg, time) {
+        var t = new Date(time).toLocaleTimeString();
+        var html = '<div class="mb-2 p-2 rounded" style="background:#fff"><strong class="text-primary">' + user + '</strong> <small class="text-muted">' + t + '</small><br/><span>' + msg + '</span></div>';
+        $('#messageArea').append(html);
+        $('#messageArea').scrollTop($('#messageArea')[0].scrollHeight);
+    });
+
+    connection.on('UserJoined', function (user) {
+        $('#messageArea').append('<div class="text-center text-muted small mb-2"><i class="fas fa-sign-in-alt me-1"></i>' + user + ' joined</div>');
+    });
+
+    connection.start().then(function () {
+        $('#onlineStatus').show();
+        loadRooms();
+    }).catch(function (err) {
+        console.error('SignalR connection error:', err);
+        toastr.error('Could not connect to chat server.');
+    });
+
+    /* ── School → Branch cascade (filter bar) ── */
+    @if (isSuperAdmin)
+    {
+        <text>
+    $('#filterSchool').on('change', function () {
+        var schoolId = $(this).val();
+        var $branch = $('#filterBranch');
+        $branch.html('<option value="">@Localizer["AllBranches"]</option>');
+        if (schoolId) {
+            $.getJSON('@Url.Action("GetBranchesBySchool")', { schoolId: schoolId }, function (data) {
+                $.each(data, function (_, b) { $branch.append('<option value="' + b.id + '">' + b.name + '</option>'); });
+            });
+        }
+    });
+        </text>
+    }
+
+    /* ── School → Branch cascade (create modal) ── */
+    @if (isSuperAdmin)
+    {
+        <text>
+    $('#newRoomSchool').on('change', function () {
+        var schoolId = $(this).val();
+        $('#newRoomBranch').html('<option value="">-- @Localizer["Select"] --</option>');
+        $('#newRoomSubject').html('<option value="">-- @Localizer["Select"] --</option>');
+        $('#newRoomClassRoom').html('<option value="">-- @Localizer["Select"] --</option>');
+        if (schoolId) {
+            $.getJSON('@Url.Action("GetBranchesBySchool")', { schoolId: schoolId }, function (data) {
+                $.each(data, function (_, b) { $('#newRoomBranch').append('<option value="' + b.id + '">' + b.name + '</option>'); });
+            });
+            $.getJSON('@Url.Action("GetSubjectsBySchool")', { schoolId: schoolId }, function (data) {
+                $.each(data, function (_, s) { $('#newRoomSubject').append('<option value="' + s.id + '">' + s.name + '</option>'); });
+            });
+        }
+    });
+        </text>
+    }
+
+    /* ── Branch → ClassRooms cascade (create modal) ── */
+    $('#newRoomBranch').on('change', function () {
+        var branchId = $(this).val();
+        $('#newRoomClassRoom').html('<option value="">-- @Localizer["Select"] --</option>');
+        if (branchId) {
+            $.getJSON('@Url.Action("GetClassRoomsByBranch")', { branchId: branchId }, function (data) {
+                $.each(data, function (_, c) { $('#newRoomClassRoom').append('<option value="' + c.id + '">' + c.name + '</option>'); });
+            });
+        }
+    });
+
+    function loadRooms() {
+        var params = {};
+        if (isSuperAdmin) { var sv = $('#filterSchool').val(); if (sv) params.schoolId = sv; }
+        var bv = $('#filterBranch').val(); if (bv) params.branchId = bv;
+
+        $.get('@Url.Action("GetRooms")', params, function (rooms) {
+            if (!rooms || rooms.length === 0) {
+                $('#roomList').html('<div class="text-center text-muted py-5">No rooms found.</div>');
+                return;
+            }
+            var html = '<div class="list-group">';
+            $.each(rooms, function (i, r) {
+                var sub = r.subjectName ? ' <small class="text-muted">(' + r.subjectName + ')</small>' : '';
+                var br = r.branchName ? ' <span class="badge bg-secondary">' + r.branchName + '</span>' : '';
+                html += '<a href="#" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center" onclick="joinRoom(\'' + r.roomName.replace(/'/g, "\\'") + '\', ' + r.id + '); return false;"><span><i class="fas fa-comments me-2"></i>' + r.roomName + sub + '</span>' + br + '</a>';
+            });
+            html += '</div>';
+            $('#roomList').html(html);
+        }).fail(function () {
+            $('#roomList').html('<div class="text-center text-muted py-5">Failed to load rooms.</div>');
+        });
+    }
+
+    function joinRoom(roomName, roomId) {
+        if (currentRoom) connection.invoke('LeaveRoom', currentRoom);
+        currentRoom = roomName;
+        currentRoomId = roomId;
+        connection.invoke('JoinRoom', roomName);
+        $('#chatTitle').html('<i class="fas fa-comment-dots me-1"></i>' + roomName);
+        $('#messageArea').html('<div class="text-center text-muted small py-2">Joined room: ' + roomName + '</div>');
+        $('#messageInput').prop('disabled', false);
+        $('#sendBtn').prop('disabled', false);
+        $('#messageInput').focus();
+
+        if (roomId > 0) {
+            $.get('@Url.Action("GetMessages")', { roomId: roomId }, function (msgs) {
+                $.each(msgs, function (i, m) {
+                    var t = new Date(m.sentAt).toLocaleTimeString();
+                    var html = '<div class="mb-2 p-2 rounded" style="background:#fff"><strong class="text-primary">' + (m.senderName || 'Unknown') + '</strong> <small class="text-muted">' + t + '</small><br/><span>' + m.message + '</span></div>';
+                    $('#messageArea').append(html);
+                });
+                $('#messageArea').scrollTop($('#messageArea')[0].scrollHeight);
+            });
+        }
+    }
+
+    function sendMessage() {
+        var msg = $('#messageInput').val();
+        if (!msg || !currentRoom) return;
+        connection.invoke('SendMessage', currentRoom, msg);
+        $('#messageInput').val('').focus();
+    }
+
+    function showCreateRoom() {
+        $('#newRoomName').val('');
+        $('#newRoomType').val('0');
+        $('#newRoomClassRoom').html('<option value="">-- @Localizer["Select"] --</option>');
+        if (isSuperAdmin) {
+            $('#newRoomSchool').val('');
+            $('#newRoomBranch').html('<option value="">-- @Localizer["Select"] --</option>');
+            $('#newRoomSubject').html('<option value="">-- @Localizer["Select"] --</option>');
+        } else {
+            $('#newRoomBranch').val('');
+            $('#newRoomSubject').val('');
+        }
+        new bootstrap.Modal('#createRoomModal').show();
+    }
+
+    function createRoom() {
+        var name = $('#newRoomName').val();
+        var branchId = $('#newRoomBranch').val();
+        if (!name) { toastr.warning('Please enter a room name.'); return; }
+        if (!branchId) { toastr.warning('Please select a branch.'); return; }
+
+        var payload = {
+            roomName: name,
+            type: parseInt($('#newRoomType').val()),
+            branchId: parseInt(branchId),
+            classRoomId: $('#newRoomClassRoom').val() ? parseInt($('#newRoomClassRoom').val()) : null,
+            subjectId: $('#newRoomSubject').val() ? parseInt($('#newRoomSubject').val()) : null
+        };
+        if (isSuperAdmin) {
+            var schoolId = $('#newRoomSchool').val();
+            if (!schoolId) { toastr.warning('Please select a school.'); return; }
+            payload.schoolId = parseInt(schoolId);
+        }
+
+        $.ajax({
+            url: '@Url.Action("CreateRoom")', type: 'POST', contentType: 'application/json',
+            data: JSON.stringify(payload),
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            success: function () { toastr.success('Room created!'); bootstrap.Modal.getInstance('#createRoomModal').hide(); loadRooms(); },
+            error: function () { toastr.error('Failed to create room.'); }
+        });
+    }
+
+    $('#messageInput').keypress(function (e) { if (e.which === 13) { e.preventDefault(); sendMessage(); } });
+</script>
+}

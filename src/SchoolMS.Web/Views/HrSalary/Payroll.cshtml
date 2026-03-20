@@ -1,0 +1,58 @@
+@model List<SchoolMS.Application.DTOs.HrMonthlyPayrollDto>
+@{ ViewData["Title"] = Localizer["HrSalary"].Value; }
+@Html.AntiForgeryToken()
+
+<div class="page-header" data-aos="fade-down">
+    <div><h4 class="page-title"><i class="fas fa-money-bill-wave text-primary"></i> @Localizer["HrSalary"]</h4></div>
+    <div class="page-actions">
+        <a href="@Url.Action("AllowanceTypes")" class="btn btn-success"><i class="fas fa-plus-circle me-1"></i>@Localizer["AllowanceTypes"]</a>
+        <a href="@Url.Action("DeductionTypes")" class="btn btn-warning"><i class="fas fa-minus-circle me-1"></i>@Localizer["DeductionTypes"]</a>
+        <a href="@Url.Action("Advances")" class="btn btn-info"><i class="fas fa-hand-holding-usd me-1"></i>@Localizer["Advances"]</a>
+        <a href="@Url.Action("Loans")" class="btn btn-dark"><i class="fas fa-landmark me-1"></i>@Localizer["Loans"]</a>
+        <a href="@Url.Action("Bonuses")" class="btn btn-success"><i class="fas fa-gift me-1"></i>@Localizer["Bonuses"]</a>
+        <a href="@Url.Action("Penalties")" class="btn btn-danger"><i class="fas fa-ban me-1"></i>@Localizer["Penalties"]</a>
+        <a href="@Url.Action("GeneratePayrollForm")" class="btn btn-accent"><i class="fas fa-calculator me-1"></i>@Localizer["GeneratePayroll"]</a>
+    </div>
+</div>
+
+<div class="filter-panel" data-aos="fade-up">
+    <div class="row g-2 align-items-end">
+        <div class="col-md-3"><label class="form-label">@Localizer["Year"]</label><input type="number" id="filterYear" class="form-control" value="@(ViewContext.HttpContext.Request.Query["year"].FirstOrDefault() ?? DateTime.Now.Year.ToString())" /></div>
+        <div class="col-md-2"><button class="btn btn-filter w-100" onclick="location.href='?year='+$('#filterYear').val()"><i class="fas fa-search"></i> @Localizer["Filter"]</button></div>
+    </div>
+</div>
+
+<div class="table-card hover-lift" data-aos="fade-up">
+    <table id="dataTable" class="table table-hover" style="width:100%">
+        <thead><tr><th>#</th><th>@Localizer["Period"]</th><th>@Localizer["Branch"]</th><th>@Localizer["Employees"]</th><th>@Localizer["GrossSalary"]</th><th>@Localizer["Deductions"]</th><th>@Localizer["NetSalary"]</th><th>@Localizer["Status"]</th><th>@Localizer["Actions"]</th></tr></thead>
+        <tbody>
+            @for (int i = 0; i < Model.Count; i++)
+            {
+                var p = Model[i];
+                var cls = p.Status switch { PayrollStatus.Draft => "bg-secondary", PayrollStatus.Calculated => "bg-info", PayrollStatus.Approved => "bg-primary", PayrollStatus.Paid => "bg-success", PayrollStatus.Locked => "bg-dark", _ => "bg-secondary" };
+                <tr>
+                    <td>@(i + 1)</td><td>@p.PayrollPeriod</td><td>@p.BranchName</td><td>@p.TotalEmployees</td>
+                    <td>@p.TotalGrossSalary.ToString("N0")</td><td>@p.TotalDeductions.ToString("N0")</td><td class="fw-bold text-success">@p.TotalNetSalary.ToString("N0")</td>
+                    <td><span class="badge @cls">@p.Status</span></td>
+                    <td>
+                        <div class="d-flex gap-1">
+                            <a href="@Url.Action("PayrollDetails", new { month = p.Month, year = p.Year, branchId = p.BranchId })" class="btn btn-sm btn-info"><i class="fas fa-eye"></i></a>
+                            @if (p.Status == PayrollStatus.Calculated)
+                            {
+                                <form asp-action="ApprovePayroll" method="post" class="d-inline"><input type="hidden" name="payrollId" value="@p.Id" /><button class="btn btn-sm btn-primary"><i class="fas fa-check"></i></button></form>
+                            }
+                            @if (p.Status == PayrollStatus.Approved)
+                            {
+                                <form asp-action="MarkPayrollPaid" method="post" class="d-inline"><input type="hidden" name="payrollId" value="@p.Id" /><button class="btn btn-sm btn-success"><i class="fas fa-dollar-sign"></i></button></form>
+                            }
+                        </div>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@section Scripts {
+<script>$(function () { $('#dataTable').DataTable({ responsive: true, pageLength: 25, dom: 'rtip' }); });</script>
+}

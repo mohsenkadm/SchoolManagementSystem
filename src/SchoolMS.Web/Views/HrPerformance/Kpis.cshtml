@@ -1,0 +1,42 @@
+@model List<SchoolMS.Application.DTOs.HrKpiDto>
+@{ ViewData["Title"] = "KPIs"; }
+@Html.AntiForgeryToken()
+
+<div class="page-header" data-aos="fade-down">
+    <div><h4 class="page-title"><i class="fas fa-bullseye text-primary"></i> KPIs</h4><span class="record-count"><i class="fas fa-layer-group"></i> @Model.Count</span></div>
+    <div class="page-actions"><a href="@Url.Action("Cycles")" class="btn btn-secondary"><i class="fas fa-arrow-left me-1"></i>@Localizer["Back"]</a></div>
+</div>
+
+<div class="stat-ribbon" data-aos="fade-up">
+    <div class="stat-item stagger-item"><div class="stat-icon bg-success-soft"><i class="fas fa-check-circle"></i></div><div class="stat-info"><h6>@Localizer["Achieved"]</h6><div class="stat-value">@Model.Count(k => k.Status == KpiStatus.Achieved || k.Status == KpiStatus.Exceeded)</div></div></div>
+    <div class="stat-item stagger-item"><div class="stat-icon bg-primary-soft"><i class="fas fa-arrow-right"></i></div><div class="stat-info"><h6>@Localizer["OnTrack"]</h6><div class="stat-value">@Model.Count(k => k.Status == KpiStatus.OnTrack)</div></div></div>
+    <div class="stat-item stagger-item"><div class="stat-icon bg-danger-soft"><i class="fas fa-exclamation-triangle"></i></div><div class="stat-info"><h6>@Localizer["Behind"]</h6><div class="stat-value">@Model.Count(k => k.Status == KpiStatus.Behind)</div></div></div>
+</div>
+
+<div class="table-card hover-lift" data-aos="fade-up">
+    <table id="dataTable" class="table table-hover" style="width:100%">
+        <thead><tr><th>#</th><th>@Localizer["Employee"]</th><th>@Localizer["KPI"]</th><th>@Localizer["Target"]</th><th>@Localizer["Actual"]</th><th>@Localizer["Achievement"]</th><th>@Localizer["DueDate"]</th><th>@Localizer["Status"]</th><th>@Localizer["Actions"]</th></tr></thead>
+        <tbody>
+            @for (int i = 0; i < Model.Count; i++)
+            {
+                var k = Model[i];
+                var cls = k.Status switch { KpiStatus.Achieved => "bg-success", KpiStatus.Exceeded => "bg-primary", KpiStatus.OnTrack => "bg-info", KpiStatus.Behind => "bg-danger", KpiStatus.NotStarted => "bg-secondary", _ => "bg-secondary" };
+                <tr>
+                    <td>@(i + 1)</td><td>@k.EmployeeName</td><td>@k.KpiName</td>
+                    <td>@k.TargetValue @k.MeasurementUnit</td><td>@k.ActualValue @k.MeasurementUnit</td>
+                    <td><span class="badge @(k.AchievementPercentage >= 100 ? "bg-success" : k.AchievementPercentage >= 70 ? "bg-warning" : "bg-danger")">@k.AchievementPercentage.ToString("N1")%</span></td>
+                    <td>@k.DueDate.ToString("dd/MM/yyyy")</td>
+                    <td><span class="badge @cls">@k.Status</span></td>
+                    <td><button class="btn btn-sm btn-danger" onclick="del(@k.Id)"><i class="fas fa-trash"></i></button></td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@section Scripts {
+<script>
+    $(function () { $('#dataTable').DataTable({ responsive: true, pageLength: 25, dom: 'rtip' }); });
+    function del(id) { confirmDelete('@Url.Action("DeleteKpi")', id, function () { location.reload(); }); }
+</script>
+}

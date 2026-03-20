@@ -1,0 +1,154 @@
+@{
+    ViewData["Title"] = Localizer["UserManagement"].Value;
+    var roles = ViewBag.Roles as List<string> ?? new();
+    var permissions = ViewBag.Permissions as List<SchoolMS.Application.DTOs.PermissionDto> ?? new();
+    var permPages = permissions.Select(p => p.PageName).Distinct().OrderBy(p => p).ToList();
+}
+
+<div class="page-header" data-aos="fade-down">
+    <div>
+        <h4 class="page-title"><i class="fas fa-users-cog text-primary"></i>@Localizer["UserManagement"]</h4>
+    </div>
+    <div class="page-actions">
+        <button class="btn btn-accent" data-bs-toggle="modal" data-bs-target="#modal" onclick="openAdd()"><i class="fas fa-plus me-1"></i>@Localizer["Add"]</button>
+    </div>
+</div>
+
+<div class="stat-ribbon" data-aos="fade-up">
+    <div class="stat-item stagger-item"><div class="stat-icon bg-primary-soft"><i class="fas fa-users"></i></div><div class="stat-info"><h6>@Localizer["Total"]</h6><div class="stat-value" id="statTotal">—</div></div></div>
+    <div class="stat-item stagger-item"><div class="stat-icon bg-info-soft"><i class="fas fa-user-shield"></i></div><div class="stat-info"><h6>@Localizer["Roles"]</h6><div class="stat-value">@roles.Count</div></div></div>
+</div>
+
+<div class="table-card hover-lift" data-aos="fade-up">
+    <table id="dataTable" class="table table-hover" style="width:100%">
+        <thead><tr><th>#</th><th>@Localizer["FullName"]</th><th>@Localizer["Email"]</th><th>Type</th><th>Roles</th><th>@Localizer["Status"]</th><th>@Localizer["Actions"]</th></tr></thead>
+    </table>
+</div>
+
+<!-- Create/Edit User Modal -->
+<div class="modal fade" id="modal" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content">
+    <div class="modal-header"><h5 class="modal-title" id="modalTitle">@Localizer["Add"]</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+    <div class="modal-body">
+        <form id="form">@Html.AntiForgeryToken()<input type="hidden" id="userId" />
+            <div class="row g-3">
+                <div class="col-md-6"><label class="form-label">@Localizer["FullName"] *</label><input type="text" id="fullName" class="form-control" required /></div>
+                <div class="col-md-6"><label class="form-label">@Localizer["Email"] *</label><input type="email" id="email" class="form-control" required /></div>
+            </div>
+            <div class="row g-3 mt-1">
+                <div id="passwordGroup" class="col-md-4"><label class="form-label">@Localizer["Password"] *</label><input type="password" id="password" class="form-control" /></div>
+                <div class="col-md-4"><label class="form-label">User Type *</label>
+                    <select class="form-select" id="userType"><option value="0">Admin</option><option value="1">Teacher</option><option value="2">Student</option><option value="3">Parent</option><option value="4">Staff</option></select>
+                </div>
+                <div class="col-md-4"><label class="form-label">Role *</label>
+                    <select class="form-select" id="role">@foreach (var r in roles){<option>@r</option>}</select>
+                </div>
+            </div>
+            <hr />
+            <h6><i class="fas fa-shield-alt me-1"></i>@Localizer["AssignPermissions"]</h6>
+            <div class="mb-2">
+                <button type="button" class="btn btn-sm btn-outline-success me-1" onclick="selectAllPerms()"><i class="fas fa-check-double me-1"></i>Select All</button>
+                <button type="button" class="btn btn-sm btn-outline-danger" onclick="deselectAllPerms()"><i class="fas fa-times me-1"></i>Deselect All</button>
+            </div>
+            <div class="table-responsive" style="max-height:350px;overflow-y:auto;">
+                <table class="table table-sm table-bordered">
+                    <thead class="table-light">
+                        <tr><th>@Localizer["Page"]</th><th>@Localizer["View"]</th><th>@Localizer["Add"]</th><th>@Localizer["Edit"]</th><th>@Localizer["Delete"]</th></tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var pageName in permPages)
+                        {
+                            <tr>
+                                <td><strong>@pageName</strong></td>
+                                @foreach (var action in new[] { "View", "Add", "Edit", "Delete" })
+                                {
+                                    var perm = permissions.FirstOrDefault(p => p.PageName == pageName && p.Action == action);
+                                    if (perm != null)
+                                    {
+                                        <td class="text-center"><input type="checkbox" class="form-check-input perm-cb" value="@perm.Id" data-pagename="@pageName" data-action="@action" /></td>
+                                    }
+                                    else
+                                    {
+                                        <td class="text-center text-muted">—</td>
+                                    }
+                                }
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </form>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@Localizer["Cancel"]</button>
+        <button type="button" class="btn btn-accent" onclick="save()"><i class="fas fa-save me-1"></i>@Localizer["Save"]</button>
+    </div>
+</div></div></div>
+
+@section Scripts {
+<script>
+    var table;
+    $(function () {
+        table = $('#dataTable').DataTable({
+            processing: true, serverSide: true,
+            ajax: {
+                url: '@Url.Action("GetData")', type: 'POST', contentType: 'application/json',
+                data: function (d) { return JSON.stringify({ draw: d.draw, start: d.start, length: d.length, searchValue: d.search.value }); }
+            },
+            columns: [
+                { data: null, render: function(d,t,r,m) { return m.row + m.settings._iDisplayStart + 1; } },
+                { data: 'fullName' }, { data: 'email' }, { data: 'userType' }, { data: 'roles' },
+                { data: 'isActive', render: function(d) { return d ? '<span class="badge bg-success">@Localizer["Active"]</span>' : '<span class="badge bg-secondary">@Localizer["Inactive"]</span>'; } },
+                { data: 'id', render: function(d) {
+                    return '<button class="btn btn-sm btn-primary" onclick="edit(\''+d+'\')"><i class="fas fa-edit"></i></button> <button class="btn btn-sm btn-danger" onclick="del(\''+d+'\')"><i class="fas fa-trash"></i></button>';
+                }}
+            ],
+            order: [[1, 'asc']], responsive: true,
+            drawCallback: function (settings) {
+                var info = this.api().page.info();
+                $('#statTotal').text(info.recordsTotal);
+            }
+        });
+    });
+
+    var token = $('input[name="__RequestVerificationToken"]').val();
+    function selectAllPerms() { $('.perm-cb').prop('checked', true); }
+    function deselectAllPerms() { $('.perm-cb').prop('checked', false); }
+    function getSelectedPermIds() { return $('.perm-cb:checked').map(function() { return +$(this).val(); }).get(); }
+
+    function openAdd() {
+        $('#modalTitle').text('@Localizer["Add"]');
+        $('#form')[0].reset(); $('#userId').val(''); $('#passwordGroup').show();
+        deselectAllPerms();
+    }
+    function edit(id) {
+        $.get('@Url.Action("Get")/' + id, function (d) {
+            $('#modalTitle').text('@Localizer["Edit"]');
+            $('#userId').val(d.id); $('#fullName').val(d.fullName);
+            $('#email').val(d.email); $('#userType').val(d.userType); $('#role').val(d.roles);
+            $('#passwordGroup').hide();
+            // Set permissions
+            deselectAllPerms();
+            if (d.permissionIds && d.permissionIds.length) {
+                d.permissionIds.forEach(function(pid) {
+                    $('.perm-cb[value="'+pid+'"]').prop('checked', true);
+                });
+            }
+            new bootstrap.Modal(document.getElementById('modal')).show();
+        });
+    }
+    function save() {
+        var id = $('#userId').val();
+        var permIds = getSelectedPermIds();
+        var data = { fullName: $('#fullName').val(), email: $('#email').val(), userType: +$('#userType').val(), role: $('#role').val(), permissionIds: permIds };
+        if (!id) data.password = $('#password').val(); else data.id = id;
+        $.ajax({
+            url: id ? '@Url.Action("Update")' : '@Url.Action("Create")', type: id ? 'PUT' : 'POST',
+            contentType: 'application/json', data: JSON.stringify(data),
+            headers: { 'RequestVerificationToken': token },
+            success: function () { toastr.success('Saved!'); location.reload(); },
+            error: function (x) { toastr.error(x.responseText || 'Error'); }
+        });
+    }
+    function del(id) { confirmDelete('@Url.Action("Delete")', id, function () { table.ajax.reload(); }); }
+</script>
+}

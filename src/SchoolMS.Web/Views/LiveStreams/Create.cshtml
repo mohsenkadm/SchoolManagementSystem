@@ -1,0 +1,145 @@
+@using SchoolMS.Application.DTOs
+@{
+    var courses = ViewBag.Courses as List<CourseDto> ?? new();
+    var teachers = ViewBag.Teachers as List<TeacherDto> ?? new();
+    var subjects = ViewBag.Subjects as List<SubjectDto> ?? new();
+    var isSuperAdmin = (bool)(ViewBag.IsSuperAdmin ?? false);
+    var schools = ViewBag.Schools as List<SchoolDto> ?? new();
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4" data-aos="fade-down">
+    <h4 class="mb-0">
+        <i class="fas fa-broadcast-tower me-2 text-danger"></i>@Localizer["CreateLiveStream"]
+    </h4>
+    <a href="@Url.Action("Index")" class="btn btn-secondary"><i class="fas fa-arrow-left me-1"></i>@Localizer["Back"]</a>
+</div>
+
+<div class="dashboard-card card p-4" data-aos="fade-up">
+    <form asp-action="Create" method="post">
+        @Html.AntiForgeryToken()
+
+        <div class="row g-3">
+            @if (isSuperAdmin)
+            {
+                <div class="col-md-12">
+                    <label class="form-label">@Localizer["School"] *</label>
+                    <select name="SchoolId" id="schoolSelect" class="form-select select2" required>
+                        <option value="">-- @Localizer["SelectSchool"] --</option>
+                        @foreach (var s in schools)
+                        {
+                            <option value="@s.Id">@s.Name</option>
+                        }
+                    </select>
+                </div>
+            }
+            <div class="col-md-12">
+                <label class="form-label">@Localizer["Title"] *</label>
+                <input type="text" name="Title" class="form-control" required />
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">@Localizer["Subject"] *</label>
+                <select name="SubjectId" id="subjectSelect" class="form-select select2" required>
+                    <option value="">-- @Localizer["SelectSubject"] --</option>
+                    @if (!isSuperAdmin)
+                    {
+                        @foreach (var s in subjects)
+                        {
+                            <option value="@s.Id">@s.SubjectName</option>
+                        }
+                    }
+                </select>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">@Localizer["Course"] <small class="text-muted">(@Localizer["Optional"])</small></label>
+                <select name="CourseId" id="courseSelect" class="form-select select2">
+                    <option value="">-- @Localizer["StandaloneLiveStream"] --</option>
+                    @if (!isSuperAdmin)
+                    {
+                        @foreach (var c in courses)
+                        {
+                            <option value="@c.Id">@c.Title</option>
+                        }
+                    }
+                </select>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">@Localizer["Teacher"] *</label>
+                <select name="TeacherId" id="teacherSelect" class="form-select select2" required>
+                    <option value="">-- @Localizer["SelectTeacher"] --</option>
+                    @if (!isSuperAdmin)
+                    {
+                        @foreach (var t in teachers)
+                        {
+                            <option value="@t.Id">@t.FullName</option>
+                        }
+                    }
+                </select>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">@Localizer["ScheduledAt"] *</label>
+                <input type="datetime-local" name="ScheduledAt" class="form-control" required />
+            </div>
+        </div>
+
+        <div class="mt-4 d-flex gap-2">
+            <button type="submit" class="btn btn-accent"><i class="fas fa-save me-1"></i>@Localizer["Save"]</button>
+            <a href="@Url.Action("Index")" class="btn btn-secondary">@Localizer["Cancel"]</a>
+        </div>
+    </form>
+</div>
+
+<div class="dashboard-card card p-4 mt-4" data-aos="fade-up">
+    <h6 class="text-muted"><i class="fas fa-info-circle me-1"></i>@Localizer["LiveStreamInfo"]</h6>
+    <p class="small text-muted mb-0">
+        @Localizer["LiveStreamInfoDesc"]
+    </p>
+</div>
+
+@if (isSuperAdmin)
+{
+    @section Scripts {
+    <script>
+        $(function () {
+            $('#schoolSelect').on('change', function () {
+                var schoolId = $(this).val();
+                var courseSel = $('#courseSelect');
+                var teacherSel = $('#teacherSelect');
+                var subjectSel = $('#subjectSelect');
+
+                courseSel.html('<option value="">-- @Localizer["StandaloneLiveStream"] --</option>');
+                teacherSel.html('<option value="">-- @Localizer["SelectTeacher"] --</option>');
+                subjectSel.html('<option value="">-- @Localizer["SelectSubject"] --</option>');
+
+                if (!schoolId) return;
+
+                $.get('@Url.Action("GetSubjectsBySchool")?schoolId=' + schoolId, function (data) {
+                    data.forEach(function (s) {
+                        subjectSel.append('<option value="' + s.id + '">' + s.subjectName + '</option>');
+                    });
+                    if (subjectSel.hasClass('select2-hidden-accessible')) {
+                        subjectSel.trigger('change.select2');
+                    }
+                });
+
+                $.get('@Url.Action("GetCoursesBySchool")?schoolId=' + schoolId, function (data) {
+                    data.forEach(function (c) {
+                        courseSel.append('<option value="' + c.id + '">' + c.title + '</option>');
+                    });
+                    if (courseSel.hasClass('select2-hidden-accessible')) {
+                        courseSel.trigger('change.select2');
+                    }
+                });
+
+                $.get('@Url.Action("GetTeachersBySchool")?schoolId=' + schoolId, function (data) {
+                    data.forEach(function (t) {
+                        teacherSel.append('<option value="' + t.id + '">' + t.fullName + '</option>');
+                    });
+                    if (teacherSel.hasClass('select2-hidden-accessible')) {
+                        teacherSel.trigger('change.select2');
+                    }
+                });
+            });
+        });
+    </script>
+    }
+}

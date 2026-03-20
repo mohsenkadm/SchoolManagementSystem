@@ -1,0 +1,37 @@
+@model List<SchoolMS.Application.DTOs.HrLeaveBalanceDto>
+@{ ViewData["Title"] = Localizer["AllLeaveBalances"].Value; }
+
+<div class="page-header" data-aos="fade-down">
+    <div><h4 class="page-title"><i class="fas fa-balance-scale text-primary"></i> @Localizer["AllLeaveBalances"]</h4></div>
+    <div class="page-actions"><a href="@Url.Action("Index")" class="btn btn-secondary"><i class="fas fa-arrow-left me-1"></i>@Localizer["Back"]</a></div>
+</div>
+
+<div class="filter-panel" data-aos="fade-up">
+    <div class="row g-2 align-items-end">
+        <div class="col-md-3"><label class="form-label">@Localizer["Year"]</label><input type="number" id="filterYear" class="form-control" value="@DateTime.Now.Year" /></div>
+        <div class="col-md-2"><button class="btn btn-filter w-100" onclick="location.href='?year='+$('#filterYear').val()"><i class="fas fa-search"></i> @Localizer["Filter"]</button></div>
+    </div>
+</div>
+
+<div class="table-card hover-lift" data-aos="fade-up">
+    <table id="dataTable" class="table table-hover" style="width:100%">
+        <thead><tr><th>#</th><th>@Localizer["Employee"]</th><th>@Localizer["LeaveType"]</th><th>@Localizer["Year"]</th><th>@Localizer["Entitlement"]</th><th>@Localizer["Used"]</th><th>@Localizer["Pending"]</th><th>@Localizer["Remaining"]</th></tr></thead>
+        <tbody>
+            @for (int i = 0; i < Model.Count; i++)
+            {
+                var b = Model[i];
+                <tr>
+                    <td>@(i + 1)</td><td>@b.EmployeeName</td><td>@b.LeaveTypeName</td><td>@b.Year</td>
+                    <td><span class="badge bg-primary">@b.TotalAvailable</span></td>
+                    <td><span class="badge bg-success">@b.Used</span></td>
+                    <td><span class="badge bg-warning">@b.Pending</span></td>
+                    <td><span class="badge @(b.Remaining > 0 ? "bg-info" : "bg-danger")">@b.Remaining</span></td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@section Scripts {
+<script>$(function () { $('#dataTable').DataTable({ responsive: true, pageLength: 50, dom: 'rtip' }); });</script>
+}

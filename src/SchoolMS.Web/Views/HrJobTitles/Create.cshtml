@@ -1,0 +1,40 @@
+@using SchoolMS.Application.DTOs
+@{
+    var isEdit = Model != null;
+    var item = isEdit ? (HrJobTitleDto)Model : null;
+    var departments = ViewBag.Departments as List<HrDepartmentDto> ?? new();
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4" data-aos="fade-down">
+    <h4 class="mb-0"><i class="fas @(isEdit ? "fa-edit" : "fa-plus-circle") me-2 text-primary"></i>@(isEdit ? Localizer["Edit"] : Localizer["Add"]) @Localizer["JobTitle"]</h4>
+    <a href="@Url.Action("Index")" class="btn btn-secondary"><i class="fas fa-arrow-left me-1"></i>@Localizer["Back"]</a>
+</div>
+<div class="dashboard-card card p-4" data-aos="fade-up">
+    <form asp-action="@(isEdit ? "Edit" : "Create")" method="post">
+        @Html.AntiForgeryToken()
+        @if (isEdit) { <input type="hidden" name="Id" value="@item!.Id" /> }
+        <div class="row g-3">
+            <div class="col-md-4"><label class="form-label">@Localizer["Name"] *</label><input type="text" name="TitleName" class="form-control" value="@item?.TitleName" required /></div>
+            <div class="col-md-4"><label class="form-label">@Localizer["NameAr"]</label><input type="text" name="TitleNameAr" class="form-control" value="@item?.TitleNameAr" /></div>
+            <div class="col-md-4"><label class="form-label">@Localizer["Code"]</label><input type="text" name="TitleCode" class="form-control" value="@item?.TitleCode" /></div>
+            <div class="col-md-4">
+                <label class="form-label">@Localizer["Department"]</label>
+                <select name="DepartmentId" class="form-select select2">
+                    <option value="">—</option>
+                    @foreach (var d in departments) { <option value="@d.Id" selected="@(item?.DepartmentId == d.Id)">@d.DepartmentName</option> }
+                </select>
+            </div>
+            <div class="col-md-4"><label class="form-label">@Localizer["MinSalary"]</label><input type="number" step="0.01" name="MinSalary" class="form-control" value="@item?.MinSalary" /></div>
+            <div class="col-md-4"><label class="form-label">@Localizer["MaxSalary"]</label><input type="number" step="0.01" name="MaxSalary" class="form-control" value="@item?.MaxSalary" /></div>
+            <div class="col-md-2">
+                <label class="form-label">@Localizer["Active"]</label>
+                <div class="form-check form-switch mt-2"><input class="form-check-input" type="checkbox" name="IsActive" value="true" @(item?.IsActive != false ? "checked" : "") /></div>
+            </div>
+            <div class="col-12"><label class="form-label">@Localizer["Description"]</label><textarea name="Description" class="form-control" rows="2">@item?.Description</textarea></div>
+        </div>
+        <div class="mt-4 d-flex gap-2">
+            <button type="submit" class="btn btn-accent"><i class="fas fa-save me-1"></i>@Localizer["Save"]</button>
+            <a href="@Url.Action("Index")" class="btn btn-secondary">@Localizer["Cancel"]</a>
+        </div>
+    </form>
+</div>

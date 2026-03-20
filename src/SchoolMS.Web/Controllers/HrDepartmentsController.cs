@@ -1,0 +1,70 @@
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using SchoolMS.Application.DTOs;
+using SchoolMS.Application.Interfaces;
+using SchoolMS.Web.Filters;
+
+namespace SchoolMS.Web.Controllers;
+
+[Authorize, RequireHrModule]
+public class HrDepartmentsController : Controller
+{
+    private readonly IHrDepartmentService _service;
+    private readonly IBranchService _branchService;
+    private readonly IOneSignalNotificationService _pushService;
+
+    public HrDepartmentsController(IHrDepartmentService service, IBranchService branchService, IOneSignalNotificationService pushService)
+    {
+        _service = service;
+        _branchService = branchService;
+        _pushService = pushService;
+    }
+
+    private int? CurrentSchoolId { get { var c = User.FindFirst("SchoolId"); return c != null && int.TryParse(c.Value, out var id) ? id : null; } }
+
+    [HasPermission("HrDepartments", "View")]
+    public async Task<IActionResult> Index() => View(await _service.GetAllAsync());
+
+    [HasPermission("HrDepartments", "Add")]
+    public async Task<IActionResult> Create()
+    {
+        ViewBag.Branches = await _branchService.GetAllAsync();
+        ViewBag.Departments = await _service.GetAllAsync();
+        return View();
+    }
+
+    [HttpPost, HasPermission("HrDepartments", "Add"), ValidateAntiForgeryToken]
+    public async Task<IActionResult> Create(HrDepartmentDto dto)
+    {
+        await _service.CreateAsync(dto);
+        if (CurrentSchoolId.HasValue)
+            await _pushService.SendToPersonTypesAsync("New Department",
+                $"{dto.DepartmentName} department has been created",
+                new[] { "Staff" }, CurrentSchoolId.Value);
+        return RedirectToAction(nameof(Index));
+    }
+
+    [HasPermission("HrDepartments", "Edit")]
+    public async Task<IActionResult> Edit(int id)
+    {
+        var item = await _service.GetByIdAsync(id);
+        if (item == null) return NotFound();
+        ViewBag.Branches = await _branchService.GetAllAsync();
+        ViewBag.Departments = await _service.GetAllAsync();
+        return View("Create", item);
+    }
+
+    [HttpPost, HasPermission("HrDepartments", "Edit"), ValidateAntiForgeryToken]
+    public async Task<IActionResult> Edit(HrDepartmentDto dto)
+    {
+        await _service.UpdateAsync(dto);
+        if (CurrentSchoolId.HasValue)
+            await _pushService.SendToPersonTypesAsync("Department Updated",
+                $"{dto.DepartmentName} department has been updated",
+                new[] { "Staff" }, CurrentSchoolId.Value);
+        return RedirectToAction(nameof(Index));
+    }
+
+    [HttpDelete("{id}"), HasPermission("HrDepartments", "Delete")]
+    public async Task<IActionResult> Delete(int id) { await _service.DeleteAsync(id); return Ok(); }
+}

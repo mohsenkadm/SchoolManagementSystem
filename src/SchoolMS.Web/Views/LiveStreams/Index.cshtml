@@ -1,0 +1,153 @@
+@model List<SchoolMS.Application.DTOs.LiveStreamDto>
+@using SchoolMS.Application.DTOs
+@{
+    var isSuperAdmin = (bool)(ViewBag.IsSuperAdmin ?? false);
+    var schools = ViewBag.Schools as List<SchoolDto> ?? new();
+    var branches = ViewBag.Branches as List<BranchDto> ?? new();
+}
+
+@Html.AntiForgeryToken()
+
+<div class="page-header" data-aos="fade-down">
+    <div>
+        <h4 class="page-title"><i class="fas fa-broadcast-tower text-danger"></i>@Localizer["LiveStreams"]</h4>
+        <span class="record-count"><i class="fas fa-layer-group"></i> @Model.Count</span>
+    </div>
+    <div class="page-actions">
+        <a href="@Url.Action("Create")" class="btn btn-accent"><i class="fas fa-plus me-1"></i>@Localizer["CreateLiveStream"]</a>
+    </div>
+</div>
+
+<div class="stat-ribbon" data-aos="fade-up">
+    <div class="stat-item stagger-item"><div class="stat-icon bg-info-soft"><i class="fas fa-calendar-check"></i></div><div class="stat-info"><h6>@Localizer["Scheduled"]</h6><div class="stat-value">@Model.Count(l => l.Status == LiveStreamStatus.Scheduled)</div></div></div>
+    <div class="stat-item stagger-item"><div class="stat-icon bg-danger-soft"><i class="fas fa-circle"></i></div><div class="stat-info"><h6>@Localizer["Live"]</h6><div class="stat-value">@Model.Count(l => l.Status == LiveStreamStatus.Live)</div></div></div>
+    <div class="stat-item stagger-item"><div class="stat-icon bg-primary-soft"><i class="fas fa-flag-checkered"></i></div><div class="stat-info"><h6>@Localizer["Ended"]</h6><div class="stat-value">@Model.Count(l => l.Status == LiveStreamStatus.Ended)</div></div></div>
+    <div class="stat-item stagger-item"><div class="stat-icon" style="background:rgba(14,165,233,0.15);"><i class="fas fa-user-check" style="color:#0ea5e9;"></i></div><div class="stat-info"><h6>@Localizer["TotalSeen"]</h6><div class="stat-value">@Model.Sum(l => l.SeenCount)</div></div></div>
+</div>
+
+<div class="filter-panel" data-aos="fade-up">
+    <div class="filter-title"><i class="fas fa-filter"></i> @Localizer["Filter"]</div>
+    <div class="row g-2 align-items-end">
+        @if (isSuperAdmin)
+        {
+            <div class="col-md-2">
+                <select id="filterSchool" class="form-select select2">
+                    <option value="">@Localizer["AllSchools"]</option>
+                    @foreach (var s in schools) { <option value="@s.Name">@s.Name</option> }
+                </select>
+            </div>
+        }
+        <div class="col-md-2">
+            <select id="filterBranch" class="form-select">
+                <option value="">@Localizer["AllBranches"]</option>
+                @foreach (var b in branches) { <option value="@b.Name">@b.Name</option> }
+            </select>
+        </div>
+        <div class="col-md-3"><input type="text" id="searchInput" class="form-control" placeholder="🔍 @Localizer["Search"]..." /></div>
+        <div class="col-md-2"><button class="btn btn-filter w-100" onclick="applyFilters()"><i class="fas fa-search"></i> @Localizer["Search"]</button></div>
+        <div class="col-md-2"><button class="btn btn-reset w-100" onclick="resetFilters()"><i class="fas fa-redo"></i> @Localizer["Reset"]</button></div>
+    </div>
+</div>
+
+<div class="table-card hover-lift" data-aos="fade-up">
+    <table id="dataTable" class="table table-hover" style="width:100%">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>@Localizer["Title"]</th>
+                <th>@Localizer["Subject"]</th>
+                <th>@Localizer["Course"]</th>
+                <th>@Localizer["Teacher"]</th>
+                <th>@Localizer["ScheduledAt"]</th>
+                <th>@Localizer["Seen"]</th>
+                <th>@Localizer["Status"]</th>
+                <th>@Localizer["Actions"]</th>
+            </tr>
+        </thead>
+        <tbody>
+            @for (int i = 0; i < Model.Count; i++)
+            {
+                var ls = Model[i];
+                var statusBadge = ls.Status switch
+                {
+                    LiveStreamStatus.Scheduled => "bg-info",
+                    LiveStreamStatus.Live => "bg-danger",
+                    LiveStreamStatus.Ended => "bg-secondary",
+                    _ => "bg-secondary"
+                };
+                <tr class="table-row-animated">
+                    <td>@(i + 1)</td>
+                    <td>@ls.Title</td>
+                    <td>@ls.SubjectName</td>
+                    <td>
+                        @if (ls.IsStandalone)
+                        {
+                            <span class="badge bg-warning text-dark"><i class="fas fa-broadcast-tower me-1"></i>@Localizer["Standalone"]</span>
+                        }
+                        else
+                        {
+                            @ls.CourseTitle
+                        }
+                    </td>
+                    <td>@ls.TeacherName</td>
+                    <td>@ls.ScheduledAt.ToString("yyyy-MM-dd HH:mm")</td>
+                    <td><span class="badge" style="background:#0ea5e9;color:#fff;"><i class="fas fa-user-check me-1"></i>@ls.SeenCount</span></td>
+                    <td>
+                        <span class="badge @statusBadge">@ls.Status</span>
+                    </td>
+                    <td>
+                        <div class="d-flex gap-1">
+                            @if (ls.Status == LiveStreamStatus.Scheduled)
+                            {
+                                <button class="btn btn-sm btn-success" onclick="updateStatus(@ls.Id, @((int)LiveStreamStatus.Live))" data-bs-toggle="tooltip" title="@Localizer["GoLive"]">
+                                    <i class="fas fa-play"></i>
+                                </button>
+                            }
+                            @if (ls.Status == LiveStreamStatus.Live)
+                            {
+                                <button class="btn btn-sm btn-warning" onclick="updateStatus(@ls.Id, @((int)LiveStreamStatus.Ended))" data-bs-toggle="tooltip" title="@Localizer["EndStream"]">
+                                    <i class="fas fa-stop"></i>
+                                </button>
+                            }
+                            <button class="btn btn-sm btn-danger" onclick="del(@ls.Id)" data-bs-toggle="tooltip" title="@Localizer["Delete"]">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@section Scripts {
+<script>
+    var isSuperAdmin = @(isSuperAdmin ? "true" : "false");
+    var dt;
+    $(function () { dt = $('#dataTable').DataTable({ responsive: true, pageLength: 25, dom: 'rtip', order: [[5, 'desc']] }); $('#searchInput').on('keyup', function () { dt.search(this.value).draw(); }); });
+
+    function applyFilters() {
+        dt.search($('#searchInput').val());
+        dt.draw();
+    }
+    function resetFilters() {
+        $('#searchInput, #filterBranch').val('');
+        if (isSuperAdmin) { $('#filterSchool').val(''); }
+        dt.search('').columns().search('').draw();
+    }
+
+    function updateStatus(id, status) {
+        $.ajax({
+            url: '@Url.Action("UpdateStatus")?id=' + id,
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(status),
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            success: function () { toastr.success('Status updated'); location.reload(); },
+            error: function () { toastr.error('Error updating status'); }
+        });
+    }
+
+    function del(id) { confirmDelete('@Url.Action("Delete")', id, function () { location.reload(); }); }
+</script>
+}

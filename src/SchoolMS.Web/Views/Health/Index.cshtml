@@ -1,0 +1,75 @@
+@using SchoolMS.Application.DTOs
+@model List<HealthRecordDto>
+@{
+    ViewData["Title"] = Localizer["HealthRecords"].Value;
+    var isSuperAdmin = (bool)(ViewBag.IsSuperAdmin ?? false);
+    var schools = ViewBag.Schools as List<SchoolDto> ?? new();
+    var branches = ViewBag.Branches as List<BranchDto> ?? new();
+}
+@Html.AntiForgeryToken()
+
+<div class="page-header" data-aos="fade-down">
+    <div>
+        <h4 class="page-title"><i class="fas fa-heartbeat text-primary"></i>@Localizer["HealthRecords"]</h4>
+        <span class="record-count"><i class="fas fa-layer-group"></i> @Model.Count</span>
+    </div>
+    <div class="page-actions">
+        <a href="@Url.Action("Create")" class="btn btn-accent"><i class="fas fa-plus me-1"></i>@Localizer["AddRecord"]</a>
+    </div>
+</div>
+
+<div class="stat-ribbon" data-aos="fade-up">
+    <div class="stat-item stagger-item"><div class="stat-icon bg-primary-soft"><i class="fas fa-heartbeat"></i></div><div class="stat-info"><h6>@Localizer["Total"]</h6><div class="stat-value">@Model.Count</div></div></div>
+    <div class="stat-item stagger-item"><div class="stat-icon bg-warning-soft"><i class="fas fa-calendar-check"></i></div><div class="stat-info"><h6>@Localizer["FollowUp"]</h6><div class="stat-value">@Model.Count(h => h.FollowUpDate.HasValue && h.FollowUpDate.Value.Date >= DateTime.Today)</div></div></div>
+    <div class="stat-item stagger-item"><div class="stat-icon bg-info-soft"><i class="fas fa-user-injured"></i></div><div class="stat-info"><h6>@Localizer["Students"]</h6><div class="stat-value">@Model.Select(h => h.StudentId).Distinct().Count()</div></div></div>
+</div>
+
+<div class="filter-panel" data-aos="fade-up">
+    <div class="filter-title"><i class="fas fa-filter"></i> @Localizer["Filter"]</div>
+    <div class="row g-2 align-items-end">
+        @if (isSuperAdmin)
+        {
+            <div class="col-md-2">
+                <select id="filterSchool" class="form-select select2">
+                    <option value="">@Localizer["AllSchools"]</option>
+                    @foreach (var s in schools) { <option value="@s.Name">@s.Name</option> }
+                </select>
+            </div>
+        }
+        <div class="col-md-3"><input type="text" id="searchInput" class="form-control" placeholder="🔍 @Localizer["SearchStudent"]..." /></div>
+        <div class="col-md-2"><select id="filterType" class="form-select"><option value="">@Localizer["AllTypes"]</option>@foreach (var t in Model.Select(h => h.RecordType.ToString()).Distinct().OrderBy(t => t)) { <option value="@t">@t</option> }</select></div>
+        <div class="col-md-1"><button class="btn btn-filter w-100" onclick="applyFilters()"><i class="fas fa-search"></i></button></div>
+        <div class="col-md-1"><button class="btn btn-reset w-100" onclick="resetFilters()"><i class="fas fa-redo"></i></button></div>
+    </div>
+</div>
+
+<div class="table-card hover-lift" data-aos="fade-up">
+    <table id="dataTable" class="table table-hover" style="width:100%">
+        <thead><tr><th>#</th><th>@Localizer["Student"]</th><th>@Localizer["Title"]</th><th>@Localizer["RecordType"]</th><th>@Localizer["Doctor"]</th><th>@Localizer["Date"]</th>@if (isSuperAdmin){<th>@Localizer["School"]</th>}<th>@Localizer["Actions"]</th></tr></thead>
+        <tbody>
+            @for (int i = 0; i < Model.Count; i++)
+            {
+                <tr class="table-row-animated">
+                    <td>@(i + 1)</td><td>@Model[i].StudentName</td><td>@Model[i].Title</td><td><span class="badge bg-info">@Model[i].RecordType</span></td><td>@Model[i].DoctorName</td><td>@Model[i].RecordDate.ToString("yyyy-MM-dd")</td>
+                    @if (isSuperAdmin){<td>@Model[i].SchoolName</td>}
+                    <td>
+                        <div class="d-flex gap-1">
+                            <a href="@Url.Action("Edit", new { id = Model[i].Id })" class="btn btn-sm btn-primary" data-bs-toggle="tooltip" title="@Localizer["Edit"]"><i class="fas fa-edit"></i></a>
+                            <button class="btn btn-sm btn-danger" onclick="del(@Model[i].Id)" data-bs-toggle="tooltip" title="@Localizer["Delete"]"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+@section Scripts {
+<script>
+    var dt, isSA = @(isSuperAdmin ? "true" : "false");
+    var typeCol = 3, schoolCol = isSA ? 6 : -1;
+    $(function () { dt = $('#dataTable').DataTable({ responsive: true, pageLength: 25, dom: 'rtip', order: [[5, 'desc']] }); $('#searchInput').on('keyup', function () { dt.search(this.value).draw(); }); });
+    function applyFilters() { dt.search($('#searchInput').val()); dt.column(typeCol).search($('#filterType').val()); if (isSA) dt.column(schoolCol).search($('#filterSchool').val()); dt.draw(); }
+    function resetFilters() { $('#searchInput, #filterType').val(''); if (isSA) $('#filterSchool').val(''); dt.search('').columns().search('').draw(); }
+    function del(id) { confirmDelete('@Url.Action("Delete")', id, function () { location.reload(); }); }
+</script>
+}

@@ -1,0 +1,34 @@
+@{
+    ViewData["Title"] = "Subscription Expired";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var reason = ViewData["Reason"]?.ToString();
+}
+
+<div class="login-page">
+    <div class="login-card animate__animated animate__fadeIn text-center">
+        <div class="mb-4">
+            <i class="fas fa-exclamation-triangle fa-4x text-warning"></i>
+        </div>
+        @if (reason == "inactive")
+        {
+            <h3 class="text-danger mb-3">@Localizer["SchoolInactive"]</h3>
+            <p class="text-muted">@Localizer["SchoolInactiveMsg"]</p>
+        }
+        else if (reason == "expired")
+        {
+            <h3 class="text-danger mb-3">@Localizer["SubscriptionExpired"]</h3>
+            <p class="text-muted">@Localizer["SubscriptionExpiredMsg"]</p>
+        }
+        else
+        {
+            <h3 class="text-danger mb-3">@Localizer["AccessDenied"]</h3>
+            <p class="text-muted">@Localizer["AccessDeniedMsg"]</p>
+        }
+        <hr />
+        <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
+            <button type="submit" class="btn btn-accent">
+                <i class="fas fa-sign-out-alt me-1"></i>@Localizer["SignOut"]
+            </button>
+        </form>
+    </div>
+</div>

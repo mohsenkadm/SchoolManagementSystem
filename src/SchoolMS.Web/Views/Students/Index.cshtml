@@ -1,0 +1,175 @@
+@using SchoolMS.Application.DTOs
+@{
+    ViewData["Title"] = Localizer["Students"].Value;
+    var isSuperAdmin = (bool)(ViewBag.IsSuperAdmin ?? false);
+    var schools = ViewBag.Schools as List<SchoolDto> ?? new();
+    var branches = ViewBag.Branches as List<BranchDto> ?? new();
+    var academicYears = ViewBag.AcademicYears as List<AcademicYearDto> ?? new();
+    var grades = ViewBag.Grades as List<GradeDto> ?? new();
+}
+@Html.AntiForgeryToken()
+
+<div class="page-header" data-aos="fade-down">
+    <div>
+        <h4 class="page-title"><i class="fas fa-user-graduate text-primary"></i>@Localizer["Students"]</h4>
+    </div>
+    <div class="page-actions">
+        <a href="@Url.Action("ExportExcel")" class="btn btn-success"><i class="fas fa-file-excel me-1"></i>@Localizer["ExportExcel"]</a>
+        <a href="@Url.Action("Create")" class="btn btn-accent"><i class="fas fa-plus me-1"></i>@Localizer["AddStudent"]</a>
+    </div>
+</div>
+
+<div class="stat-ribbon" data-aos="fade-up">
+    <div class="stat-item stagger-item"><div class="stat-icon bg-primary-soft"><i class="fas fa-user-graduate"></i></div><div class="stat-info"><h6>@Localizer["Total"]</h6><div class="stat-value" id="statTotal">—</div></div></div>
+    <div class="stat-item stagger-item"><div class="stat-icon bg-info-soft"><i class="fas fa-star"></i></div><div class="stat-info"><h6>@Localizer["Grades"]</h6><div class="stat-value">@grades.Count</div></div></div>
+    <div class="stat-item stagger-item"><div class="stat-icon bg-success-soft"><i class="fas fa-building"></i></div><div class="stat-info"><h6>@Localizer["Branches"]</h6><div class="stat-value">@branches.Count</div></div></div>
+</div>
+
+<!-- Filters -->
+<div class="filter-panel" data-aos="fade-up">
+    <div class="filter-title"><i class="fas fa-filter"></i> @Localizer["Filter"]</div>
+    <div class="row g-2">
+        @if (isSuperAdmin)
+        {
+            <div class="col-md-3">
+                <select id="filterSchool" class="form-select select2">
+                    <option value="">@Localizer["AllSchools"]</option>
+                    @foreach (var s in schools)
+                    {
+                        <option value="@s.Id">@s.Name</option>
+                    }
+                </select>
+            </div>
+        }
+        <div class="col-md-3">
+            <select id="filterBranch" class="form-select select2">
+                <option value="">@Localizer["AllBranches"]</option>
+                @foreach (var b in branches)
+                {
+                    <option value="@b.Id">@b.Name</option>
+                }
+            </select>
+        </div>
+        <div class="col-md-2">
+            <select id="filterYear" class="form-select select2">
+                <option value="">@Localizer["AllYears"]</option>
+                @foreach (var y in academicYears)
+                {
+                    <option value="@y.Id" selected="@y.IsCurrent">@y.YearName</option>
+                }
+            </select>
+        </div>
+        <div class="col-md-2">
+            <select id="filterGrade" class="form-select select2">
+                <option value="">@Localizer["AllGrades"]</option>
+                @foreach (var g in grades)
+                {
+                    <option value="@g.Id">@g.GradeName</option>
+                }
+            </select>
+        </div>
+        <div class="col-md-2 d-flex align-items-end">
+            <button class="btn btn-filter w-100" onclick="reloadTable()"><i class="fas fa-search me-1"></i>@Localizer["Filter"]</button>
+        </div>
+    </div>
+</div>
+
+<!-- DataTable -->
+<div class="table-card hover-lift" data-aos="fade-up">
+    <table id="studentsTable" class="table table-hover" style="width:100%">
+        <thead>
+            <tr>
+                <th>@Localizer["Photo"]</th>
+                <th>@Localizer["Name"]</th>
+                <th>@Localizer["Grade"]</th>
+                <th>@Localizer["Division"]</th>
+                <th>@Localizer["Branch"]</th>
+                @if (isSuperAdmin)
+                {
+                    <th>@Localizer["School"]</th>
+                }
+                <th>@Localizer["Phone"]</th>
+                <th>@Localizer["GuardianPhone"]</th>
+                <th>Badge</th>
+                <th>@Localizer["Actions"]</th>
+            </tr>
+        </thead>
+    </table>
+</div>
+
+@section Scripts {
+    <script>
+        var isSuperAdmin = @(isSuperAdmin ? "true" : "false");
+        var table;
+        $(document).ready(function () {
+            @if (isSuperAdmin)
+            {
+                @:$('#filterSchool').on('change', function () {
+                @:    var schoolId = $(this).val();
+                @:    var $branch = $('#filterBranch');
+                @:    $branch.empty().append('<option value="">@Localizer["AllBranches"]</option>');
+                @:    if (schoolId) {
+                @:        $.getJSON('@Url.Action("GetBranchesBySchool")?schoolId=' + schoolId, function (data) {
+                @:            data.forEach(function (b) { $branch.append('<option value="' + b.id + '">' + b.name + '</option>'); });
+                @:        });
+                @:    }
+                @:});
+            }
+
+            var columns = [
+                { data: 'profileImage', orderable: false, render: function () { return '<div class="avatar-sm bg-primary text-white rounded-circle d-flex align-items-center justify-content-center"><i class="fas fa-user"></i></div>'; } },
+                { data: 'fullName' },
+                { data: 'gradeName' },
+                { data: 'divisionName' },
+                { data: 'branchName' }
+            ];
+            if (isSuperAdmin) { columns.push({ data: 'schoolName' }); }
+            columns.push({ data: 'phone' });
+            columns.push({ data: 'parentPhone' });
+            columns.push({ data: 'badgeCardNumber' });
+            columns.push({
+                data: 'id', orderable: false,
+                render: function (data) {
+                    return '<div class="d-flex gap-1">' +
+                        '<a class="btn btn-sm btn-primary" href="@Url.Action("Edit")/' + data + '"><i class="fas fa-edit"></i></a>' +
+                        '<button class="btn btn-sm btn-danger" onclick="deleteStudent(' + data + ')"><i class="fas fa-trash"></i></button>' +
+                        '</div>';
+                }
+            });
+
+            table = $('#studentsTable').DataTable({
+                processing: true,
+                serverSide: true,
+                ajax: {
+                    url: '@Url.Action("GetData")',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: function (d) {
+                        return JSON.stringify({
+                            draw: d.draw,
+                            start: d.start,
+                            length: d.length,
+                            searchValue: d.search.value,
+                            sortColumn: d.columns[d.order[0].column].data,
+                            sortDirection: d.order[0].dir,
+                            schoolId: $('#filterSchool').val() || null,
+                            branchId: $('#filterBranch').val() || null,
+                            academicYearId: $('#filterYear').val() || null
+                        });
+                    }
+                },
+                columns: columns,
+                responsive: true,
+                dom: 'Bfrtip',
+                pageLength: 25,
+                drawCallback: function (settings) {
+                    var info = this.api().page.info();
+                    $('#statTotal').text(info.recordsTotal);
+                }
+            });
+        });
+
+        function reloadTable() { table.ajax.reload(); }
+        function deleteStudent(id) { confirmDelete('@Url.Action("Delete")', id, function () { table.ajax.reload(); }); }
+    </script>
+}

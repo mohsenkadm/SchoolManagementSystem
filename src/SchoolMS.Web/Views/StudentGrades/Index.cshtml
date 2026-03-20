@@ -1,0 +1,111 @@
+@using SchoolMS.Application.DTOs
+@model List<StudentGradeDto>
+@{ ViewData["Title"] = Localizer["StudentGrades"].Value; }
+@Html.AntiForgeryToken()
+@{
+    var isSuperAdmin = (bool)(ViewBag.IsSuperAdmin ?? false);
+    var schools = ViewBag.Schools as List<SchoolDto> ?? new();
+    var avg = Model.Any() ? Model.Where(m => m.MaxMark > 0).Average(m => m.Mark / m.MaxMark * 100) : 0;
+    var avgBySubject = Model.Where(m => m.MaxMark > 0).GroupBy(m => m.SubjectName ?? "Other").Select(g => new { Name = g.Key, Avg = g.Average(x => x.Mark / x.MaxMark * 100) }).OrderByDescending(x => x.Avg).ToList();
+}
+
+<div class="page-header" data-aos="fade-down">
+    <div>
+        <h4 class="page-title"><i class="fas fa-chart-bar text-primary"></i>@Localizer["StudentGrades"]</h4>
+        <span class="record-count"><i class="fas fa-layer-group"></i> @Model.Count</span>
+    </div>
+    <div class="page-actions">
+        <button class="btn btn-outline-primary" onclick="printSchedule()"><i class="fas fa-print me-1"></i>@Localizer["Print"]</button>
+        <a href="@Url.Action("ExportExcel")" class="btn btn-success"><i class="fas fa-file-excel me-1"></i>@Localizer["Export"]</a>
+        <a href="@Url.Action("BulkCreate")" class="btn btn-info"><i class="fas fa-layer-group me-1"></i>@Localizer["BulkAdd"]</a>
+        <a href="@Url.Action("Create")" class="btn btn-accent"><i class="fas fa-plus me-1"></i>@Localizer["AddGrade"]</a>
+    </div>
+</div>
+
+<div class="stat-ribbon" data-aos="fade-up">
+    <div class="stat-item stagger-item"><div class="stat-icon bg-primary-soft"><i class="fas fa-chart-bar"></i></div><div class="stat-info"><h6>@Localizer["Total"]</h6><div class="stat-value">@Model.Count</div></div></div>
+    <div class="stat-item stagger-item"><div class="stat-icon bg-success-soft"><i class="fas fa-percentage"></i></div><div class="stat-info"><h6>@Localizer["Average"]</h6><div class="stat-value">@avg.ToString("N1")%</div></div></div>
+    <div class="stat-item stagger-item"><div class="stat-icon bg-info-soft"><i class="fas fa-book"></i></div><div class="stat-info"><h6>@Localizer["Subjects"]</h6><div class="stat-value">@Model.Select(m => m.SubjectName).Distinct().Count()</div></div></div>
+    <div class="stat-item stagger-item"><div class="stat-icon bg-warning-soft"><i class="fas fa-user-graduate"></i></div><div class="stat-info"><h6>@Localizer["Students"]</h6><div class="stat-value">@Model.Select(m => m.StudentId).Distinct().Count()</div></div></div>
+</div>
+
+<div class="row mb-4" data-aos="fade-up">
+    <div class="col-lg-12">
+        <div class="dashboard-card card p-3 hover-lift"><h6 class="mb-3"><i class="fas fa-chart-bar me-2 text-primary"></i>@Localizer["AverageBySubject"]</h6><canvas id="chartAvgSubject" height="180"></canvas></div>
+    </div>
+</div>
+
+<div class="filter-panel" data-aos="fade-up">
+    <div class="filter-title"><i class="fas fa-filter"></i> @Localizer["Filter"]</div>
+    <div class="row g-2 align-items-end">
+        @if (isSuperAdmin)
+        {
+            <div class="col-md-2">
+                <select id="filterSchool" class="form-select select2">
+                    <option value="">@Localizer["AllSchools"]</option>
+                    @foreach (var s in schools) { <option value="@s.Name">@s.Name</option> }
+                </select>
+            </div>
+        }
+        <div class="col-md-2"><input type="text" id="searchInput" class="form-control" placeholder="🔍 @Localizer["SearchStudent"]..." /></div>
+        <div class="col-md-2"><select id="filterSubject" class="form-select"><option value="">@Localizer["AllSubjects"]</option>@foreach (var s in Model.Select(m => m.SubjectName).Distinct().OrderBy(s => s)) { <option value="@s">@s</option> }</select></div>
+        <div class="col-md-2"><select id="filterExam" class="form-select"><option value="">@Localizer["AllExamTypes"]</option>@foreach (var e in Model.Select(m => m.ExamTypeName).Distinct().OrderBy(e => e)) { <option value="@e">@e</option> }</select></div>
+        <div class="col-md-1"><button class="btn btn-filter w-100" onclick="applyFilters()"><i class="fas fa-search"></i></button></div>
+        <div class="col-md-1"><button class="btn btn-reset w-100" onclick="resetFilters()"><i class="fas fa-redo"></i></button></div>
+    </div>
+</div>
+
+<div class="table-card hover-lift" data-aos="fade-up" id="printArea">
+    <table id="dataTable" class="table table-hover" style="width:100%">
+        <thead><tr><th>#</th><th>@Localizer["Student"]</th><th>@Localizer["Subject"]</th><th>@Localizer["ExamType"]</th><th>@Localizer["Mark"]</th><th>@Localizer["MaxMark"]</th><th>@Localizer["Grade"]</th>@if (isSuperAdmin) { <th>@Localizer["School"]</th> }<th class="no-print">@Localizer["Actions"]</th></tr></thead>
+        <tbody>
+            @for (int i = 0; i < Model.Count; i++)
+            {
+                var pct = Model[i].MaxMark > 0 ? (Model[i].Mark / Model[i].MaxMark * 100) : 0;
+                var badgeCls = pct >= 85 ? "bg-success" : pct >= 60 ? "bg-info" : pct >= 40 ? "bg-warning" : "bg-danger";
+                <tr class="table-row-animated">
+                    <td>@(i + 1)</td><td>@Model[i].StudentName</td><td>@Model[i].SubjectName</td><td>@Model[i].ExamTypeName</td><td>@Model[i].Mark</td><td>@Model[i].MaxMark</td>
+                    <td><span class="badge @badgeCls">@Model[i].GradeLetter</span></td>
+                    @if (isSuperAdmin) { <td>@Model[i].SchoolName</td> }
+                    <td class="no-print">
+                        <div class="d-flex gap-1">
+                            <a href="@Url.Action("Edit", new { id = Model[i].Id })" class="btn btn-sm btn-primary" data-bs-toggle="tooltip" title="@Localizer["Edit"]"><i class="fas fa-edit"></i></a>
+                            <button class="btn btn-sm btn-danger" onclick="del(@Model[i].Id)" data-bs-toggle="tooltip" title="@Localizer["Delete"]"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+@section Scripts {
+<style media="print">
+    .page-header, .stat-ribbon, .filter-panel, .no-print, nav, .sidebar, footer, .row.mb-4 { display: none !important; }
+    .table-card { box-shadow: none !important; border: none !important; }
+    table { font-size: 12px; }
+    th, td { padding: 4px 8px !important; }
+</style>
+<script>
+    var isSuperAdmin = @(isSuperAdmin ? "true" : "false");
+    var subjectColIdx = 2, examColIdx = 3, schoolColIdx = isSuperAdmin ? 7 : -1;
+    var dt;
+    $(function () {
+        dt = $('#dataTable').DataTable({ responsive: true, pageLength: 25, dom: 'rtip' });
+        $('#searchInput').on('keyup', function () { dt.search(this.value).draw(); });
+        var subLabels = [@Html.Raw(string.Join(",", avgBySubject.Select(x => $"\"{x.Name}\"")))];
+        var subData = [@Html.Raw(string.Join(",", avgBySubject.Select(x => x.Avg.ToString("F1"))))];
+        var colors = subData.map(function(v) { return v >= 85 ? '#22c55e' : v >= 60 ? '#06b6d4' : v >= 40 ? '#f59e0b' : '#ef4444'; });
+        new Chart(document.getElementById('chartAvgSubject'), { type: 'bar', data: { labels: subLabels, datasets: [{ label: 'Average %', data: subData, backgroundColor: colors, borderRadius: 8 }] }, options: { responsive: true, indexAxis: 'y', plugins: { legend: { display: false } }, scales: { x: { beginAtZero: true, max: 100 } } } });
+    });
+    function applyFilters() {
+        dt.search($('#searchInput').val());
+        dt.column(subjectColIdx).search($('#filterSubject').val());
+        dt.column(examColIdx).search($('#filterExam').val());
+        if (isSuperAdmin) { dt.column(schoolColIdx).search($('#filterSchool').val()); }
+        dt.draw();
+    }
+    function resetFilters() { $('#searchInput, #filterSubject, #filterExam').val(''); if (isSuperAdmin) { $('#filterSchool').val(''); } dt.search('').columns().search('').draw(); }
+    function del(id) { confirmDelete('@Url.Action("Delete")', id, function () { location.reload(); }); }
+    function printSchedule() { window.print(); }
+</script>
+}

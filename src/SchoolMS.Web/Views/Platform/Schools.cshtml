@@ -1,0 +1,215 @@
+@model List<SchoolMS.Application.DTOs.SchoolDto>
+
+<div class="container-fluid">
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="fas fa-school me-2"></i>@Localizer["ManageSchools"]</h5>
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#schoolModal" onclick="openCreate()">
+                <i class="fas fa-plus me-1"></i>@Localizer["AddSchool"]
+            </button>
+        </div>
+        <div class="card-body">
+            <table id="dataTable" class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>#</th><th>@Localizer["Name"]</th><th>@Localizer["SchoolSlug"]</th><th>@Localizer["Branches"]</th><th>@Localizer["Students"]</th><th>@Localizer["Teachers"]</th><th>@Localizer["Plan"]</th><th>@Localizer["Status"]</th><th>@Localizer["ExpiryDate"]</th><th>@Localizer["Actions"]</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var s in Model)
+                    {
+                        <tr>
+                            <td>@s.Id</td>
+                            <td><strong>@s.Name</strong></td>
+                            <td><code>@s.Slug</code></td>
+                            <td>@s.BranchCount</td>
+                            <td>@s.StudentCount</td>
+                            <td>@s.TeacherCount</td>
+                            <td>@(s.CurrentPlan ?? "<span class='text-muted'>None</span>")</td>
+                            <td>
+                                @if (s.IsActive)
+                                {<span class="badge bg-success">@Localizer["Active"]</span>}
+                                else
+                                {<span class="badge bg-danger">@Localizer["Inactive"]</span>}
+                            </td>
+                            <td>@(s.ExpiryDate?.ToString("MMM dd, yyyy") ?? "—")</td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-primary" onclick="editSchool(@s.Id)"><i class="fas fa-edit"></i></button>
+                                <button class="btn btn-sm btn-outline-info" onclick="manageSubscription(@s.Id, '@s.Name')"><i class="fas fa-file-contract"></i></button>
+                                <button class="btn btn-sm btn-outline-warning" onclick="toggleSchool(@s.Id)"><i class="fas fa-power-off"></i></button>
+                                <button class="btn btn-sm btn-outline-danger" onclick="deleteSchool(@s.Id)"><i class="fas fa-trash"></i></button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Create/Edit School Modal -->
+<div class="modal fade" id="schoolModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header"><h5 class="modal-title" id="schoolModalTitle">@Localizer["AddSchool"]</h5><button class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body">
+                <input type="hidden" id="schoolId" />
+                <div class="row g-3">
+                    <div class="col-md-6"><label class="form-label">@Localizer["SchoolName"] *</label><input type="text" class="form-control" id="schoolName" required /></div>
+                    <div class="col-md-6"><label class="form-label">@Localizer["SchoolSlug"] *</label><input type="text" class="form-control" id="schoolSlug" required placeholder="e.g. my-school" /></div>
+                    <div class="col-md-12"><label class="form-label">@Localizer["Address"]</label><input type="text" class="form-control" id="schoolAddress" /></div>
+                    <div class="col-md-4"><label class="form-label">@Localizer["ExpiryDate"]</label><input type="date" class="form-control" id="schoolExpiry" /></div>
+                    <div class="col-md-4"><div class="form-check mt-4"><input type="checkbox" class="form-check-input" id="schoolActive" checked /><label class="form-check-label">@Localizer["Active"]</label></div></div>
+                    <div class="col-md-4"><div class="form-check mt-4"><input type="checkbox" class="form-check-input" id="schoolOnline" /><label class="form-check-label">@Localizer["OnlinePlatform"]</label></div></div>
+                </div>
+                <hr />
+                <div id="adminFields">
+                    <h6><i class="fas fa-user-shield me-1"></i>@Localizer["SchoolAdminAccount"]</h6>
+                    <div class="alert alert-info small mb-2">
+                        <i class="fas fa-info-circle me-1"></i>
+                        <strong>@Localizer["Email"]</strong> must be valid (e.g. admin@school.com). 
+                        <strong>@Localizer["Password"]</strong> requires 8+ characters, uppercase, lowercase, digit, and special character (e.g. Admin@1234).
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-md-4"><label class="form-label">@Localizer["AdminName"] *</label><input type="text" class="form-control" id="adminName" /></div>
+                        <div class="col-md-4"><label class="form-label">@Localizer["AdminEmail"] *</label><input type="email" class="form-control" id="adminEmail" placeholder="admin@school.com" /></div>
+                        <div class="col-md-4"><label class="form-label">@Localizer["AdminPassword"] *</label><input type="password" class="form-control" id="adminPassword" placeholder="Min 8 chars, e.g. Admin@1234" /></div>
+                    </div>
+                    <div class="row g-3 mt-1">
+                        <div class="col-md-6">
+                            <label class="form-label">@Localizer["SubscriptionPlan"]</label>
+                            <select class="form-select" id="subscriptionPlan">
+                                <option value="">— @Localizer["NoPlan"] —</option>
+                                @if (ViewBag.Plans != null)
+                                {
+                                    foreach (SchoolMS.Application.DTOs.SubscriptionPlanDto p in ViewBag.Plans)
+                                    {
+                                        <option value="@p.Id">@p.PlanName ($@p.Price / @p.DurationMonths mo)</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-bs-dismiss="modal">@Localizer["Cancel"]</button>
+                <button class="btn btn-primary" onclick="saveSchool()"><i class="fas fa-save me-1"></i>@Localizer["Save"]</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Subscription Modal -->
+<div class="modal fade" id="subModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header"><h5 class="modal-title">@Localizer["ManageSubscription"] — <span id="subSchoolName"></span></h5><button class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body">
+                <input type="hidden" id="subSchoolId" />
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <select class="form-select" id="newPlanId">
+                            @if (ViewBag.Plans != null)
+                            {
+                                foreach (SchoolMS.Application.DTOs.SubscriptionPlanDto p in ViewBag.Plans)
+                                {
+                                    <option value="@p.Id">@p.PlanName ($@p.Price / @p.DurationMonths mo)</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <button class="btn btn-success" onclick="assignSub()"><i class="fas fa-plus me-1"></i>@Localizer["AssignPlan"]</button>
+                    </div>
+                </div>
+                <table class="table table-sm" id="subTable">
+                    <thead><tr><th>@Localizer["Plan"]</th><th>@Localizer["ActivatedAt"]</th><th>@Localizer["ExpiryDate"]</th><th>@Localizer["Status"]</th><th>@Localizer["Actions"]</th></tr></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    $(document).ready(function () { $('#dataTable').DataTable(); });
+    const token = $('input[name="__RequestVerificationToken"]').val() || document.querySelector('meta[name="csrf-token"]')?.content;
+    function getHeaders() { return { 'Content-Type': 'application/json', 'RequestVerificationToken': token }; }
+
+    let isEdit = false;
+    function openCreate() {
+        isEdit = false; $('#schoolModalTitle').text('Add School'); $('#schoolId').val('');
+        $('#schoolName,#schoolSlug,#schoolAddress,#adminName,#adminEmail,#adminPassword').val('');
+        $('#schoolExpiry').val(''); $('#schoolActive').prop('checked', true); $('#schoolOnline').prop('checked', false);
+        $('#adminFields').show(); $('#subscriptionPlan').val('');
+    }
+    function editSchool(id) {
+        isEdit = true; $('#schoolModalTitle').text('Edit School'); $('#adminFields').hide();
+        $.getJSON('@Url.Action("GetSchool", "Platform")?id=' + id, function (s) {
+            $('#schoolId').val(s.id); $('#schoolName').val(s.name); $('#schoolSlug').val(s.slug);
+            $('#schoolAddress').val(s.address); $('#schoolActive').prop('checked', s.isActive);
+            $('#schoolOnline').prop('checked', s.onlinePlatformEnabled);
+            if (s.expiryDate) $('#schoolExpiry').val(s.expiryDate.split('T')[0]);
+            new bootstrap.Modal('#schoolModal').show();
+        });
+    }
+    function saveSchool() {
+        if (isEdit) {
+            $.ajax({ url: '@Url.Action("UpdateSchool", "Platform")', method: 'PUT', headers: getHeaders(),
+                data: JSON.stringify({ id: +$('#schoolId').val(), name: $('#schoolName').val(), slug: $('#schoolSlug').val(),
+                    address: $('#schoolAddress').val(), isActive: $('#schoolActive').is(':checked'),
+                    expiryDate: $('#schoolExpiry').val() || null, onlinePlatformEnabled: $('#schoolOnline').is(':checked') }),
+                success: () => location.reload(),
+                error: (xhr) => toastr.error(xhr.responseJSON?.error || 'Error')
+            });
+        } else {
+            $.ajax({ url: '@Url.Action("CreateSchool", "Platform")', method: 'POST', headers: getHeaders(),
+                data: JSON.stringify({ name: $('#schoolName').val(), slug: $('#schoolSlug').val(), address: $('#schoolAddress').val(),
+                    isActive: $('#schoolActive').is(':checked'), expiryDate: $('#schoolExpiry').val() || null,
+                    onlinePlatformEnabled: $('#schoolOnline').is(':checked'),
+                    adminEmail: $('#adminEmail').val(), adminPassword: $('#adminPassword').val(),
+                    adminFullName: $('#adminName').val(), subscriptionPlanId: $('#subscriptionPlan').val() || null }),
+                success: () => { toastr.success('School created!'); location.reload(); },
+                error: (xhr) => toastr.error(xhr.responseJSON?.error || 'Error creating school')
+            });
+        }
+    }
+    function toggleSchool(id) {
+        Swal.fire({ title: 'Toggle Status?', icon: 'question', showCancelButton: true, confirmButtonText: 'Yes' }).then(r => {
+            if (r.isConfirmed) $.ajax({ url: '@Url.Action("ToggleSchool", "Platform")?id=' + id, method: 'POST', headers: getHeaders(), success: () => location.reload() });
+        });
+    }
+    function deleteSchool(id) {
+        Swal.fire({ title: 'Delete School?', text: 'This will soft-delete the school.', icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33' }).then(r => {
+            if (r.isConfirmed) $.ajax({ url: '/Platform/DeleteSchool/' + id, method: 'DELETE', headers: getHeaders(), success: () => location.reload() });
+        });
+    }
+    function manageSubscription(schoolId, name) {
+        $('#subSchoolId').val(schoolId); $('#subSchoolName').text(name);
+        $.getJSON('@Url.Action("GetSubscriptions", "Platform")?schoolId=' + schoolId, function (data) {
+            let html = '';
+            data.forEach(s => {
+                html += `<tr><td>${s.planName}</td><td>${new Date(s.activatedAt).toLocaleDateString()}</td>
+                    <td>${new Date(s.expiryDate).toLocaleDateString()}</td>
+                    <td>${s.isActive ? '<span class="badge bg-success">Active</span>' : '<span class="badge bg-secondary">Inactive</span>'}</td>
+                    <td>${s.isActive ? `<button class="btn btn-sm btn-outline-danger" onclick="cancelSub(${s.id})">Cancel</button>` : ''}</td></tr>`;
+            });
+            $('#subTable tbody').html(html || '<tr><td colspan="5" class="text-center text-muted">No subscriptions</td></tr>');
+            new bootstrap.Modal('#subModal').show();
+        });
+    }
+    function assignSub() {
+        $.ajax({ url: '@Url.Action("AssignSubscription", "Platform")', method: 'POST', headers: getHeaders(),
+            data: JSON.stringify({ schoolId: +$('#subSchoolId').val(), systemSubscriptionPlanId: +$('#newPlanId').val() }),
+            success: () => { toastr.success('Subscription assigned!'); manageSubscription($('#subSchoolId').val(), $('#subSchoolName').text()); }
+        });
+    }
+    function cancelSub(id) {
+        $.ajax({ url: '@Url.Action("CancelSubscription", "Platform")?id=' + id, method: 'POST', headers: getHeaders(),
+            success: () => { toastr.info('Subscription cancelled.'); manageSubscription($('#subSchoolId').val(), $('#subSchoolName').text()); }
+        });
+    }
+</script>
+}

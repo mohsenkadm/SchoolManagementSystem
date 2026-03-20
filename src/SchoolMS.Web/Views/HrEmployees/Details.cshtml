@@ -1,0 +1,84 @@
+@model SchoolMS.Application.DTOs.HrEmployeeDto
+@{ ViewData["Title"] = Model.FullName; }
+
+<div class="d-flex justify-content-between align-items-center mb-4" data-aos="fade-down">
+    <h4 class="mb-0"><i class="fas fa-user me-2 text-primary"></i>@Model.FullName</h4>
+    <div class="d-flex gap-2">
+        <a href="@Url.Action("Edit", new { id = Model.Id })" class="btn btn-primary"><i class="fas fa-edit me-1"></i>@Localizer["Edit"]</a>
+        <a href="@Url.Action("Index")" class="btn btn-secondary"><i class="fas fa-arrow-left me-1"></i>@Localizer["Back"]</a>
+    </div>
+</div>
+
+<div class="row g-3" data-aos="fade-up">
+    <div class="col-md-4">
+        <div class="dashboard-card card p-4 text-center">
+            <img src="@(Model.ProfileImage ?? "/img/avatar.png")" class="rounded-circle mx-auto mb-3" width="120" height="120" />
+            <h5>@Model.FullName</h5>
+            <p class="text-muted mb-1">@Model.JobTitleName</p>
+            <p class="text-muted mb-2">@Model.DepartmentName</p>
+            @{ var statusClass = Model.Status switch { HrEmployeeStatus.Active => "bg-success", HrEmployeeStatus.OnProbation => "bg-warning", HrEmployeeStatus.OnLeave => "bg-info", HrEmployeeStatus.Suspended => "bg-danger", _ => "bg-secondary" }; }
+            <span class="badge @statusClass fs-6">@Model.Status</span>
+            <hr />
+            <div class="text-start">
+                <p><i class="fas fa-id-badge me-2 text-primary"></i><strong>@Localizer["EmployeeNo"]:</strong> @Model.EmployeeNumber</p>
+                <p><i class="fas fa-phone me-2 text-primary"></i><strong>@Localizer["Phone"]:</strong> @Model.Phone</p>
+                <p><i class="fas fa-envelope me-2 text-primary"></i><strong>@Localizer["Email"]:</strong> @Model.Email</p>
+                <p><i class="fas fa-building me-2 text-primary"></i><strong>@Localizer["Branch"]:</strong> @Model.BranchName</p>
+                <p><i class="fas fa-calendar me-2 text-primary"></i><strong>@Localizer["HireDate"]:</strong> @Model.HireDate.ToString("dd/MM/yyyy")</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-8">
+        <ul class="nav nav-tabs" role="tablist">
+            <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tabPersonal">@Localizer["PersonalInfo"]</button></li>
+            <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tabEmployment">@Localizer["EmploymentInfo"]</button></li>
+            <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tabFinancial">@Localizer["FinancialInfo"]</button></li>
+            <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tabQuickLinks">@Localizer["QuickLinks"]</button></li>
+        </ul>
+        <div class="tab-content dashboard-card card p-4">
+            <div class="tab-pane fade show active" id="tabPersonal">
+                <div class="row g-3">
+                    <div class="col-md-4"><strong>@Localizer["DateOfBirth"]:</strong><br />@Model.DateOfBirth.ToString("dd/MM/yyyy")</div>
+                    <div class="col-md-4"><strong>@Localizer["Gender"]:</strong><br />@Model.Gender</div>
+                    <div class="col-md-4"><strong>@Localizer["NationalId"]:</strong><br />@Model.NationalId</div>
+                    <div class="col-md-4"><strong>@Localizer["Nationality"]:</strong><br />@Model.Nationality</div>
+                    <div class="col-md-4"><strong>@Localizer["MaritalStatus"]:</strong><br />@Model.MaritalStatus</div>
+                    <div class="col-md-4"><strong>@Localizer["BloodType"]:</strong><br />@Model.BloodType</div>
+                    <div class="col-md-6"><strong>@Localizer["Address"]:</strong><br />@Model.Address</div>
+                    <div class="col-md-6"><strong>@Localizer["EmergencyContact"]:</strong><br />@Model.EmergencyContactName — @Model.EmergencyContactPhone</div>
+                </div>
+            </div>
+            <div class="tab-pane fade" id="tabEmployment">
+                <div class="row g-3">
+                    <div class="col-md-4"><strong>@Localizer["EmployeeType"]:</strong><br /><span class="badge bg-info">@Model.EmployeeType</span></div>
+                    <div class="col-md-4"><strong>@Localizer["Category"]:</strong><br /><span class="badge bg-secondary">@Model.Category</span></div>
+                    <div class="col-md-4"><strong>@Localizer["JobGrade"]:</strong><br />@Model.JobGradeName</div>
+                    <div class="col-md-4"><strong>@Localizer["WorkShift"]:</strong><br />@Model.WorkShiftName</div>
+                    <div class="col-md-4"><strong>@Localizer["DirectManager"]:</strong><br />@Model.DirectManagerName</div>
+                    <div class="col-md-4"><strong>@Localizer["Qualification"]:</strong><br />@Model.HighestQualification</div>
+                    <div class="col-md-4"><strong>@Localizer["University"]:</strong><br />@Model.University</div>
+                    <div class="col-md-4"><strong>@Localizer["YearsOfExperience"]:</strong><br />@Model.YearsOfExperience</div>
+                </div>
+            </div>
+            <div class="tab-pane fade" id="tabFinancial">
+                <div class="row g-3">
+                    <div class="col-md-4"><strong>@Localizer["BankName"]:</strong><br />@Model.BankName</div>
+                    <div class="col-md-4"><strong>@Localizer["BankAccount"]:</strong><br />@Model.BankAccountNumber</div>
+                    <div class="col-md-4"><strong>IBAN:</strong><br />@Model.IBAN</div>
+                    <div class="col-md-4"><strong>@Localizer["TaxNumber"]:</strong><br />@Model.TaxNumber</div>
+                    <div class="col-md-4"><strong>@Localizer["SocialSecurity"]:</strong><br />@Model.SocialSecurityNumber</div>
+                </div>
+            </div>
+            <div class="tab-pane fade" id="tabQuickLinks">
+                <div class="row g-2">
+                    <div class="col-md-4"><a href="@Url.Action("ByEmployee", "HrContracts", new { employeeId = Model.Id })" class="btn btn-outline-primary w-100"><i class="fas fa-file-contract me-1"></i>@Localizer["Contracts"]</a></div>
+                    <div class="col-md-4"><a href="@Url.Action("Setup", "HrSalary", new { employeeId = Model.Id })" class="btn btn-outline-success w-100"><i class="fas fa-money-bill me-1"></i>@Localizer["HrSalary"]</a></div>
+                    <div class="col-md-4"><a href="@Url.Action("Balances", "HrLeaves", new { employeeId = Model.Id })" class="btn btn-outline-info w-100"><i class="fas fa-calendar-minus me-1"></i>@Localizer["HrLeaves"]</a></div>
+                    <div class="col-md-4"><a href="@Url.Action("Index", "HrAttendance", new { employeeId = Model.Id })" class="btn btn-outline-warning w-100"><i class="fas fa-fingerprint me-1"></i>@Localizer["HrAttendance"]</a></div>
+                    <div class="col-md-4"><a href="@Url.Action("CareerHistory", "HrPromotions", new { employeeId = Model.Id })" class="btn btn-outline-dark w-100"><i class="fas fa-arrow-up me-1"></i>@Localizer["CareerHistory"]</a></div>
+                    <div class="col-md-4"><a href="@Url.Action("Records", "HrTraining", new { employeeId = Model.Id })" class="btn btn-outline-secondary w-100"><i class="fas fa-chalkboard-teacher me-1"></i>@Localizer["Training"]</a></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

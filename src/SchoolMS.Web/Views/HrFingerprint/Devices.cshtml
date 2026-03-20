@@ -1,0 +1,36 @@
+@model List<SchoolMS.Application.DTOs.HrFingerprintDeviceDto>
+@{ ViewData["Title"] = Localizer["Devices"].Value; }
+@Html.AntiForgeryToken()
+
+<div class="page-header" data-aos="fade-down">
+    <div><h4 class="page-title"><i class="fas fa-server text-primary"></i> @Localizer["Devices"]</h4></div>
+    <div class="page-actions">
+        <a href="@Url.Action("Index")" class="btn btn-secondary"><i class="fas fa-arrow-left me-1"></i>@Localizer["Back"]</a>
+        <a href="@Url.Action("CreateDevice")" class="btn btn-accent"><i class="fas fa-plus me-1"></i>@Localizer["Add"]</a>
+    </div>
+</div>
+
+<div class="table-card hover-lift" data-aos="fade-up">
+    <table id="dataTable" class="table table-hover" style="width:100%">
+        <thead><tr><th>#</th><th>@Localizer["Name"]</th><th>@Localizer["SerialNumber"]</th><th>@Localizer["Branch"]</th><th>@Localizer["IPAddress"]</th><th>@Localizer["Status"]</th><th>@Localizer["Actions"]</th></tr></thead>
+        <tbody>
+            @for (int i = 0; i < Model.Count; i++)
+            {
+                var d = Model[i];
+                var cls = d.Status switch { DeviceStatus.Online => "bg-success", DeviceStatus.Offline => "bg-danger", _ => "bg-secondary" };
+                <tr>
+                    <td>@(i + 1)</td><td>@d.DeviceName</td><td>@d.SerialNumber</td><td>@d.BranchName</td><td>@d.IpAddress</td>
+                    <td><span class="badge @cls">@d.Status</span></td>
+                    <td><button class="btn btn-sm btn-danger" onclick="del(@d.Id)"><i class="fas fa-trash"></i></button></td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@section Scripts {
+<script>
+    $(function () { $('#dataTable').DataTable({ responsive: true, dom: 'rtip' }); });
+    function del(id) { confirmDelete('@Url.Action("DeleteDevice")', id, function () { location.reload(); }); }
+</script>
+}

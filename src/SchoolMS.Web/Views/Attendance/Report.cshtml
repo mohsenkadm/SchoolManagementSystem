@@ -1,0 +1,304 @@
+@using SchoolMS.Application.DTOs
+@using SchoolMS.Domain.Enums
+@{
+    ViewData["Title"] = Localizer["AttendanceReport"].Value;
+    var isSuperAdmin = (bool)(ViewBag.IsSuperAdmin ?? false);
+    var schools = ViewBag.Schools as List<SchoolDto> ?? new();
+    var branches = ViewBag.Branches as List<BranchDto> ?? new();
+}
+
+@Html.AntiForgeryToken()
+
+<div class="page-header" data-aos="fade-down">
+    <div>
+        <h4 class="page-title"><i class="fas fa-chart-bar text-info"></i> @Localizer["AttendanceReport"]</h4>
+    </div>
+    <div class="page-actions">
+        <a href="@Url.Action("Index")" class="btn btn-primary"><i class="fas fa-fingerprint me-1"></i>@Localizer["CheckInOut"]</a>
+        <button class="btn btn-success" id="btnExport"><i class="fas fa-file-excel me-1"></i>@Localizer["ExportExcel"]</button>
+        <button class="btn btn-outline-secondary" onclick="window.print()"><i class="fas fa-print me-1"></i>@Localizer["Print"]</button>
+    </div>
+</div>
+
+<!-- Stats -->
+<div class="stat-ribbon" data-aos="fade-up">
+    <div class="stat-item stagger-item"><div class="stat-icon bg-primary-soft"><i class="fas fa-list"></i></div><div class="stat-info"><h6>@Localizer["Total"]</h6><div class="stat-value" id="statTotal">0</div></div></div>
+    <div class="stat-item stagger-item"><div class="stat-icon bg-success-soft"><i class="fas fa-sign-in-alt"></i></div><div class="stat-info"><h6>@Localizer["CheckIn"]</h6><div class="stat-value" id="statCheckIn">0</div></div></div>
+    <div class="stat-item stagger-item"><div class="stat-icon bg-warning-soft"><i class="fas fa-sign-out-alt"></i></div><div class="stat-info"><h6>@Localizer["CheckOut"]</h6><div class="stat-value" id="statCheckOut">0</div></div></div>
+    <div class="stat-item stagger-item"><div class="stat-icon bg-danger-soft"><i class="fas fa-user-times"></i></div><div class="stat-info"><h6>@Localizer["Absent"]</h6><div class="stat-value" id="statAbsent">0</div></div></div>
+    <div class="stat-item stagger-item"><div class="stat-icon bg-info-soft"><i class="fas fa-user-graduate"></i></div><div class="stat-info"><h6>@Localizer["Students"]</h6><div class="stat-value" id="statStudents">0</div></div></div>
+    <div class="stat-item stagger-item"><div class="stat-icon" style="background:rgba(139,92,246,0.15);"><i class="fas fa-chalkboard-teacher" style="color:#8b5cf6;"></i></div><div class="stat-info"><h6>@Localizer["Teachers"]</h6><div class="stat-value" id="statTeachers">0</div></div></div>
+    <div class="stat-item stagger-item"><div class="stat-icon" style="background:rgba(20,184,166,0.15);"><i class="fas fa-user-tie" style="color:#14b8a6;"></i></div><div class="stat-info"><h6>@Localizer["Staff"]</h6><div class="stat-value" id="statStaff">0</div></div></div>
+</div>
+
+<!-- Charts -->
+<div class="row mb-4" data-aos="fade-up">
+    <div class="col-lg-4">
+        <div class="dashboard-card card p-3 hover-lift"><h6 class="mb-3"><i class="fas fa-chart-pie me-2 text-primary"></i>@Localizer["ByType"]</h6><canvas id="chartType" height="220"></canvas></div>
+    </div>
+    <div class="col-lg-4">
+        <div class="dashboard-card card p-3 hover-lift"><h6 class="mb-3"><i class="fas fa-chart-doughnut me-2 text-info"></i>@Localizer["ByPersonType"]</h6><canvas id="chartPerson" height="220"></canvas></div>
+    </div>
+    <div class="col-lg-4">
+        <div class="dashboard-card card p-3 hover-lift">
+            <h6 class="mb-3"><i class="fas fa-user-times me-2 text-danger"></i>@Localizer["MarkAbsentees"]</h6>
+            <p class="text-muted small">@Localizer["MarkAbsenteesDesc"]</p>
+            <div class="row g-2">
+                <div class="col-8">
+                    <select id="absentBranch" class="form-select">
+                        @foreach (var b in branches) { <option value="@b.Id">@b.Name</option> }
+                    </select>
+                </div>
+                <div class="col-4">
+                    <button class="btn btn-danger w-100" id="btnMarkAbsent"><i class="fas fa-user-times me-1"></i>@Localizer["Mark"]</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="filter-panel" data-aos="fade-up">
+    <div class="filter-title"><i class="fas fa-filter"></i> @Localizer["Filter"]</div>
+    <div class="row g-2 align-items-end">
+        @if (isSuperAdmin)
+        {
+            <div class="col-md-2">
+                <label class="form-label small">@Localizer["School"]</label>
+                <select id="filterSchool" class="form-select select2">
+                    <option value="">@Localizer["AllSchools"]</option>
+                    @foreach (var s in schools) { <option value="@s.Id">@s.Name</option> }
+                </select>
+            </div>
+        }
+        <div class="col-md-2">
+            <label class="form-label small">@Localizer["Branch"]</label>
+            <select id="filterBranch" class="form-select">
+                <option value="">@Localizer["AllBranches"]</option>
+                @foreach (var b in branches) { <option value="@b.Id">@b.Name</option> }
+            </select>
+        </div>
+        <div class="col-md-2">
+            <label class="form-label small">@Localizer["DateFrom"]</label>
+            <input type="date" id="filterDateFrom" class="form-control" value="@DateTime.Today.ToString("yyyy-MM-dd")" />
+        </div>
+        <div class="col-md-2">
+            <label class="form-label small">@Localizer["DateTo"]</label>
+            <input type="date" id="filterDateTo" class="form-control" value="@DateTime.Today.ToString("yyyy-MM-dd")" />
+        </div>
+        <div class="col-md-1">
+            <label class="form-label small">@Localizer["Type"]</label>
+            <select id="filterType" class="form-select">
+                <option value="">@Localizer["All"]</option>
+                <option value="0">@Localizer["CheckIn"]</option>
+                <option value="1">@Localizer["CheckOut"]</option>
+                <option value="2">@Localizer["Absent"]</option>
+            </select>
+        </div>
+        <div class="col-md-1">
+            <label class="form-label small">@Localizer["PersonType"]</label>
+            <select id="filterPersonType" class="form-select">
+                <option value="">@Localizer["All"]</option>
+                <option value="0">@Localizer["Student"]</option>
+                <option value="1">@Localizer["Teacher"]</option>
+                <option value="2">@Localizer["Staff"]</option>
+            </select>
+        </div>
+        <div class="col-md-1">
+            <label class="form-label small">@Localizer["Search"]</label>
+            <input type="text" id="filterSearch" class="form-control" placeholder="🔍" />
+        </div>
+        <div class="col-md-1 d-flex gap-1">
+            <button class="btn btn-filter flex-fill" onclick="loadReport()"><i class="fas fa-search"></i></button>
+            <button class="btn btn-reset flex-fill" onclick="resetFilters()"><i class="fas fa-redo"></i></button>
+        </div>
+    </div>
+</div>
+
+<!-- Data Table -->
+<div class="table-card hover-lift" data-aos="fade-up">
+    <table id="reportTable" class="table table-hover" style="width:100%">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>@Localizer["Name"]</th>
+                <th>@Localizer["PersonType"]</th>
+                <th>@Localizer["BadgeCardNumber"]</th>
+                <th>@Localizer["Type"]</th>
+                <th>@Localizer["Date"]</th>
+                <th>@Localizer["Time"]</th>
+                <th>@Localizer["Branch"]</th>
+                @if (isSuperAdmin) { <th>@Localizer["School"]</th> }
+            </tr>
+        </thead>
+        <tbody id="reportBody"></tbody>
+    </table>
+</div>
+
+@section Scripts {
+<script>
+    var isSuperAdmin = @(isSuperAdmin ? "true" : "false");
+    var token = $('input[name="__RequestVerificationToken"]').val();
+    var chartType, chartPerson;
+    var reportData = [];
+
+    @if (isSuperAdmin)
+    {
+        @:$('#filterSchool').on('change', function() {
+        @:    var sid = $(this).val();
+        @:    var brSel = $('#filterBranch');
+        @:    brSel.html('<option value="">@Localizer["AllBranches"]</option>');
+        @:    if (!sid) return;
+        @:    $.get('@Url.Action("GetBranchesBySchool")?schoolId=' + sid, function(data) {
+        @:        data.forEach(function(b) { brSel.append('<option value="' + b.id + '">' + b.name + '</option>'); });
+        @:    });
+        @:});
+    }
+
+    $(function() { loadReport(); });
+
+    function getFilter() {
+        return {
+            dateFrom: $('#filterDateFrom').val() || null,
+            dateTo: $('#filterDateTo').val() || null,
+            type: $('#filterType').val() !== '' ? +$('#filterType').val() : null,
+            personType: $('#filterPersonType').val() !== '' ? +$('#filterPersonType').val() : null,
+            branchId: $('#filterBranch').val() ? +$('#filterBranch').val() : null,
+            schoolId: isSuperAdmin && $('#filterSchool').val() ? +$('#filterSchool').val() : null,
+            searchValue: $('#filterSearch').val() || null
+        };
+    }
+
+    function loadReport() {
+        $.ajax({
+            url: '@Url.Action("GetReport")', type: 'POST', contentType: 'application/json',
+            data: JSON.stringify(getFilter()),
+            headers: { 'RequestVerificationToken': token },
+            success: function(data) {
+                reportData = data.records || [];
+                updateStats(data);
+                updateCharts(data);
+                renderTable(data.records);
+            },
+            error: function() { toastr.error('@Localizer["ErrorLoadingReport"]'); }
+        });
+    }
+
+    function updateStats(d) {
+        $('#statTotal').text(d.totalRecords);
+        $('#statCheckIn').text(d.checkInCount);
+        $('#statCheckOut').text(d.checkOutCount);
+        $('#statAbsent').text(d.absentCount);
+        $('#statStudents').text(d.studentCount);
+        $('#statTeachers').text(d.teacherCount);
+        $('#statStaff').text(d.staffCount);
+    }
+
+    function updateCharts(d) {
+        if (chartType) chartType.destroy();
+        if (chartPerson) chartPerson.destroy();
+
+        chartType = new Chart(document.getElementById('chartType'), {
+            type: 'doughnut',
+            data: {
+                labels: ['@Localizer["CheckIn"]', '@Localizer["CheckOut"]', '@Localizer["Absent"]'],
+                datasets: [{ data: [d.checkInCount, d.checkOutCount, d.absentCount], backgroundColor: ['#22c55e','#f59e0b','#ef4444'], borderWidth: 0 }]
+            },
+            options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+        });
+
+        chartPerson = new Chart(document.getElementById('chartPerson'), {
+            type: 'doughnut',
+            data: {
+                labels: ['@Localizer["Students"]', '@Localizer["Teachers"]', '@Localizer["Staff"]'],
+                datasets: [{ data: [d.studentCount, d.teacherCount, d.staffCount], backgroundColor: ['#06b6d4','#8b5cf6','#14b8a6'], borderWidth: 0 }]
+            },
+            options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+        });
+    }
+
+    function renderTable(records) {
+        var body = $('#reportBody');
+        body.empty();
+        var typeNames = ['@Localizer["CheckIn"]','@Localizer["CheckOut"]','@Localizer["Absent"]'];
+        var typeBadges = ['bg-success','bg-warning text-dark','bg-danger'];
+        var personNames = ['@Localizer["Student"]','@Localizer["Teacher"]','@Localizer["Staff"]'];
+        var personBadges = ['bg-info','bg-primary','bg-secondary'];
+
+        if (!records || records.length === 0) {
+            var cols = isSuperAdmin ? 9 : 8;
+            body.append('<tr><td colspan="' + cols + '" class="text-center text-muted py-4"><i class="fas fa-inbox fa-2x mb-2 d-block"></i>@Localizer["NoRecordsFound"]</td></tr>');
+            if ($.fn.DataTable.isDataTable('#reportTable')) { $('#reportTable').DataTable().destroy(); }
+            return;
+        }
+
+        records.forEach(function(r, i) {
+            var time = r.time ? r.time.substring(0, 5) : '—';
+            var date = r.attendanceDate ? r.attendanceDate.split('T')[0] : '';
+            var row = '<tr>' +
+                '<td>' + (i + 1) + '</td>' +
+                '<td><strong>' + (r.personName || '—') + '</strong>' + (r.isAutoAbsent ? ' <i class="fas fa-robot text-muted" title="Auto"></i>' : '') + '</td>' +
+                '<td><span class="badge ' + personBadges[r.personType] + '">' + personNames[r.personType] + '</span></td>' +
+                '<td><code>' + (r.badgeCardNumber || '—') + '</code></td>' +
+                '<td><span class="badge ' + typeBadges[r.type] + '">' + typeNames[r.type] + '</span></td>' +
+                '<td>' + date + '</td>' +
+                '<td>' + time + '</td>' +
+                '<td>' + (r.branchName || '—') + '</td>';
+            if (isSuperAdmin) row += '<td>' + (r.schoolName || '—') + '</td>';
+            row += '</tr>';
+            body.append(row);
+        });
+
+        if ($.fn.DataTable.isDataTable('#reportTable')) { $('#reportTable').DataTable().destroy(); }
+        $('#reportTable').DataTable({ responsive: true, pageLength: 25, dom: 'rtip', order: [[5, 'desc']] });
+    }
+
+    function resetFilters() {
+        $('#filterDateFrom').val('@DateTime.Today.ToString("yyyy-MM-dd")');
+        $('#filterDateTo').val('@DateTime.Today.ToString("yyyy-MM-dd")');
+        $('#filterType, #filterPersonType, #filterSearch').val('');
+        $('#filterBranch').val('');
+        if (isSuperAdmin) $('#filterSchool').val('');
+        loadReport();
+    }
+
+    $('#btnExport').on('click', function() {
+        var f = getFilter();
+        var params = [];
+        if (f.dateFrom) params.push('dateFrom=' + f.dateFrom);
+        if (f.dateTo) params.push('dateTo=' + f.dateTo);
+        if (f.type !== null && f.type !== undefined) params.push('type=' + f.type);
+        if (f.personType !== null && f.personType !== undefined) params.push('personType=' + f.personType);
+        if (f.branchId) params.push('branchId=' + f.branchId);
+        if (f.schoolId) params.push('schoolId=' + f.schoolId);
+        if (f.searchValue) params.push('search=' + encodeURIComponent(f.searchValue));
+        window.location.href = '@Url.Action("ExportExcel")?' + params.join('&');
+    });
+
+    $('#btnMarkAbsent').on('click', function() {
+        var branchId = +$('#absentBranch').val();
+        if (!branchId) { toastr.warning('@Localizer["SelectBranch"]'); return; }
+        Swal.fire({
+            title: '@Localizer["MarkAbsentees"]?',
+            text: '@Localizer["MarkAbsenteesConfirm"]',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#ef4444',
+            confirmButtonText: '<i class="fas fa-user-times me-1"></i>@Localizer["Mark"]',
+            cancelButtonText: '@Localizer["Cancel"]'
+        }).then(function(r) {
+            if (!r.isConfirmed) return;
+            $.ajax({
+                url: '@Url.Action("MarkAbsentees")', type: 'POST', contentType: 'application/json',
+                data: JSON.stringify({ branchId: branchId, date: new Date().toISOString() }),
+                headers: { 'RequestVerificationToken': token },
+                success: function(data) {
+                    toastr.success(data.count + ' @Localizer["MarkedAsAbsent"]');
+                    loadReport();
+                },
+                error: function() { toastr.error('@Localizer["Error"]'); }
+            });
+        });
+    });
+</script>
+}

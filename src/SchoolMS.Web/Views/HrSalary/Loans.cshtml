@@ -1,0 +1,36 @@
+@model List<SchoolMS.Application.DTOs.HrEmployeeLoanDto>
+@{ ViewData["Title"] = Localizer["Loans"].Value; }
+@Html.AntiForgeryToken()
+
+<div class="page-header" data-aos="fade-down">
+    <div><h4 class="page-title"><i class="fas fa-landmark text-primary"></i> @Localizer["Loans"]</h4><span class="record-count"><i class="fas fa-layer-group"></i> @Model.Count</span></div>
+    <div class="page-actions"><a href="@Url.Action("Payroll")" class="btn btn-secondary"><i class="fas fa-arrow-left me-1"></i>@Localizer["Back"]</a></div>
+</div>
+
+<div class="stat-ribbon" data-aos="fade-up">
+    <div class="stat-item stagger-item"><div class="stat-icon bg-primary-soft"><i class="fas fa-landmark"></i></div><div class="stat-info"><h6>@Localizer["Active"]</h6><div class="stat-value">@Model.Count(l => l.Status == LoanStatus.Active)</div></div></div>
+    <div class="stat-item stagger-item"><div class="stat-icon bg-success-soft"><i class="fas fa-check-double"></i></div><div class="stat-info"><h6>@Localizer["FullyPaid"]</h6><div class="stat-value">@Model.Count(l => l.Status == LoanStatus.FullyPaid)</div></div></div>
+    <div class="stat-item stagger-item"><div class="stat-icon bg-info-soft"><i class="fas fa-money-bill"></i></div><div class="stat-info"><h6>@Localizer["TotalRemaining"]</h6><div class="stat-value">@Model.Sum(l => l.RemainingBalance).ToString("N0")</div></div></div>
+</div>
+
+<div class="table-card hover-lift" data-aos="fade-up">
+    <table id="dataTable" class="table table-hover" style="width:100%">
+        <thead><tr><th>#</th><th>@Localizer["Employee"]</th><th>@Localizer["Type"]</th><th>@Localizer["Amount"]</th><th>@Localizer["Monthly"]</th><th>@Localizer["Paid"]</th><th>@Localizer["Remaining"]</th><th>@Localizer["Status"]</th></tr></thead>
+        <tbody>
+            @for (int i = 0; i < Model.Count; i++)
+            {
+                var l = Model[i];
+                var cls = l.Status switch { LoanStatus.Active => "bg-primary", LoanStatus.FullyPaid => "bg-success", _ => "bg-secondary" };
+                <tr>
+                    <td>@(i + 1)</td><td>@l.EmployeeName</td><td>@l.LoanType</td><td>@l.LoanAmount.ToString("N0")</td>
+                    <td>@l.MonthlyInstallment.ToString("N0")</td><td>@l.PaidSoFar.ToString("N0")</td><td>@l.RemainingBalance.ToString("N0")</td>
+                    <td><span class="badge @cls">@l.Status</span></td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@section Scripts {
+<script>$(function () { $('#dataTable').DataTable({ responsive: true, pageLength: 25, dom: 'rtip' }); });</script>
+}

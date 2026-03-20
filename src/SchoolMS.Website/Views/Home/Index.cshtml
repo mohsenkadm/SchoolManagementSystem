@@ -1,0 +1,761 @@
+﻿@{
+    ViewData["Title"] = "نظام إدارة المدارس المتكامل";
+}
+
+<!-- ============ NAVIGATION BAR ============ -->
+<nav class="website-navbar" id="navbar">
+    <div class="container">
+        <a href="/" class="navbar-brand">
+            <i class="fas fa-graduation-cap" style="color:#6366f1;font-size:1.6rem;"></i>
+            <span class="gradient-text">SchoolMS</span>
+        </a>
+        <ul class="nav-links">
+            <li><a href="#features" class="nav-link">المميزات</a></li>
+            <li><a href="#technology" class="nav-link">التقنيات</a></li>
+            <li><a href="#pricing" class="nav-link">الأسعار</a></li>
+            <li><a href="#testimonials" class="nav-link">آراء العملاء</a></li>
+            <li><a href="#faq" class="nav-link">الأسئلة الشائعة</a></li>
+            <li><a href="#contact" class="nav-link">تواصل معنا</a></li>
+        </ul>
+        <div class="nav-actions">
+            <a href="/Account/Login" class="btn-glass-website">تسجيل الدخول</a>
+            <a href="#register" class="btn-gradient-website">ابدأ الآن مجاناً</a>
+        </div>
+        <button class="mobile-menu-btn" aria-label="Toggle navigation">
+            <span></span><span></span><span></span>
+        </button>
+    </div>
+</nav>
+
+<!-- ============ HERO SECTION ============ -->
+<section class="hero-section" id="hero">
+    <div class="hero-bg">
+        <div class="hero-gradient-orbs">
+            <div class="orb orb-1"></div>
+            <div class="orb orb-2"></div>
+            <div class="orb orb-3"></div>
+        </div>
+        <div class="hero-grid-pattern"></div>
+    </div>
+    <div class="container hero-content">
+        <div data-aos="fade-up">
+            <div class="hero-badge">
+                <span class="badge-dot"></span>
+                <span>🚀 الإصدار 4.0 متاح الآن — مع نظام HR وجداول الامتحانات</span>
+            </div>
+            <h1 class="hero-title">
+                نظام إدارة المدارس
+                <br />
+                <span class="gradient-text">الأكثر تقدماً في العراق</span>
+            </h1>
+            <p class="hero-subtitle">
+                نظام شامل ومتكامل لإدارة جميع جوانب المدرسة — الطلاب، الأساتذة، الرواتب،
+                الأقساط، الحضور، الامتحانات، الدرجات، الموارد البشرية، المنصة الإلكترونية، والمزيد. مع تطبيق موبايل وAPI كامل.
+            </p>
+            <div class="hero-ctas">
+                <a href="#register" class="btn-hero-primary">
+                    <span>ابدأ تجربة مجانية</span>
+                    <i class="fas fa-arrow-left"></i>
+                </a>
+                <a href="#features" class="btn-hero-secondary">
+                    <div class="play-icon"><i class="fas fa-play"></i></div>
+                    <span>اكتشف المميزات</span>
+                </a>
+            </div>
+            <div class="hero-trust">
+                <div class="trust-more">50+</div>
+                <div>
+                    <div style="font-size:0.85rem;">⭐⭐⭐⭐⭐</div>
+                    <span style="font-size:0.9rem;color:#94a3b8;">أكثر من <strong style="color:#e2e8f0;">50 مدرسة</strong> تثق بنا</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="scroll-indicator">
+        <div class="mouse"><div class="mouse-wheel"></div></div>
+        <span>اكتشف المزيد</span>
+    </div>
+</section>
+
+<!-- ============ STATISTICS ============ -->
+<section class="stats-section">
+    <div class="container">
+        <div class="stats-row">
+            <div class="stat-item" data-aos="fade-up">
+                <div class="stat-number"><span class="counter" data-target="50">0</span>+</div>
+                <p>مدرسة مشتركة</p>
+            </div>
+            <div class="stat-item" data-aos="fade-up" data-aos-delay="100">
+                <div class="stat-number"><span class="counter" data-target="25000">0</span>+</div>
+                <p>طالب مسجل</p>
+            </div>
+            <div class="stat-item" data-aos="fade-up" data-aos-delay="200">
+                <div class="stat-number"><span class="counter" data-target="500">0</span>+</div>
+                <p>معلم نشط</p>
+            </div>
+            <div class="stat-item" data-aos="fade-up" data-aos-delay="300">
+                <div class="stat-number"><span class="counter" data-target="99">0</span>%</div>
+                <p>نسبة الرضا</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ============ FEATURES ============ -->
+<section class="features-section" id="features">
+    <div class="container">
+        <div class="section-header" data-aos="fade-up">
+            <span class="section-badge">المميزات</span>
+            <h2 class="section-title">كل ما تحتاجه لإدارة مدرستك <br /><span class="gradient-text">في مكان واحد</span></h2>
+            <p class="section-subtitle">أكثر من 70 ميزة متقدمة تغطي جميع جوانب العملية التعليمية والإدارية والمالية</p>
+        </div>
+        <div class="features-grid">
+            <div class="feature-card" data-aos="fade-up">
+                <div class="feature-icon-wrapper gradient-1"><i class="fas fa-user-graduate"></i></div>
+                <h4>إدارة الطلاب</h4>
+                <p>تسجيل وإدارة كاملة لبيانات الطلاب مع بطاقات هوية، رموز QR، واستخراج التقارير</p>
+                <ul class="feature-list">
+                    <li><i class="fas fa-check"></i> بطاقة هوية مع QR Code</li>
+                    <li><i class="fas fa-check"></i> تسجيل عبر التطبيق</li>
+                    <li><i class="fas fa-check"></i> وثائق ومستندات</li>
+                    <li><i class="fas fa-check"></i> متابعة السلوك</li>
+                </ul>
+            </div>
+            <div class="feature-card" data-aos="fade-up" data-aos-delay="100">
+                <div class="feature-icon-wrapper gradient-2"><i class="fas fa-chalkboard-teacher"></i></div>
+                <h4>إدارة الأساتذة</h4>
+                <p>نظام متكامل لإدارة المعلمين مع تقييم أداء، رواتب، جدول حصص، وصلاحيات متقدمة</p>
+                <ul class="feature-list">
+                    <li><i class="fas fa-check"></i> ملف شخصي متكامل</li>
+                    <li><i class="fas fa-check"></i> تقييم الأداء</li>
+                    <li><i class="fas fa-check"></i> توزيع الحصص والمواد</li>
+                    <li><i class="fas fa-check"></i> إدارة الإجازات</li>
+                </ul>
+            </div>
+            <div class="feature-card featured" data-aos="fade-up" data-aos-delay="200">
+                <div class="featured-badge">الأكثر طلباً</div>
+                <div class="feature-icon-wrapper gradient-3"><i class="fas fa-coins"></i></div>
+                <h4>النظام المالي</h4>
+                <p>إدارة مالية شاملة: أقساط الطلاب، أنواع المصروفات، رواتب الموظفين، تقارير مالية</p>
+                <ul class="feature-list">
+                    <li><i class="fas fa-check"></i> أقساط مرنة مع خطط دفع</li>
+                    <li><i class="fas fa-check"></i> رواتب مع بدلات وخصومات</li>
+                    <li><i class="fas fa-check"></i> أنواع مصروفات قابلة للتخصيص</li>
+                    <li><i class="fas fa-check"></i> تقارير ومخططات بيانية</li>
+                </ul>
+            </div>
+            <div class="feature-card" data-aos="fade-up" data-aos-delay="300">
+                <div class="feature-icon-wrapper gradient-1"><i class="fas fa-fingerprint"></i></div>
+                <h4>الحضور والغياب</h4>
+                <p>تسجيل الحضور بالبطاقة أو QR أو يدوياً مع تقارير تفصيلية</p>
+                <ul class="feature-list">
+                    <li><i class="fas fa-check"></i> حضور بالـ QR Code</li>
+                    <li><i class="fas fa-check"></i> إشعارات فورية للأهل</li>
+                    <li><i class="fas fa-check"></i> تقارير يومية/شهرية</li>
+                    <li><i class="fas fa-check"></i> تصدير Excel</li>
+                </ul>
+            </div>
+            <div class="feature-card" data-aos="fade-up" data-aos-delay="400">
+                <div class="feature-icon-wrapper gradient-2"><i class="fas fa-clipboard-list"></i></div>
+                <h4>الجداول والامتحانات</h4>
+                <p>جدول أسبوعي ذكي مع إدارة كاملة لمواعيد الامتحانات وأنواعها وتوزيع المراقبين</p>
+                <ul class="feature-list">
+                    <li><i class="fas fa-check"></i> جدول حصص أسبوعي</li>
+                    <li><i class="fas fa-check"></i> جدول امتحانات مفصّل</li>
+                    <li><i class="fas fa-check"></i> أنواع امتحانات مخصصة</li>
+                    <li><i class="fas fa-check"></i> إضافة جماعية للجداول</li>
+                </ul>
+            </div>
+            <div class="feature-card" data-aos="fade-up" data-aos-delay="500">
+                <div class="feature-icon-wrapper gradient-3"><i class="fas fa-chart-bar"></i></div>
+                <h4>الدرجات والتقييم</h4>
+                <p>إدارة درجات الطلاب لجميع المواد والامتحانات مع حساب المعدلات وتقديرات تلقائية</p>
+                <ul class="feature-list">
+                    <li><i class="fas fa-check"></i> إدخال درجات فردي وجماعي</li>
+                    <li><i class="fas fa-check"></i> تقديرات تلقائية (A-F)</li>
+                    <li><i class="fas fa-check"></i> تقارير حسب المادة</li>
+                    <li><i class="fas fa-check"></i> تصدير كشوفات Excel</li>
+                </ul>
+            </div>
+            <div class="feature-card" data-aos="fade-up" data-aos-delay="100">
+                <div class="feature-icon-wrapper gradient-1"><i class="fas fa-wallet"></i></div>
+                <h4>الرواتب والموظفين</h4>
+                <p>إعداد الرواتب لجميع الموظفين مع البدلات والخصومات وصافي الراتب التلقائي</p>
+                <ul class="feature-list">
+                    <li><i class="fas fa-check"></i> راتب أساسي + بدلات</li>
+                    <li><i class="fas fa-check"></i> خصومات وصافي تلقائي</li>
+                    <li><i class="fas fa-check"></i> تصدير كشوف رواتب</li>
+                    <li><i class="fas fa-check"></i> ربط مع نظام HR</li>
+                </ul>
+            </div>
+            <div class="feature-card" data-aos="fade-up" data-aos-delay="200">
+                <div class="feature-icon-wrapper gradient-2"><i class="fas fa-comments"></i></div>
+                <h4>المحادثات والتواصل</h4>
+                <p>نظام محادثات فوري بين المعلمين والطلاب وأولياء الأمور مع إشعارات push</p>
+                <ul class="feature-list">
+                    <li><i class="fas fa-check"></i> محادثات خاصة وجماعية</li>
+                    <li><i class="fas fa-check"></i> SignalR في الوقت الحقيقي</li>
+                    <li><i class="fas fa-check"></i> إشعارات فورية</li>
+                    <li><i class="fas fa-check"></i> إعلانات وتعاميم</li>
+                </ul>
+            </div>
+            <div class="feature-card" data-aos="fade-up" data-aos-delay="300">
+                <div class="feature-icon-wrapper gradient-3"><i class="fas fa-laptop-code"></i></div>
+                <h4>المنصة الإلكترونية</h4>
+                <p>كورسات وفيديوات تعليمية مع بث مباشر واشتراكات مدفوعة واختبارات</p>
+                <ul class="feature-list">
+                    <li><i class="fas fa-check"></i> كورسات وفيديوات</li>
+                    <li><i class="fas fa-check"></i> بث مباشر</li>
+                    <li><i class="fas fa-check"></i> واجبات واختبارات إلكترونية</li>
+                    <li><i class="fas fa-check"></i> اشتراكات وأكواد خصم</li>
+                </ul>
+            </div>
+            <div class="feature-card" data-aos="fade-up" data-aos-delay="400">
+                <div class="feature-icon-wrapper gradient-1"><i class="fas fa-id-card-alt"></i></div>
+                <h4>نظام الموارد البشرية</h4>
+                <p>نظام HR متكامل يشمل العقود، الترقيات، التدريب، الأداء، ونهاية الخدمة</p>
+                <ul class="feature-list">
+                    <li><i class="fas fa-check"></i> عقود وترقيات</li>
+                    <li><i class="fas fa-check"></i> تقييم الأداء</li>
+                    <li><i class="fas fa-check"></i> ورديات وعمل إضافي</li>
+                    <li><i class="fas fa-check"></i> مخالفات ونهاية خدمة</li>
+                </ul>
+            </div>
+            <div class="feature-card" data-aos="fade-up" data-aos-delay="500">
+                <div class="feature-icon-wrapper gradient-2"><i class="fas fa-calendar-minus"></i></div>
+                <h4>الإجازات والتقارير</h4>
+                <p>إدارة طلبات الإجازات مع الموافقة والرفض وتقارير التحليلات الشاملة</p>
+                <ul class="feature-list">
+                    <li><i class="fas fa-check"></i> طلبات إجازة إلكترونية</li>
+                    <li><i class="fas fa-check"></i> موافقة ورفض سريع</li>
+                    <li><i class="fas fa-check"></i> تحليلات شاملة</li>
+                    <li><i class="fas fa-check"></i> سجل تدقيق كامل</li>
+                </ul>
+            </div>
+            <div class="feature-card" data-aos="fade-up" data-aos-delay="100">
+                <div class="feature-icon-wrapper gradient-3"><i class="fas fa-tasks"></i></div>
+                <h4>التوزيعات والإدارة</h4>
+                <p>توزيع المعلمين على الصفوف والمواد مع إدارة الأقسام والمراحل والشعب</p>
+                <ul class="feature-list">
+                    <li><i class="fas fa-check"></i> توزيع المعلمين</li>
+                    <li><i class="fas fa-check"></i> إدارة المراحل والشعب</li>
+                    <li><i class="fas fa-check"></i> ترحيل الطلاب</li>
+                    <li><i class="fas fa-check"></i> إدارة الفروع</li>
+                </ul>
+            </div>
+        </div>
+        <div class="more-features" data-aos="fade-up">
+            <h4>والمزيد من المميزات...</h4>
+            <div class="more-features-tags">
+                <span class="feature-tag">📋 الواجبات المنزلية</span>
+                <span class="feature-tag">❓ الاختبارات الإلكترونية</span>
+                <span class="feature-tag">📊 تقارير وتحليلات شاملة</span>
+                <span class="feature-tag">🎓 شهادات وتقديرات</span>
+                <span class="feature-tag">📅 تقويم الأحداث</span>
+                <span class="feature-tag">🏥 السجلات الصحية</span>
+                <span class="feature-tag">📦 إدارة الممتلكات والأصول</span>
+                <span class="feature-tag">🚪 إدارة الزوار</span>
+                <span class="feature-tag">📝 الشكاوى والمقترحات</span>
+                <span class="feature-tag">🔄 ترحيل الطلبة</span>
+                <span class="feature-tag">👨‍👩‍👧 بوابة أولياء الأمور</span>
+                <span class="feature-tag">🗑️ سلة المحذوفات</span>
+                <span class="feature-tag">🌙 الوضع الليلي</span>
+                <span class="feature-tag">🌐 عربي/إنجليزي</span>
+                <span class="feature-tag">📅 جدول امتحانات متقدم</span>
+                <span class="feature-tag">📆 جدول حصص أسبوعي</span>
+                <span class="feature-tag">📑 أنواع الامتحانات</span>
+                <span class="feature-tag">💰 أنواع المصروفات</span>
+                <span class="feature-tag">💳 تقارير الأقساط والمدفوعات</span>
+                <span class="feature-tag">🏷️ توزيع المعلمين على الصفوف</span>
+                <span class="feature-tag">📊 درجات الطلاب</span>
+                <span class="feature-tag">📤 تصدير Excel لكل شيء</span>
+                <span class="feature-tag">🔔 إشعارات ذكية</span>
+                <span class="feature-tag">🚌 إدارة النقل</span>
+                <span class="feature-tag">📚 المكتبة الإلكترونية</span>
+                <span class="feature-tag">🖼️ سلايدر الصور</span>
+                <span class="feature-tag">📱 تطبيق موبايل متكامل</span>
+                <span class="feature-tag">🔐 صلاحيات وأدوار متقدمة</span>
+                <span class="feature-tag">📋 سجل التدقيق</span>
+                <span class="feature-tag">👥 نظام موارد بشرية HR</span>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ============ TECHNOLOGY ============ -->
+<section class="tech-section" id="technology">
+    <div class="container">
+        <div class="section-header" data-aos="fade-up">
+            <span class="section-badge">التقنيات</span>
+            <h2 class="section-title">مبني بأحدث <span class="gradient-text">التقنيات العالمية</span></h2>
+            <p class="section-subtitle">نستخدم أفضل وأحدث التقنيات لضمان الأداء والأمان والموثوقية</p>
+        </div>
+        <div class="tech-category" data-aos="fade-up">
+            <h5 class="tech-category-title"><i class="fas fa-server"></i> الخادم (Backend)</h5>
+            <div class="tech-cards">
+                <div class="tech-card"><div style="font-size:2.5rem;color:#512BD4;margin-bottom:12px"><i class="fas fa-code"></i></div><h6>ASP.NET Core 8</h6><p>إطار عمل مايكروسوفت الأقوى</p></div>
+                <div class="tech-card"><div style="font-size:2.5rem;color:#68217A;margin-bottom:12px"><i class="fas fa-database"></i></div><h6>Entity Framework Core</h6><p>ORM متقدم لقواعد البيانات</p></div>
+                <div class="tech-card"><div style="font-size:2.5rem;color:#CC2927;margin-bottom:12px"><i class="fas fa-server"></i></div><h6>SQL Server</h6><p>قاعدة بيانات موثوقة</p></div>
+                <div class="tech-card"><div style="font-size:2.5rem;color:#2088FF;margin-bottom:12px"><i class="fas fa-bolt"></i></div><h6>SignalR</h6><p>اتصال فوري في الوقت الحقيقي</p></div>
+            </div>
+        </div>
+        <div class="tech-category" data-aos="fade-up" data-aos-delay="100">
+            <h5 class="tech-category-title"><i class="fas fa-paint-brush"></i> الواجهة (Frontend)</h5>
+            <div class="tech-cards">
+                <div class="tech-card"><div style="font-size:2.5rem;color:#7952B3;margin-bottom:12px"><i class="fab fa-bootstrap"></i></div><h6>Bootstrap 5</h6><p>تصميم متجاوب وجميل</p></div>
+                <div class="tech-card"><div style="font-size:2.5rem;color:#0769AD;margin-bottom:12px"><i class="fab fa-js"></i></div><h6>jQuery & AJAX</h6><p>تفاعل ديناميكي سلس</p></div>
+                <div class="tech-card"><div style="font-size:2.5rem;color:#FF6384;margin-bottom:12px"><i class="fas fa-chart-area"></i></div><h6>Chart.js</h6><p>مخططات بيانية تفاعلية</p></div>
+            </div>
+        </div>
+        <div class="tech-category" data-aos="fade-up" data-aos-delay="200">
+            <h5 class="tech-category-title"><i class="fas fa-mobile-alt"></i> تطبيق الموبايل</h5>
+            <div class="tech-cards">
+                <div class="tech-card"><div style="font-size:2.5rem;color:#02569B;margin-bottom:12px"><i class="fas fa-mobile-alt"></i></div><h6>Flutter</h6><p>تطبيق موحد لـ iOS و Android</p></div>
+                <div class="tech-card"><div style="font-size:2.5rem;color:#0175C2;margin-bottom:12px"><i class="fas fa-code"></i></div><h6>Dart</h6><p>لغة برمجة التطبيق</p></div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ============ PRICING ============ -->
+<section class="pricing-section" id="pricing">
+    <div class="container">
+        <div class="section-header" data-aos="fade-up">
+            <span class="section-badge">الأسعار</span>
+            <h2 class="section-title">خطط <span class="gradient-text">تناسب الجميع</span></h2>
+            <p class="section-subtitle">اختر الخطة المناسبة لحجم مدرستك واحتياجاتك</p>
+        </div>
+        <div class="pricing-grid">
+            @{
+                var plans = ViewBag.Plans as List<SchoolMS.Application.DTOs.SubscriptionPlanDto>;
+                var icons = new[] { "🏫", "🏛️", "🌐", "🚀", "⭐" };
+                var labels = new[] { "للمدارس الصغيرة", "للمدارس المتوسطة", "للمدارس الكبيرة", "للمؤسسات", "مخصص" };
+                var idx = 0;
+            }
+            @if (plans != null && plans.Count > 0)
+            {
+                @foreach (var p in plans)
+                {
+                    var isFeatured = idx == 1;
+                    var icon = idx < icons.Length ? icons[idx] : "🏫";
+                    var label = idx < labels.Length ? labels[idx] : "خطة مخصصة";
+                    <div class="pricing-card @(isFeatured ? "featured" : "")" data-aos="fade-up" data-aos-delay="@(idx * 100)">
+                        @if (isFeatured)
+                        {
+                            <div class="featured-ribbon">الأكثر شعبية</div>
+                        }
+                        <div class="pricing-header">
+                            <div class="pricing-icon">@icon</div>
+                            <h4>@p.PlanName</h4>
+                            <p>@label</p>
+                        </div>
+                        <div class="pricing-amount">
+                            <span class="currency">$</span>
+                            <span class="price">@p.Price</span>
+                            <span class="period">/ @p.DurationMonths شهر</span>
+                        </div>
+                        <ul class="pricing-features">
+                            <li><i class="fas fa-check"></i> حتى <strong>@p.MaxUsers مستخدمين</strong></li>
+                            <li><i class="fas fa-check"></i> حتى <strong>@p.MaxStudents طالب</strong></li>
+                            @if (p.IncludesCourses)
+                            {
+                                <li><i class="fas fa-check"></i> المنصة الإلكترونية <strong>(@p.StorageLimitGB GB)</strong></li>
+                            }
+                            else
+                            {
+                                <li class="disabled"><i class="fas fa-times"></i> المنصة الإلكترونية</li>
+                            }
+                            @if (p.IncludesLiveStream)
+                            {
+                                <li><i class="fas fa-check"></i> البث المباشر</li>
+                            }
+                            else
+                            {
+                                <li class="disabled"><i class="fas fa-times"></i> البث المباشر</li>
+                            }
+                            @if (p.IncludesHrModule)
+                            {
+                                <li><i class="fas fa-check"></i> نظام HR متكامل</li>
+                            }
+                            else
+                            {
+                                <li class="disabled"><i class="fas fa-times"></i> نظام HR</li>
+                            }
+                        </ul>
+                        <a href="#register" class="btn-pricing @(isFeatured ? "btn-gradient" : "btn-outline-gradient")">ابدأ مجاناً</a>
+                    </div>
+                    idx++;
+                }
+            }
+            else
+            {
+                <div class="pricing-card" data-aos="fade-up">
+                    <div class="pricing-header">
+                        <div class="pricing-icon">🏫</div>
+                        <h4>المبتدئ</h4>
+                        <p>للمدارس الصغيرة</p>
+                    </div>
+                    <div class="pricing-amount">
+                        <span class="currency">$</span>
+                        <span class="price">49</span>
+                        <span class="period">/ شهرياً</span>
+                    </div>
+                    <ul class="pricing-features">
+                        <li><i class="fas fa-check"></i> حتى <strong>3 مستخدمين</strong></li>
+                        <li><i class="fas fa-check"></i> حتى <strong>200 طالب</strong></li>
+                        <li><i class="fas fa-check"></i> إدارة الطلاب والأساتذة</li>
+                    </ul>
+                    <a href="#register" class="btn-pricing btn-outline-gradient">ابدأ مجاناً</a>
+                </div>
+            }
+        </div>
+    </div>
+</section>
+
+<!-- ============ TESTIMONIALS ============ -->
+<section class="testimonials-section" id="testimonials">
+    <div class="container">
+        <div class="section-header" data-aos="fade-up">
+            <span class="section-badge">آراء العملاء</span>
+            <h2 class="section-title">ماذا يقول <span class="gradient-text">عملاؤنا</span></h2>
+        </div>
+        <div class="row g-4">
+            <div class="col-md-4" data-aos="fade-up">
+                <div class="testimonial-card">
+                    <div class="testimonial-stars">⭐⭐⭐⭐⭐</div>
+                    <p class="testimonial-text">"نظام رائع ومتكامل، سهّل علينا إدارة المدرسة بشكل كبير. الدعم الفني ممتاز والتحديثات مستمرة."</p>
+                    <div class="testimonial-author">
+                        <div style="width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,#6366f1,#ec4899);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;">ن</div>
+                        <div><h6>مدرسة النور الأهلية</h6><small>بغداد، العراق</small></div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4" data-aos="fade-up" data-aos-delay="100">
+                <div class="testimonial-card">
+                    <div class="testimonial-stars">⭐⭐⭐⭐⭐</div>
+                    <p class="testimonial-text">"التطبيق سهّل التواصل مع أولياء الأمور بشكل كبير. نظام الحضور بالـ QR وفّر علينا وقتاً كثيراً."</p>
+                    <div class="testimonial-author">
+                        <div style="width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,#06b6d4,#6366f1);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;">ر</div>
+                        <div><h6>مدرسة الرسالة</h6><small>أربيل، العراق</small></div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4" data-aos="fade-up" data-aos-delay="200">
+                <div class="testimonial-card">
+                    <div class="testimonial-stars">⭐⭐⭐⭐⭐</div>
+                    <p class="testimonial-text">"المنصة الإلكترونية كانت نقلة نوعية. الطلاب الآن يتابعون دروسهم أونلاين بسهولة تامة."</p>
+                    <div class="testimonial-author">
+                        <div style="width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,#f59e0b,#ef4444);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;">ا</div>
+                        <div><h6>أكاديمية الإبداع</h6><small>البصرة، العراق</small></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ============ REGISTRATION FORM ============ -->
+<section class="register-section" id="register">
+    <div class="container">
+        <div class="register-wrapper" data-aos="fade-up">
+            <div class="text-center">
+                <span class="section-badge">سجّل الآن</span>
+                <h2 style="font-weight:800;font-size:2rem;margin-bottom:8px;">سجّل مدرستك <span class="gradient-text">مجاناً</span></h2>
+                <p style="color:#94a3b8;margin-bottom:32px;">قم بتقديم طلب تسجيل وسيتواصل فريقنا معك خلال 24 ساعة</p>
+            </div>
+            <form id="schoolRegisterForm">
+                @Html.AntiForgeryToken()
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="form-group-website">
+                            <label>اسم المدرسة / المعهد *</label>
+                            <input type="text" class="form-control" name="schoolName" required />
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group-website">
+                            <label>اسم المسؤول *</label>
+                            <input type="text" class="form-control" name="contactName" required />
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group-website">
+                            <label>رقم الهاتف *</label>
+                            <input type="tel" class="form-control" name="phone" required />
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group-website">
+                            <label>البريد الإلكتروني *</label>
+                            <input type="email" class="form-control" name="email" required />
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group-website">
+                            <label>المدينة</label>
+                            <select class="form-select" name="city">
+                                <option value="">اختر المدينة...</option>
+                                <option>بغداد</option>
+                                <option>البصرة</option>
+                                <option>أربيل</option>
+                                <option>النجف</option>
+                                <option>كربلاء</option>
+                                <option>السليمانية</option>
+                                <option>الموصل</option>
+                                <option>دهوك</option>
+                                <option>ديالى</option>
+                                <option>الأنبار</option>
+                                <option>واسط</option>
+                                <option>ميسان</option>
+                                <option>ذي قار</option>
+                                <option>المثنى</option>
+                                <option>القادسية</option>
+                                <option>بابل</option>
+                                <option>صلاح الدين</option>
+                                <option>كركوك</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group-website">
+                            <label>نوع المؤسسة</label>
+                            <select class="form-select" name="schoolType">
+                                <option value="">اختر النوع...</option>
+                                <option>مدرسة ابتدائية</option>
+                                <option>مدرسة متوسطة</option>
+                                <option>مدرسة إعدادية</option>
+                                <option>معهد تعليمي</option>
+                                <option>أكاديمية خاصة</option>
+                                <option>رياض أطفال</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group-website">
+                            <label>عدد الطلاب التقريبي</label>
+                            <select class="form-select" name="studentCountRange">
+                                <option>أقل من 100</option>
+                                <option>100 - 500</option>
+                                <option>500 - 1000</option>
+                                <option>أكثر من 1000</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group-website">
+                            <label>الخطة المطلوبة</label>
+                            <select class="form-select" name="requestedPlan">
+                                <option>المبتدئ - $49/شهر</option>
+                                <option>الاحترافي - $99/شهر</option>
+                                <option>المؤسسي - $199/شهر</option>
+                                <option>غير متأكد (سأقرر لاحقاً)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <div class="form-group-website">
+                            <label>ملاحظات إضافية</label>
+                            <textarea class="form-control" name="notes" rows="3"></textarea>
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <button type="submit" class="btn btn-gradient w-100" style="padding:14px;font-size:1.05rem;font-weight:700;border-radius:10px;">
+                            <i class="fas fa-paper-plane me-2"></i>
+                            تقديم طلب التسجيل
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</section>
+
+<!-- ============ FAQ ============ -->
+<section class="faq-section" id="faq">
+    <div class="container">
+        <div class="section-header" data-aos="fade-up">
+            <span class="section-badge">الأسئلة الشائعة</span>
+            <h2 class="section-title">أسئلة <span class="gradient-text">شائعة</span></h2>
+        </div>
+        <div class="faq-accordion" data-aos="fade-up">
+            <div class="faq-item">
+                <button class="faq-question">
+                    <span>هل يمكنني تجربة النظام مجاناً قبل الاشتراك؟</span>
+                    <i class="fas fa-plus"></i>
+                </button>
+                <div class="faq-answer"><p>نعم! نوفر فترة تجربة مجانية لمدة 14 يوماً بجميع المميزات. لا يُطلب منك إدخال بيانات الدفع.</p></div>
+            </div>
+            <div class="faq-item">
+                <button class="faq-question">
+                    <span>هل بيانات مدرستي آمنة؟</span>
+                    <i class="fas fa-plus"></i>
+                </button>
+                <div class="faq-answer"><p>نعم، نستخدم تشفير SSL، وبيانات كل مدرسة معزولة تماماً عن المدارس الأخرى (Multi-Tenant Architecture).</p></div>
+            </div>
+            <div class="faq-item">
+                <button class="faq-question">
+                    <span>هل يمكنني ترقية أو تغيير خطتي لاحقاً؟</span>
+                    <i class="fas fa-plus"></i>
+                </button>
+                <div class="faq-answer"><p>بالتأكيد! يمكنك الترقية أو تغيير خطتك في أي وقت من لوحة التحكم.</p></div>
+            </div>
+            <div class="faq-item">
+                <button class="faq-question">
+                    <span>هل يوجد تطبيق موبايل؟</span>
+                    <i class="fas fa-plus"></i>
+                </button>
+                <div class="faq-answer"><p>نعم، التطبيق مبني بتقنية Flutter ويعمل على iOS و Android. يمكن للطلاب وأولياء الأمور والمعلمين استخدامه.</p></div>
+            </div>
+            <div class="faq-item">
+                <button class="faq-question">
+                    <span>هل يدعم النظام اللغة العربية؟</span>
+                    <i class="fas fa-plus"></i>
+                </button>
+                <div class="faq-answer"><p>نعم، النظام يدعم العربية والإنجليزية بالكامل مع دعم الاتجاه RTL.</p></div>
+            </div>
+            <div class="faq-item">
+                <button class="faq-question">
+                    <span>ما هي الميزات الجديدة في النظام؟</span>
+                    <i class="fas fa-plus"></i>
+                </button>
+                <div class="faq-answer"><p>أضفنا مؤخراً: نظام الموارد البشرية HR الكامل (عقود، ترقيات، تدريب، أداء، نهاية خدمة)، جدول الامتحانات مع أنواع مخصصة، جدول الحصص الأسبوعي، إدارة درجات الطلاب مع إدخال جماعي، إدارة الرواتب مع البدلات والخصومات، أنواع المصروفات، تقارير مالية متقدمة، وأكثر من 70 ميزة أخرى.</p></div>
+            </div>
+            <div class="faq-item">
+                <button class="faq-question">
+                    <span>هل يوجد API للتكامل مع أنظمة أخرى؟</span>
+                    <i class="fas fa-plus"></i>
+                </button>
+                <div class="faq-answer"><p>نعم، نوفر API متكامل (RESTful) يغطي جميع وظائف النظام بما في ذلك الطلاب، المعلمين، الأقساط، الحضور، الدرجات، الامتحانات، الرواتب، والمزيد. يمكنك دمجه مع تطبيقك أو أي نظام خارجي.</p></div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ============ CONTACT ============ -->
+<section class="contact-section" id="contact">
+    <div class="container">
+        <div class="section-header" data-aos="fade-up">
+            <span class="section-badge">تواصل معنا</span>
+            <h2 class="section-title">نحن هنا <span class="gradient-text">لمساعدتك</span></h2>
+        </div>
+        <div class="contact-grid">
+            <div data-aos="fade-left">
+                <div class="contact-card">
+                    <div class="contact-icon"><i class="fas fa-phone"></i></div>
+                    <h5>اتصل بنا</h5>
+                    <p>+964 770 123 4567</p>
+                </div>
+                <div class="contact-card">
+                    <div class="contact-icon"><i class="fas fa-envelope"></i></div>
+                    <h5>راسلنا</h5>
+                    <p>info&#64;schoolms.com</p>
+                </div>
+                <div class="contact-card">
+                    <div class="contact-icon"><i class="fas fa-map-marker-alt"></i></div>
+                    <h5>العنوان</h5>
+                    <p>بغداد، العراق</p>
+                </div>
+                <div class="social-links">
+                    <a href="#" class="social-link"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#" class="social-link"><i class="fab fa-instagram"></i></a>
+                    <a href="#" class="social-link"><i class="fab fa-youtube"></i></a>
+                    <a href="#" class="social-link"><i class="fab fa-telegram-plane"></i></a>
+                    <a href="#" class="social-link"><i class="fab fa-whatsapp"></i></a>
+                    <a href="#" class="social-link"><i class="fab fa-tiktok"></i></a>
+                </div>
+            </div>
+            <div data-aos="fade-right">
+                <div class="contact-card" style="padding:32px">
+                    <form>
+                        <div class="form-group-website">
+                            <label>الاسم *</label>
+                            <input type="text" class="form-control" required />
+                        </div>
+                        <div class="form-group-website">
+                            <label>البريد الإلكتروني *</label>
+                            <input type="email" class="form-control" required />
+                        </div>
+                        <div class="form-group-website">
+                            <label>الموضوع</label>
+                            <input type="text" class="form-control" />
+                        </div>
+                        <div class="form-group-website">
+                            <label>الرسالة *</label>
+                            <textarea class="form-control" rows="4" required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-gradient w-100" style="padding:12px;font-weight:700;border-radius:10px;">
+                            <i class="fas fa-paper-plane me-2"></i> إرسال الرسالة
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ============ CTA ============ -->
+<section class="cta-section">
+    <div class="container">
+        <div class="cta-card" data-aos="zoom-in">
+            <h2>جاهز لتحويل إدارة مدرستك؟</h2>
+            <p>انضم إلى أكثر من 50 مدرسة تستخدم SchoolMS لإدارة مدارسهم بكفاءة</p>
+            <div class="cta-buttons">
+                <a href="#register" class="btn-white">ابدأ مجاناً اليوم <i class="fas fa-arrow-left ms-2"></i></a>
+                <a href="#contact" class="btn-outline-white">تحدث مع فريقنا</a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ============ FOOTER ============ -->
+<footer class="website-footer">
+    <div class="container">
+        <div class="footer-grid">
+            <div class="footer-brand">
+                <i class="fas fa-graduation-cap" style="font-size:2rem;color:#6366f1;"></i>
+                <h5>SchoolMS</h5>
+                <p>نظام إدارة المدارس الأكثر تقدماً في المنطقة</p>
+                <div class="footer-social">
+                    <a href="#"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#"><i class="fab fa-instagram"></i></a>
+                    <a href="#"><i class="fab fa-youtube"></i></a>
+                    <a href="#"><i class="fab fa-telegram-plane"></i></a>
+                    <a href="#"><i class="fab fa-whatsapp"></i></a>
+                </div>
+            </div>
+            <div class="footer-links">
+                <h6>المنتج</h6>
+                <ul>
+                    <li><a href="#features">المميزات</a></li>
+                    <li><a href="#pricing">الأسعار</a></li>
+                    <li><a href="#technology">التقنيات</a></li>
+                </ul>
+            </div>
+            <div class="footer-links">
+                <h6>الشركة</h6>
+                <ul>
+                    <li><a href="#contact">تواصل معنا</a></li>
+                    <li><a href="#testimonials">آراء العملاء</a></li>
+                </ul>
+            </div>
+            <div class="footer-links">
+                <h6>القانونية</h6>
+                <ul>
+                    <li><a asp-action="Privacy">سياسة الخصوصية</a></li>
+                    <li><a asp-action="Terms">شروط الاستخدام</a></li>
+                </ul>
+            </div>
+            <div class="footer-links">
+                <h6>الدعم</h6>
+                <ul>
+                    <li><a href="#faq">الأسئلة الشائعة</a></li>
+                    <li><a href="#contact">مركز المساعدة</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>© 2026 SchoolMS. جميع الحقوق محفوظة.</p>
+            <p>صنع بـ ❤️ في العراق</p>
+        </div>
+    </div>
+</footer>

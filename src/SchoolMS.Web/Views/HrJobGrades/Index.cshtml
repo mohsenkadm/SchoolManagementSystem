@@ -1,0 +1,38 @@
+@model List<SchoolMS.Application.DTOs.HrJobGradeDto>
+@{ ViewData["Title"] = Localizer["JobGrades"].Value; }
+@Html.AntiForgeryToken()
+
+<div class="page-header" data-aos="fade-down">
+    <div><h4 class="page-title"><i class="fas fa-layer-group text-primary"></i> @Localizer["JobGrades"]</h4><span class="record-count"><i class="fas fa-layer-group"></i> @Model.Count</span></div>
+    <div class="page-actions"><a href="@Url.Action("Create")" class="btn btn-accent"><i class="fas fa-plus me-1"></i>@Localizer["Add"]</a></div>
+</div>
+
+<div class="table-card hover-lift" data-aos="fade-up">
+    <table id="dataTable" class="table table-hover" style="width:100%">
+        <thead><tr><th>#</th><th>@Localizer["Name"]</th><th>@Localizer["Level"]</th><th>@Localizer["MinSalary"]</th><th>@Localizer["MaxSalary"]</th><th>@Localizer["Active"]</th><th>@Localizer["Actions"]</th></tr></thead>
+        <tbody>
+            @for (int i = 0; i < Model.Count; i++)
+            {
+                <tr>
+                    <td>@(i + 1)</td><td>@Model[i].GradeName</td><td>@Model[i].GradeLevel</td>
+                    <td>@Model[i].MinSalary.ToString("N0")</td><td>@Model[i].MaxSalary.ToString("N0")</td>
+                    <td>@if (Model[i].IsActive) { <span class="status-badge status-active"><span class="status-dot"></span> @Localizer["Active"]</span> } else { <span class="badge bg-secondary">@Localizer["Inactive"]</span> }</td>
+                    <td>
+                        <div class="d-flex gap-1">
+                            <a href="@Url.Action("Edit", new { id = Model[i].Id })" class="btn btn-sm btn-primary"><i class="fas fa-edit"></i></a>
+                            <button class="btn btn-sm btn-danger" onclick="del(@Model[i].Id)"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@section Scripts {
+<script>
+    var dt;
+    $(function () { dt = $('#dataTable').DataTable({ responsive: true, pageLength: 25, dom: 'rtip' }); });
+    function del(id) { confirmDelete('@Url.Action("Delete")', id, function () { location.reload(); }); }
+</script>
+}

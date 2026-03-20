@@ -1,0 +1,88 @@
+@using SchoolMS.Application.DTOs
+@{
+    var isEdit = Model != null;
+    var item = isEdit ? (HomeworkDto)Model : null;
+    var teachers = ViewBag.Teachers as List<TeacherDto> ?? new();
+    var classRooms = ViewBag.ClassRooms as List<ClassRoomDto> ?? new();
+    var subjects = ViewBag.Subjects as List<SubjectDto> ?? new();
+    var years = ViewBag.AcademicYears as List<AcademicYearDto> ?? new();
+    var isSuperAdmin = (bool)(ViewBag.IsSuperAdmin ?? false);
+    var schools = ViewBag.Schools as List<SchoolDto> ?? new();
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4" data-aos="fade-down">
+    <h4 class="mb-0"><i class="fas @(isEdit ? "fa-edit" : "fa-plus-circle") me-2 text-primary"></i>@(isEdit ? Localizer["EditHomework"] : Localizer["AddHomework"])</h4>
+    <a href="@Url.Action("Index")" class="btn btn-secondary"><i class="fas fa-arrow-left me-1"></i>@Localizer["Back"]</a>
+</div>
+<div class="dashboard-card card p-4" data-aos="fade-up">
+    <form asp-action="@(isEdit ? "Edit" : "Create")" method="post" enctype="multipart/form-data">
+        @Html.AntiForgeryToken()
+        @if (isEdit) { <input type="hidden" name="Id" value="@item!.Id" /> }
+        <div class="row g-3">
+            @if (isSuperAdmin)
+            {
+                <div class="col-md-6">
+                    <label class="form-label">@Localizer["School"]</label>
+                    <select id="filterSchoolCreate" name="SchoolId" class="form-select select2" required>
+                        <option value="">-- @Localizer["Select"] --</option>
+                        @foreach (var s in schools) { <option value="@s.Id" selected="@(item?.SchoolId == s.Id)">@s.Name</option> }
+                    </select>
+                </div>
+            }
+            <div class="col-md-6"><label class="form-label">@Localizer["Title"] *</label><input type="text" name="Title" class="form-control" value="@item?.Title" required /></div>
+            <div class="col-md-6">
+                <label class="form-label">@Localizer["Teacher"] *</label>
+                <select name="TeacherId" class="form-select select2" required>
+                    <option value="">-- @Localizer["Select"] --</option>
+                    @foreach (var t in teachers) { <option value="@t.Id" selected="@(item?.TeacherId == t.Id)">@t.FullName</option> }
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">@Localizer["ClassRoom"] *</label>
+                <select name="ClassRoomId" class="form-select select2" required>
+                    <option value="">-- @Localizer["Select"] --</option>
+                    @foreach (var c in classRooms) { <option value="@c.Id" selected="@(item?.ClassRoomId == c.Id)">@c.GradeName - @c.DivisionName</option> }
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">@Localizer["Subject"] *</label>
+                <select name="SubjectId" class="form-select select2" required>
+                    <option value="">-- @Localizer["Select"] --</option>
+                    @foreach (var s in subjects) { <option value="@s.Id" selected="@(item?.SubjectId == s.Id)">@s.SubjectName</option> }
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">@Localizer["AcademicYear"] *</label>
+                <select name="AcademicYearId" class="form-select" required>
+                    @foreach (var y in years) { <option value="@y.Id" selected="@(item?.AcademicYearId == y.Id)">@y.YearName</option> }
+                </select>
+            </div>
+            <div class="col-md-3"><label class="form-label">@Localizer["StartDate"] *</label><input type="date" name="StartDate" class="form-control" value="@(item?.StartDate.ToString("yyyy-MM-dd") ?? DateTime.Today.ToString("yyyy-MM-dd"))" required /></div>
+            <div class="col-md-3"><label class="form-label">@Localizer["DueDate"] *</label><input type="date" name="DueDate" class="form-control" value="@(item?.DueDate.ToString("yyyy-MM-dd") ?? DateTime.Today.AddDays(7).ToString("yyyy-MM-dd"))" required /></div>
+            <div class="col-md-6"><label class="form-label">@Localizer["Description"]</label><textarea name="Description" class="form-control" rows="2">@item?.Description</textarea></div>
+            <div class="col-md-12">
+                <label class="form-label"><i class="fas fa-paperclip me-1"></i>@Localizer["Attachments"]</label>
+                <input type="file" name="attachments" class="form-control" multiple accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx" />
+                <small class="text-muted">Upload images, PDFs, or documents. Multiple files allowed.</small>
+            </div>
+            @if (isEdit && item!.Attachments.Count > 0)
+            {
+                <div class="col-md-12">
+                    <label class="form-label">Existing Attachments</label>
+                    <div class="d-flex flex-wrap gap-2">
+                        @foreach (var att in item.Attachments)
+                        {
+                            <a href="@att.FileUrl" target="_blank" class="btn btn-sm btn-outline-primary">
+                                <i class="fas @(att.FileType != null && att.FileType.StartsWith("image") ? "fa-image" : "fa-file") me-1"></i>@att.FileName
+                            </a>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+        <div class="mt-4 d-flex gap-2">
+            <button type="submit" class="btn btn-accent"><i class="fas fa-save me-1"></i>@Localizer["Save"]</button>
+            <a href="@Url.Action("Index")" class="btn btn-secondary">@Localizer["Cancel"]</a>
+        </div>
+    </form>
+</div>

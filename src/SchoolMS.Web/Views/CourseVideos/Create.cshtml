@@ -1,0 +1,492 @@
+@using SchoolMS.Application.DTOs
+@{
+    var isEdit = Model != null;
+    var video = isEdit ? (CourseVideoDto)Model : null;
+    var course = ViewBag.Course as CourseDto;
+    var hasVideo = isEdit && !string.IsNullOrEmpty(video?.BunnyStreamVideoId);
+    var quota = ViewBag.StorageQuota as StorageQuotaDto;
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4" data-aos="fade-down">
+    <div>
+        <h4 class="mb-0">
+            <i class="fas @(isEdit ? "fa-edit" : "fa-plus-circle") me-2 text-primary"></i>
+            @(isEdit ? Localizer["EditVideo"] : Localizer["AddVideo"]) - @course?.Title
+        </h4>
+        <a href="@Url.Action("Index", new { courseId = course?.Id })" class="text-muted small">
+            <i class="fas fa-arrow-left me-1"></i>@Localizer["BackToVideos"]
+        </a>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- LEFT COLUMN: Form -->
+    <div class="col-lg-7">
+        <div class="dashboard-card card p-4" data-aos="fade-up">
+            <h6 class="mb-3"><i class="fas fa-info-circle me-2 text-primary"></i>@Localizer["VideoDetails"]</h6>
+            <form id="videoForm" asp-action="@(isEdit ? "Edit" : "Create")" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="CourseId" value="@course?.Id" />
+                @if (isEdit)
+                {
+                    <input type="hidden" name="Id" value="@video!.Id" />
+                }
+
+                <div class="row g-3">
+                    <div class="col-md-8">
+                        <label class="form-label">@Localizer["Title"] *</label>
+                        <input type="text" name="Title" class="form-control" value="@video?.Title" required />
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">@Localizer["SortOrder"]</label>
+                        <input type="number" name="SortOrder" class="form-control" value="@(video?.SortOrder ?? 0)" />
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">@Localizer["FreeTrial"]</label>
+                        <div class="form-check form-switch mt-2">
+                            <input class="form-check-input" type="checkbox" name="IsFreeTrial" value="true"
+                                   @(video?.IsFreeTrial == true ? "checked" : "") />
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label">@Localizer["Description"]</label>
+                        <textarea name="Description" class="form-control" rows="3">@video?.Description</textarea>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">@Localizer["Scheduled"]</label>
+                        <div class="form-check form-switch mt-2">
+                            <input class="form-check-input" type="checkbox" name="IsScheduled" id="isScheduled" value="true"
+                                   @(video?.IsScheduled == true ? "checked" : "") onchange="toggleScheduleDate()" />
+                            <label class="form-check-label" for="isScheduled">@Localizer["SchedulePublish"]</label>
+                        </div>
+                    </div>
+                    <div class="col-md-5" id="scheduleDateGroup" style="@(video?.IsScheduled == true ? "" : "display:none;")">
+                        <label class="form-label">@Localizer["ScheduledPublishAt"]</label>
+                        <input type="datetime-local" name="ScheduledPublishAt" class="form-control" value="@(video?.ScheduledPublishAt?.ToString("yyyy-MM-ddTHH:mm"))" />
+                        <small class="text-muted">@Localizer["VideoHiddenUntilSchedule"]</small>
+                    </div>
+                </div>
+
+                <div class="mt-4 d-flex gap-2">
+                    <button type="submit" class="btn btn-accent" id="btnSave"><i class="fas fa-save me-1"></i>@Localizer["Save"]</button>
+                    <a href="@Url.Action("Index", new { courseId = course?.Id })" class="btn btn-secondary">@Localizer["Cancel"]</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- RIGHT COLUMN: Upload & Preview -->
+    <div class="col-lg-5">
+        @if (isEdit && hasVideo)
+        {
+            <!-- Current Video Preview (edit mode with existing video) -->
+            <div class="dashboard-card card p-4 mb-4" data-aos="fade-up">
+                <h6 class="mb-3"><i class="fas fa-play-circle me-2 text-success"></i>@Localizer["CurrentVideo"]</h6>
+                <div class="position-relative" style="border-radius:12px;overflow:hidden;background:#000;">
+                    @if (!string.IsNullOrEmpty(video?.ThumbnailUrl))
+                    {
+                        <img id="videoThumbnail" src="@video.ThumbnailUrl" class="w-100" style="max-height:250px;object-fit:cover;cursor:pointer;" onclick="previewCurrentVideo()" alt="" />
+                        <div class="position-absolute top-50 start-50 translate-middle" style="cursor:pointer;" onclick="previewCurrentVideo()">
+                            <div class="bg-white bg-opacity-75 rounded-circle d-flex align-items-center justify-content-center" style="width:60px;height:60px;">
+                                <i class="fas fa-play text-primary fs-4"></i>
+                            </div>
+                        </div>
+                    }
+                    <video id="currentVideoPlayer" class="w-100" controls style="max-height:300px;display:none;"></video>
+                </div>
+                <div class="mt-3 d-flex flex-wrap gap-2">
+                    <span class="badge bg-info"><i class="fas fa-clock me-1"></i>@video!.Duration.ToString(@"hh\:mm\:ss")</span>
+                    <span class="badge bg-primary"><i class="fas fa-eye me-1"></i>@video.ViewCount @Localizer["Views"]</span>
+                    <span class="badge bg-success"><i class="fas fa-check-circle me-1"></i>@Localizer["Uploaded"]</span>
+                    <span class="badge" style="background:#ec4899;color:#fff;"><i class="fas fa-heart me-1"></i>@video.LikeCount</span>
+                    <span class="badge" style="background:#0ea5e9;color:#fff;"><i class="fas fa-user-check me-1"></i>@video.SeenCount @Localizer["Seen"]</span>
+                </div>
+                <div class="d-flex align-items-center gap-1 mt-2">
+                    @for (int s = 1; s <= 5; s++)
+                    {
+                        if (s <= (int)Math.Round(video.AverageRating))
+                        {
+                            <i class="fas fa-star" style="color:#facc15;"></i>
+                        }
+                        else
+                        {
+                            <i class="far fa-star" style="color:#facc15;"></i>
+                        }
+                    }
+                    <span class="ms-1 small text-muted">@video.AverageRating.ToString("F1") (@video.RatingCount @Localizer["Ratings"])</span>
+                </div>
+                <small class="text-muted d-block mt-2"><i class="fas fa-fingerprint me-1"></i>ID: @video.BunnyStreamVideoId</small>
+            </div>
+        }
+
+        <!-- Local Video Preview (before upload) -->
+        <div id="localPreviewCard" class="dashboard-card card p-4 mb-4" data-aos="fade-up" style="display:none;">
+            <h6 class="mb-3"><i class="fas fa-eye me-2 text-info"></i>@Localizer["Preview"]</h6>
+            <div style="border-radius:12px;overflow:hidden;background:#000;">
+                <video id="localPreviewPlayer" class="w-100" controls style="max-height:300px;"></video>
+            </div>
+        </div>
+
+        <!-- Upload Section -->
+        <div class="dashboard-card card p-4" data-aos="fade-up">
+            <h6 class="mb-3"><i class="fas fa-cloud-upload-alt me-2 text-info"></i>@(hasVideo ? Localizer["ReplaceVideo"] : Localizer["UploadVideo"])</h6>
+
+            @if (quota != null)
+            {
+                var usedPct = quota.TotalStorageGB > 0 ? Math.Min(100, Math.Round((double)(quota.UsedStorageGB / quota.TotalStorageGB * 100), 1)) : 0;
+                var barColor = usedPct > 90 ? "bg-danger" : usedPct > 70 ? "bg-warning" : "bg-info";
+                <div class="mb-3 p-2" style="background:#f8fafc;border-radius:8px;">
+                    <div class="d-flex justify-content-between mb-1">
+                        <small class="fw-semibold"><i class="fas fa-hdd me-1"></i>@Localizer["Storage"]</small>
+                        <small class="text-muted">@quota.UsedStorageGB.ToString("F2") / @quota.TotalStorageGB.ToString("F2") GB</small>
+                    </div>
+                    <div class="progress" style="height:6px;border-radius:3px;">
+                        <div class="progress-bar @barColor" style="width:@(usedPct)%;border-radius:3px;"></div>
+                    </div>
+                    <small class="text-muted">@Localizer["Available"]: @quota.AvailableGB.ToString("F2") GB</small>
+                </div>
+            }
+
+            <form id="uploadForm" enctype="multipart/form-data">
+                @Html.AntiForgeryToken()
+
+                <!-- Drag & Drop Zone -->
+                <div id="dropZone" class="text-center p-4" style="border:2px dashed #cbd5e1;border-radius:12px;cursor:pointer;transition:all 0.3s ease;background:#f8fafc;">
+                    <div id="dropZoneContent">
+                        <i class="fas fa-cloud-upload-alt fa-3x text-muted mb-3 d-block"></i>
+                        <h6 class="text-muted">@Localizer["DragDropVideo"]</h6>
+                        <p class="text-muted small mb-2">@Localizer["Or"]</p>
+                        <label for="videoFile" class="btn btn-outline-primary btn-sm"><i class="fas fa-folder-open me-1"></i>@Localizer["BrowseFiles"]</label>
+                        <input type="file" id="videoFile" class="d-none" accept="video/mp4,video/mov,video/avi,video/x-matroska,video/webm,video/quicktime" />
+                        <p class="text-muted small mt-2 mb-0">MP4, MOV, AVI, MKV, WEBM — Max 500MB</p>
+                    </div>
+                </div>
+
+                <!-- Selected File Info -->
+                <div id="fileInfo" class="mt-3" style="display:none;">
+                    <div class="d-flex align-items-center gap-3 p-3" style="background:#f0f9ff;border-radius:10px;border:1px solid #bae6fd;">
+                        <div>
+                            <i class="fas fa-film fa-2x text-info"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <strong id="fileName" class="d-block"></strong>
+                            <small id="fileSize" class="text-muted"></small>
+                        </div>
+                        <button type="button" class="btn btn-sm btn-outline-danger" onclick="clearFile()"><i class="fas fa-times"></i></button>
+                    </div>
+                </div>
+
+                <!-- Upload Progress -->
+                <div id="uploadProgress" class="mt-3" style="display:none;">
+                    <div class="d-flex justify-content-between mb-1">
+                        <small class="fw-semibold" id="uploadStatusText">@Localizer["Uploading"]...</small>
+                        <small class="fw-semibold" id="uploadPercent">0%</small>
+                    </div>
+                    <div class="progress" style="height:10px;border-radius:5px;">
+                        <div id="uploadBar" class="progress-bar progress-bar-striped progress-bar-animated bg-info" style="width:0%;border-radius:5px;transition:width 0.3s ease;"></div>
+                    </div>
+                    <div class="d-flex justify-content-between mt-1">
+                        <small class="text-muted" id="uploadSpeed"></small>
+                        <small class="text-muted" id="uploadEta"></small>
+                    </div>
+                </div>
+
+                <!-- Upload Success -->
+                <div id="uploadSuccess" class="mt-3" style="display:none;">
+                    <div class="alert alert-success d-flex align-items-center" style="border-radius:10px;">
+                        <i class="fas fa-check-circle fa-2x me-3"></i>
+                        <div>
+                            <strong>@Localizer["VideoUploadedSuccess"]</strong>
+                            <small class="d-block text-muted">@Localizer["VideoProcessingComplete"]</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Upload Button (edit mode only — create mode uploads automatically on save) -->
+                @if (isEdit)
+                {
+                    <div class="mt-3">
+                        <button type="button" id="btnUpload" class="btn btn-info w-100" onclick="uploadVideo()" disabled>
+                            <i class="fas fa-upload me-1"></i>@Localizer["Upload"]
+                        </button>
+                    </div>
+                }
+                else
+                {
+                    <div class="mt-3">
+                        <small class="text-muted"><i class="fas fa-info-circle me-1"></i>@Localizer["VideoWillUploadOnSave"]</small>
+                    </div>
+                }
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script>
+    var dropZone = document.getElementById('dropZone');
+    var videoInput = document.getElementById('videoFile');
+    var maxSize = 500 * 1024 * 1024; // 500MB
+    var validTypes = ['video/mp4', 'video/quicktime', 'video/x-msvideo', 'video/x-matroska', 'video/webm', 'video/avi'];
+    var isEditMode = @(isEdit ? "true" : "false");
+    var selectedFile = null;
+
+    // Drag & Drop events
+    if (dropZone) {
+        ['dragenter', 'dragover'].forEach(function (evt) {
+            dropZone.addEventListener(evt, function (e) {
+                e.preventDefault();
+                dropZone.style.borderColor = '#6366f1';
+                dropZone.style.background = '#eef2ff';
+            });
+        });
+        ['dragleave', 'drop'].forEach(function (evt) {
+            dropZone.addEventListener(evt, function (e) {
+                e.preventDefault();
+                dropZone.style.borderColor = '#cbd5e1';
+                dropZone.style.background = '#f8fafc';
+            });
+        });
+        dropZone.addEventListener('drop', function (e) {
+            var files = e.dataTransfer.files;
+            if (files.length > 0) {
+                videoInput.files = files;
+                onFileSelected(files[0]);
+            }
+        });
+    }
+
+    if (videoInput) {
+        videoInput.addEventListener('change', function () {
+            if (this.files.length > 0) onFileSelected(this.files[0]);
+        });
+    }
+
+    function onFileSelected(file) {
+        if (file.size > maxSize) {
+            toastr.error('File too large. Maximum 500MB.');
+            clearFile();
+            return;
+        }
+
+        selectedFile = file;
+        $('#fileInfo').show();
+        $('#fileName').text(file.name);
+        $('#fileSize').text(formatFileSize(file.size));
+        $('#uploadSuccess').hide();
+        $('#uploadProgress').hide();
+
+        // Show local video preview
+        var previewUrl = URL.createObjectURL(file);
+        var previewPlayer = document.getElementById('localPreviewPlayer');
+        previewPlayer.src = previewUrl;
+        $('#localPreviewCard').show();
+
+        // Check storage quota before enabling upload
+        $.ajax({
+            url: '@Url.Action("CheckStorageQuota")',
+            type: 'POST',
+            contentType: 'application/json',
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            data: JSON.stringify(file.size),
+            success: function (result) {
+                if (result.allowed) {
+                    $('#btnUpload').prop('disabled', false);
+                } else {
+                    toastr.error(result.error || 'Not enough storage space.');
+                    $('#btnUpload').prop('disabled', true);
+                }
+            },
+            error: function () {
+                $('#btnUpload').prop('disabled', false);
+            }
+        });
+    }
+
+    function clearFile() {
+        videoInput.value = '';
+        selectedFile = null;
+        $('#fileInfo').hide();
+        $('#btnUpload').prop('disabled', true);
+        $('#localPreviewCard').hide();
+        var previewPlayer = document.getElementById('localPreviewPlayer');
+        previewPlayer.pause();
+        previewPlayer.removeAttribute('src');
+    }
+
+    function doUpload(courseVideoId) {
+        var file = selectedFile || (videoInput.files.length > 0 ? videoInput.files[0] : null);
+        if (!file) { toastr.warning('@Localizer["SelectFile"]'); return; }
+
+        var formData = new FormData();
+        formData.append('file', file);
+        formData.append('courseVideoId', courseVideoId);
+
+        $('#uploadProgress').show();
+        $('#btnUpload').prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-1"></i>@Localizer["Uploading"]...');
+        $('#btnSave').prop('disabled', true);
+
+        var startTime = Date.now();
+        var xhr = new XMLHttpRequest();
+
+        xhr.upload.addEventListener('progress', function (e) {
+            if (e.lengthComputable) {
+                var pct = Math.round((e.loaded / e.total) * 100);
+                $('#uploadBar').css('width', pct + '%');
+                $('#uploadPercent').text(pct + '%');
+
+                var elapsed = (Date.now() - startTime) / 1000;
+                var speed = e.loaded / elapsed;
+                var remaining = (e.total - e.loaded) / speed;
+                $('#uploadSpeed').text(formatFileSize(speed) + '/s');
+                $('#uploadEta').text(pct < 100 ? '~' + formatTime(remaining) + ' remaining' : '');
+
+                if (pct >= 100) {
+                    $('#uploadStatusText').text('@Localizer["Processing"]...');
+                    $('#uploadBar').removeClass('bg-info').addClass('bg-warning');
+                }
+            }
+        });
+
+        xhr.addEventListener('load', function () {
+            if (xhr.status === 200) {
+                $('#uploadProgress').hide();
+                $('#uploadSuccess').show();
+                $('#uploadBar').css('width', '100%').removeClass('bg-warning bg-info').addClass('bg-success');
+                $('#btnUpload').html('<i class="fas fa-check me-1"></i>@Localizer["Done"]').removeClass('btn-info').addClass('btn-success');
+                toastr.success('@Localizer["VideoUploadedSuccess"]');
+                var courseId = $('input[name="CourseId"]').val();
+                setTimeout(function () { window.location.href = '@Url.Action("Index")?courseId=' + courseId; }, 2000);
+            } else {
+                var errMsg = '@Localizer["UploadError"]';
+                try { errMsg = JSON.parse(xhr.responseText).error || errMsg; } catch (ex) {}
+                toastr.error(errMsg);
+                resetUploadUI();
+            }
+        });
+
+        xhr.addEventListener('error', function () {
+            toastr.error('@Localizer["UploadError"]');
+            resetUploadUI();
+        });
+
+        xhr.open('POST', '@Url.Action("UploadVideo")');
+        xhr.setRequestHeader('RequestVerificationToken', $('input[name="__RequestVerificationToken"]').val());
+        xhr.send(formData);
+    }
+
+    function uploadVideo() {
+        var courseVideoId = '@(video?.Id ?? 0)';
+        doUpload(courseVideoId);
+    }
+
+    // Intercept Create form submission to auto-upload file after saving
+    if (!isEditMode) {
+        $('#videoForm').on('submit', function (e) {
+            if (!selectedFile) return; // no file selected, normal submit
+
+            e.preventDefault();
+            var form = $(this);
+            var formData = form.serialize();
+
+            $('#btnSave').prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-1"></i>@Localizer["Saving"]...');
+
+            $.ajax({
+                url: form.attr('action'),
+                method: 'POST',
+                data: formData,
+                dataType: 'json',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                success: function (result) {
+                    if (result && result.id) {
+                        toastr.success('Video saved! Uploading file...');
+                        $('#btnSave').html('<i class="fas fa-check me-1"></i>@Localizer["Saved"]').removeClass('btn-accent').addClass('btn-success');
+                        doUpload(result.id);
+                    } else {
+                        // Fallback: get the latest video ID
+                        var courseId = $('input[name="CourseId"]').val();
+                        $.get('@Url.Action("GetLatestVideoId")' + '?courseId=' + courseId, function (r) {
+                            if (r && r.id) {
+                                toastr.success('Video saved! Uploading file...');
+                                $('#btnSave').html('<i class="fas fa-check me-1"></i>@Localizer["Saved"]').removeClass('btn-accent').addClass('btn-success');
+                                doUpload(r.id);
+                            } else {
+                                toastr.error('Could not find the created video for upload.');
+                                window.location.href = '@Url.Action("Index")?courseId=' + courseId;
+                            }
+                        }).fail(function () {
+                            window.location.href = '@Url.Action("Index")?courseId=' + courseId;
+                        });
+                    }
+                },
+                error: function () {
+                    toastr.error('Error saving video details.');
+                    $('#btnSave').prop('disabled', false).html('<i class="fas fa-save me-1"></i>@Localizer["Save"]');
+                }
+            });
+        });
+    }
+
+    function resetUploadUI() {
+        $('#uploadProgress').hide();
+        $('#uploadBar').css('width', '0%').removeClass('bg-warning bg-success').addClass('bg-info');
+        $('#uploadPercent').text('0%');
+        $('#uploadSpeed, #uploadEta').text('');
+        $('#uploadStatusText').text('@Localizer["Uploading"]...');
+        $('#btnUpload').prop('disabled', false).html('<i class="fas fa-upload me-1"></i>@Localizer["Upload"]').removeClass('btn-success').addClass('btn-info');
+        $('#btnSave').prop('disabled', false).html('<i class="fas fa-save me-1"></i>@Localizer["Save"]');
+    }
+
+    @if (isEdit && hasVideo)
+    {
+        <text>
+    function previewCurrentVideo() {
+        var videoUrl = '@video?.VideoUrl';
+        if (!videoUrl) return;
+
+        var player = document.getElementById('currentVideoPlayer');
+        var thumb = document.getElementById('videoThumbnail');
+        var playOverlay = document.querySelector('#currentVideoPlayer').parentElement.querySelector('.position-absolute');
+        if (thumb) thumb.style.display = 'none';
+        if (playOverlay) playOverlay.style.display = 'none';
+        player.style.display = 'block';
+
+        if (videoUrl.endsWith('.m3u8')) {
+            if (Hls.isSupported()) {
+                if (window._hlsPreview) window._hlsPreview.destroy();
+                window._hlsPreview = new Hls();
+                window._hlsPreview.loadSource(videoUrl);
+                window._hlsPreview.attachMedia(player);
+                window._hlsPreview.on(Hls.Events.MANIFEST_PARSED, function () { player.play(); });
+            } else if (player.canPlayType('application/vnd.apple.mpegurl')) {
+                player.src = videoUrl;
+                player.play();
+            }
+        } else {
+            player.src = videoUrl;
+            player.play();
+        }
+    }
+        </text>
+    }
+
+    function formatFileSize(bytes) {
+        if (bytes < 1024) return bytes + ' B';
+        if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+        if (bytes < 1073741824) return (bytes / 1048576).toFixed(1) + ' MB';
+        return (bytes / 1073741824).toFixed(2) + ' GB';
+    }
+
+    function formatTime(seconds) {
+        if (seconds < 60) return Math.round(seconds) + 's';
+        if (seconds < 3600) return Math.round(seconds / 60) + 'm ' + Math.round(seconds % 60) + 's';
+        return Math.round(seconds / 3600) + 'h ' + Math.round((seconds % 3600) / 60) + 'm';
+    }
+
+    function toggleScheduleDate() {
+        var checked = document.getElementById('isScheduled').checked;
+        document.getElementById('scheduleDateGroup').style.display = checked ? '' : 'none';
+    }
+</script>
+}

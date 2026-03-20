@@ -1,0 +1,71 @@
+@using SchoolMS.Application.DTOs
+@using SchoolMS.Domain.Enums
+@{
+    var isEdit = Model != null;
+    var item = isEdit ? (PromoCodeDto)Model : null;
+    var isSuperAdmin = (bool)(ViewBag.IsSuperAdmin ?? false);
+    var schools = ViewBag.Schools as List<SchoolDto> ?? new();
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4" data-aos="fade-down">
+    <h4 class="mb-0"><i class="fas @(isEdit ? "fa-edit" : "fa-plus-circle") me-2 text-primary"></i>@(isEdit ? Localizer["EditPromoCode"] : Localizer["AddPromoCode"])</h4>
+    <a href="@Url.Action("Index")" class="btn btn-secondary"><i class="fas fa-arrow-left me-1"></i>@Localizer["Back"]</a>
+</div>
+<div class="dashboard-card card p-4" data-aos="fade-up">
+    <form asp-action="@(isEdit ? "Edit" : "Create")" method="post">
+        @Html.AntiForgeryToken()
+        @if (isEdit) { <input type="hidden" name="Id" value="@item!.Id" /> }
+        <div class="row g-3">
+            @if (isSuperAdmin)
+            {
+                <div class="col-md-6">
+                    <label class="form-label">@Localizer["School"] *</label>
+                    <select name="SchoolId" class="form-select select2" required>
+                        <option value="">-- @Localizer["Select"] --</option>
+                        @foreach (var s in schools) { <option value="@s.Id" selected="@(item?.SchoolId == s.Id)">@s.Name</option> }
+                    </select>
+                </div>
+            }
+            <div class="col-md-6">
+                <label class="form-label">@Localizer["Code"] *</label>
+                <input type="text" name="Code" class="form-control" value="@item?.Code" required />
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">@Localizer["DiscountType"] *</label>
+                <select name="DiscountType" class="form-select" required>
+                    @foreach (var dt in Enum.GetValues<DiscountType>())
+                    { <option value="@((int)dt)" selected="@(item?.DiscountType == dt)">@dt</option> }
+                </select>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">@Localizer["DiscountValue"] *</label>
+                <input type="number" name="DiscountValue" class="form-control" step="0.01" value="@item?.DiscountValue" required />
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">@Localizer["MaxUsage"]</label>
+                <input type="number" name="MaxUsage" class="form-control" min="0" value="@(item?.MaxUsage ?? 1)" />
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">@Localizer["ExpiryDate"]</label>
+                <input type="date" name="ExpiryDate" class="form-control" value="@item?.ExpiryDate?.ToString("yyyy-MM-dd")" />
+                <small class="text-muted">@Localizer["LeaveEmptyForUnlimited"]</small>
+            </div>
+            <div class="col-md-3">
+                <div class="form-check form-switch mt-4">
+                    <input class="form-check-input" type="checkbox" name="IsUnlimited" value="true" id="isUnlimited" @(item?.IsUnlimited == true ? "checked" : "") />
+                    <label class="form-check-label" for="isUnlimited">@Localizer["Unlimited"]</label>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="form-check form-switch mt-4">
+                    <input class="form-check-input" type="checkbox" name="IsActive" value="true" id="isActive" @(isEdit ? (item?.IsActive == true ? "checked" : "") : "checked") />
+                    <label class="form-check-label" for="isActive">@Localizer["Active"]</label>
+                </div>
+            </div>
+        </div>
+        <div class="mt-4 d-flex gap-2">
+            <button type="submit" class="btn btn-accent"><i class="fas fa-save me-1"></i>@Localizer["Save"]</button>
+            <a href="@Url.Action("Index")" class="btn btn-secondary">@Localizer["Cancel"]</a>
+        </div>
+    </form>
+</div>

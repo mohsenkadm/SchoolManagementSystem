@@ -1,0 +1,55 @@
+@model SchoolMS.Application.DTOs.HrTrainingProgramDto
+@{ ViewData["Title"] = $"{Localizer["TrainingDetails"].Value} — {Model?.ProgramName}"; }
+
+<div class="page-header" data-aos="fade-down">
+    <div><h4 class="page-title"><i class="fas fa-graduation-cap text-primary"></i> @Model?.ProgramName</h4></div>
+    <div class="page-actions">
+        <a href="@Url.Action("Index")" class="btn btn-secondary"><i class="fas fa-arrow-left me-1"></i>@Localizer["Back"]</a>
+        @if (Model != null) { <a href="@Url.Action("Enroll", new { programId = Model.Id })" class="btn btn-success"><i class="fas fa-user-plus me-1"></i>@Localizer["Enroll"]</a> }
+    </div>
+</div>
+
+@if (Model != null)
+{
+    var cls = Model.Status switch { TrainingStatus.Planned => "bg-warning", TrainingStatus.InProgress => "bg-primary", TrainingStatus.Completed => "bg-success", TrainingStatus.Cancelled => "bg-danger", _ => "bg-secondary" };
+
+    <div class="stat-ribbon" data-aos="fade-up">
+        <div class="stat-item stagger-item"><div class="stat-icon bg-primary-soft"><i class="fas fa-tag"></i></div><div class="stat-info"><h6>@Localizer["Category"]</h6><div class="stat-value">@(Model.Category ?? "—")</div></div></div>
+        <div class="stat-item stagger-item"><div class="stat-icon bg-info-soft"><i class="fas fa-clock"></i></div><div class="stat-info"><h6>@Localizer["Duration"]</h6><div class="stat-value">@Model.DurationHours h</div></div></div>
+        <div class="stat-item stagger-item"><div class="stat-icon bg-success-soft"><i class="fas fa-users"></i></div><div class="stat-info"><h6>@Localizer["Participants"]</h6><div class="stat-value">@Model.ParticipantCount / @Model.MaxParticipants</div></div></div>
+        <div class="stat-item stagger-item"><div class="stat-icon bg-warning-soft"><i class="fas fa-signal"></i></div><div class="stat-info"><h6>@Localizer["Status"]</h6><div class="stat-value"><span class="badge @cls">@Model.Status</span></div></div></div>
+    </div>
+
+    <div class="row g-3 mt-2" data-aos="fade-up">
+        <div class="col-md-6">
+            <div class="dashboard-card card p-3">
+                <h6><i class="fas fa-info-circle me-1 text-info"></i>@Localizer["Details"]</h6>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item d-flex justify-content-between"><span>@Localizer["Provider"]</span><span>@(Model.Provider ?? "—")</span></li>
+                    <li class="list-group-item d-flex justify-content-between"><span>@Localizer["Trainer"]</span><span>@(Model.Trainer ?? "—")</span></li>
+                    <li class="list-group-item d-flex justify-content-between"><span>@Localizer["Location"]</span><span>@(Model.Location ?? "—")</span></li>
+                    <li class="list-group-item d-flex justify-content-between"><span>@Localizer["StartDate"]</span><span>@Model.StartDate.ToString("dd/MM/yyyy")</span></li>
+                    <li class="list-group-item d-flex justify-content-between"><span>@Localizer["EndDate"]</span><span>@Model.EndDate.ToString("dd/MM/yyyy")</span></li>
+                    <li class="list-group-item d-flex justify-content-between"><span>@Localizer["Cost"]</span><span>@(Model.Cost?.ToString("N0") ?? "—")</span></li>
+                    <li class="list-group-item d-flex justify-content-between"><span>@Localizer["Mandatory"]</span><span>@(Model.IsMandatory ? "✅" : "❌")</span></li>
+                </ul>
+            </div>
+        </div>
+        <div class="col-md-6">
+            @if (!string.IsNullOrEmpty(Model.Description))
+            {
+                <div class="dashboard-card card p-3 mb-3">
+                    <h6><i class="fas fa-align-left me-1 text-primary"></i>@Localizer["Description"]</h6>
+                    <p class="mb-0">@Model.Description</p>
+                </div>
+            }
+            @if (!string.IsNullOrEmpty(Model.Notes))
+            {
+                <div class="dashboard-card card p-3">
+                    <h6><i class="fas fa-sticky-note me-1 text-warning"></i>@Localizer["Notes"]</h6>
+                    <p class="mb-0">@Model.Notes</p>
+                </div>
+            }
+        </div>
+    </div>
+}

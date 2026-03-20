@@ -1,0 +1,51 @@
+@model SchoolMS.Application.DTOs.HrDisciplinaryActionDto
+@{ ViewData["Title"] = $"{Localizer["DisciplinaryDetails"].Value} — {Model?.EmployeeName}"; }
+
+<div class="page-header" data-aos="fade-down">
+    <div><h4 class="page-title"><i class="fas fa-gavel text-primary"></i> @Localizer["DisciplinaryDetails"]</h4></div>
+    <div class="page-actions"><a href="@Url.Action("Index")" class="btn btn-secondary"><i class="fas fa-arrow-left me-1"></i>@Localizer["Back"]</a></div>
+</div>
+
+@if (Model != null)
+{
+    var cls = Model.Status switch { DisciplinaryStatus.Issued => "bg-warning", DisciplinaryStatus.Acknowledged => "bg-info", DisciplinaryStatus.Appealed => "bg-primary", DisciplinaryStatus.Resolved => "bg-success", DisciplinaryStatus.Expired => "bg-secondary", _ => "bg-secondary" };
+
+    <div class="stat-ribbon" data-aos="fade-up">
+        <div class="stat-item stagger-item"><div class="stat-icon bg-primary-soft"><i class="fas fa-user"></i></div><div class="stat-info"><h6>@Localizer["Employee"]</h6><div class="stat-value">@Model.EmployeeName</div></div></div>
+        <div class="stat-item stagger-item"><div class="stat-icon bg-danger-soft"><i class="fas fa-exclamation-triangle"></i></div><div class="stat-info"><h6>@Localizer["ActionType"]</h6><div class="stat-value">@Model.ActionType</div></div></div>
+        <div class="stat-item stagger-item"><div class="stat-icon bg-warning-soft"><i class="fas fa-signal"></i></div><div class="stat-info"><h6>@Localizer["Status"]</h6><div class="stat-value"><span class="badge @cls">@Model.Status</span></div></div></div>
+    </div>
+
+    <div class="row g-3 mt-2" data-aos="fade-up">
+        <div class="col-md-6">
+            <div class="dashboard-card card p-3">
+                <h6><i class="fas fa-info-circle me-1 text-info"></i>@Localizer["Details"]</h6>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item d-flex justify-content-between"><span>@Localizer["Violation"]</span><span>@(Model.ViolationName ?? "—")</span></li>
+                    <li class="list-group-item d-flex justify-content-between"><span>@Localizer["IncidentDate"]</span><span>@Model.IncidentDate.ToString("dd/MM/yyyy")</span></li>
+                    <li class="list-group-item d-flex justify-content-between"><span>@Localizer["IssuedDate"]</span><span>@Model.IssuedDate.ToString("dd/MM/yyyy")</span></li>
+                    <li class="list-group-item d-flex justify-content-between"><span>@Localizer["IssuedBy"]</span><span>@(Model.IssuedBy ?? "—")</span></li>
+                    @if (Model.WarningLevel.HasValue) { <li class="list-group-item d-flex justify-content-between"><span>@Localizer["WarningLevel"]</span><span class="badge bg-warning">@Model.WarningLevel</span></li> }
+                    @if (Model.SuspensionDays.HasValue) { <li class="list-group-item d-flex justify-content-between"><span>@Localizer["SuspensionDays"]</span><span class="badge bg-danger">@Model.SuspensionDays</span></li> }
+                    @if (Model.PenaltyAmount.HasValue) { <li class="list-group-item d-flex justify-content-between"><span>@Localizer["PenaltyAmount"]</span><span class="text-danger fw-bold">@Model.PenaltyAmount.Value.ToString("N0")</span></li> }
+                </ul>
+            </div>
+        </div>
+        <div class="col-md-6">
+            @if (!string.IsNullOrEmpty(Model.IncidentDescription))
+            {
+                <div class="dashboard-card card p-3 mb-3">
+                    <h6><i class="fas fa-file-alt me-1 text-warning"></i>@Localizer["IncidentDescription"]</h6>
+                    <p class="mb-0">@Model.IncidentDescription</p>
+                </div>
+            }
+            @if (!string.IsNullOrEmpty(Model.Notes))
+            {
+                <div class="dashboard-card card p-3">
+                    <h6><i class="fas fa-sticky-note me-1 text-info"></i>@Localizer["Notes"]</h6>
+                    <p class="mb-0">@Model.Notes</p>
+                </div>
+            }
+        </div>
+    </div>
+}

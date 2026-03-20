@@ -1,0 +1,41 @@
+@model List<SchoolMS.Application.DTOs.HrEmployeeContractDto>
+@{ ViewData["Title"] = Localizer["Contracts"].Value; }
+@Html.AntiForgeryToken()
+
+<div class="page-header" data-aos="fade-down">
+    <div><h4 class="page-title"><i class="fas fa-file-contract text-primary"></i> @Localizer["Contracts"]</h4><span class="record-count"><i class="fas fa-layer-group"></i> @Model.Count</span></div>
+    <div class="page-actions"><a href="@Url.Action("Create")" class="btn btn-accent"><i class="fas fa-plus me-1"></i>@Localizer["Add"]</a></div>
+</div>
+
+<div class="stat-ribbon" data-aos="fade-up">
+    <div class="stat-item stagger-item"><div class="stat-icon bg-primary-soft"><i class="fas fa-file-contract"></i></div><div class="stat-info"><h6>@Localizer["Total"]</h6><div class="stat-value">@Model.Count</div></div></div>
+    <div class="stat-item stagger-item"><div class="stat-icon bg-success-soft"><i class="fas fa-check"></i></div><div class="stat-info"><h6>@Localizer["Active"]</h6><div class="stat-value">@Model.Count(c => c.Status == ContractStatus.Active)</div></div></div>
+    <div class="stat-item stagger-item"><div class="stat-icon bg-warning-soft"><i class="fas fa-clock"></i></div><div class="stat-info"><h6>@Localizer["PendingRenewal"]</h6><div class="stat-value">@Model.Count(c => c.Status == ContractStatus.PendingRenewal)</div></div></div>
+    <div class="stat-item stagger-item"><div class="stat-icon bg-danger-soft"><i class="fas fa-times"></i></div><div class="stat-info"><h6>@Localizer["Expired"]</h6><div class="stat-value">@Model.Count(c => c.Status == ContractStatus.Expired)</div></div></div>
+</div>
+
+<div class="table-card hover-lift" data-aos="fade-up">
+    <table id="dataTable" class="table table-hover" style="width:100%">
+        <thead><tr><th>#</th><th>@Localizer["Employee"]</th><th>@Localizer["ContractNo"]</th><th>@Localizer["Type"]</th><th>@Localizer["StartDate"]</th><th>@Localizer["EndDate"]</th><th>@Localizer["Salary"]</th><th>@Localizer["Status"]</th><th>@Localizer["Actions"]</th></tr></thead>
+        <tbody>
+            @for (int i = 0; i < Model.Count; i++)
+            {
+                var c = Model[i];
+                var cls = c.Status switch { ContractStatus.Active => "bg-success", ContractStatus.PendingRenewal => "bg-warning", ContractStatus.Expired => "bg-danger", _ => "bg-secondary" };
+                <tr>
+                    <td>@(i + 1)</td><td>@c.EmployeeName</td><td>@c.ContractNumber</td><td><span class="badge bg-info">@c.ContractType</span></td>
+                    <td>@c.StartDate.ToString("dd/MM/yyyy")</td><td>@c.EndDate?.ToString("dd/MM/yyyy")</td><td>@c.AgreedSalary.ToString("N0")</td>
+                    <td><span class="badge @cls">@c.Status</span></td>
+                    <td><div class="d-flex gap-1"><a href="@Url.Action("Edit", new { id = c.Id })" class="btn btn-sm btn-primary"><i class="fas fa-edit"></i></a><button class="btn btn-sm btn-danger" onclick="del(@c.Id)"><i class="fas fa-trash"></i></button></div></td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@section Scripts {
+<script>
+    $(function () { $('#dataTable').DataTable({ responsive: true, pageLength: 25, dom: 'rtip' }); });
+    function del(id) { confirmDelete('@Url.Action("Delete")', id, function () { location.reload(); }); }
+</script>
+}

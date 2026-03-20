@@ -1,0 +1,43 @@
+@model List<SchoolMS.Application.DTOs.HrDisciplinaryActionDto>
+@{ ViewData["Title"] = Localizer["HrDisciplinary"].Value; }
+@Html.AntiForgeryToken()
+
+<div class="page-header" data-aos="fade-down">
+    <div><h4 class="page-title"><i class="fas fa-gavel text-primary"></i> @Localizer["HrDisciplinary"]</h4><span class="record-count"><i class="fas fa-layer-group"></i> @Model.Count</span></div>
+    <div class="page-actions">
+        <a href="@Url.Action("ViolationTypes")" class="btn btn-secondary"><i class="fas fa-list me-1"></i>@Localizer["ViolationTypes"]</a>
+        <a href="@Url.Action("Create")" class="btn btn-accent"><i class="fas fa-plus me-1"></i>@Localizer["Add"]</a>
+    </div>
+</div>
+
+<div class="stat-ribbon" data-aos="fade-up">
+    <div class="stat-item stagger-item"><div class="stat-icon bg-warning-soft"><i class="fas fa-exclamation-triangle"></i></div><div class="stat-info"><h6>@Localizer["Issued"]</h6><div class="stat-value">@Model.Count(d => d.Status == DisciplinaryStatus.Issued)</div></div></div>
+    <div class="stat-item stagger-item"><div class="stat-icon bg-success-soft"><i class="fas fa-check"></i></div><div class="stat-info"><h6>@Localizer["Resolved"]</h6><div class="stat-value">@Model.Count(d => d.Status == DisciplinaryStatus.Resolved)</div></div></div>
+    <div class="stat-item stagger-item"><div class="stat-icon bg-info-soft"><i class="fas fa-info-circle"></i></div><div class="stat-info"><h6>@Localizer["Appealed"]</h6><div class="stat-value">@Model.Count(d => d.Status == DisciplinaryStatus.Appealed)</div></div></div>
+</div>
+
+<div class="table-card hover-lift" data-aos="fade-up">
+    <table id="dataTable" class="table table-hover" style="width:100%">
+        <thead><tr><th>#</th><th>@Localizer["Employee"]</th><th>@Localizer["Violation"]</th><th>@Localizer["IncidentDate"]</th><th>@Localizer["ActionType"]</th><th>@Localizer["Penalty"]</th><th>@Localizer["Status"]</th><th>@Localizer["Actions"]</th></tr></thead>
+        <tbody>
+            @for (int i = 0; i < Model.Count; i++)
+            {
+                var d = Model[i];
+                var cls = d.Status switch { DisciplinaryStatus.Issued => "bg-warning", DisciplinaryStatus.Acknowledged => "bg-info", DisciplinaryStatus.Appealed => "bg-primary", DisciplinaryStatus.Resolved => "bg-success", DisciplinaryStatus.Expired => "bg-secondary", _ => "bg-secondary" };
+                var actCls = d.ActionType switch { DisciplinaryActionType.VerbalWarning => "bg-info", DisciplinaryActionType.WrittenWarning => "bg-warning", DisciplinaryActionType.FinalWarning => "bg-danger", DisciplinaryActionType.Suspension => "bg-dark", DisciplinaryActionType.Termination => "bg-danger", _ => "bg-secondary" };
+                <tr>
+                    <td>@(i + 1)</td><td>@d.EmployeeName</td><td>@d.ViolationName</td>
+                    <td>@d.IncidentDate.ToString("dd/MM/yyyy")</td>
+                    <td><span class="badge @actCls">@d.ActionType</span></td>
+                    <td>@(d.PenaltyAmount?.ToString("N0") ?? "—")</td>
+                    <td><span class="badge @cls">@d.Status</span></td>
+                    <td><a href="@Url.Action("Details", new { id = d.Id })" class="btn btn-sm btn-info"><i class="fas fa-eye"></i></a></td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@section Scripts {
+<script>$(function () { $('#dataTable').DataTable({ responsive: true, pageLength: 25, dom: 'rtip' }); });</script>
+}

@@ -1,0 +1,37 @@
+@using SchoolMS.Application.DTOs
+@{
+    var employees = ViewBag.Employees as List<HrEmployeeDto> ?? new();
+    var violationTypes = ViewBag.ViolationTypes as List<HrViolationTypeDto> ?? new();
+    ViewData["Title"] = Localizer["AddDisciplinaryAction"].Value;
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4" data-aos="fade-down">
+    <h4 class="mb-0"><i class="fas fa-plus-circle me-2 text-primary"></i>@Localizer["AddDisciplinaryAction"]</h4>
+    <a href="@Url.Action("Index")" class="btn btn-secondary"><i class="fas fa-arrow-left me-1"></i>@Localizer["Back"]</a>
+</div>
+<div class="dashboard-card card p-4" data-aos="fade-up">
+    <form asp-action="Create" method="post">
+        @Html.AntiForgeryToken()
+        <div class="row g-3">
+            <div class="col-md-4">
+                <label class="form-label">@Localizer["Employee"] *</label>
+                <select name="EmployeeId" class="form-select select2" required><option value="">—</option>@foreach (var e in employees) { <option value="@e.Id">@e.FullName</option> }</select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">@Localizer["ViolationType"]</label>
+                <select name="ViolationTypeId" class="form-select select2"><option value="">—</option>@foreach (var v in violationTypes) { <option value="@v.Id">@v.ViolationName (@v.Severity)</option> }</select>
+            </div>
+            <div class="col-md-4"><label class="form-label">@Localizer["IncidentDate"] *</label><input type="date" name="IncidentDate" class="form-control" value="@DateTime.Today.ToString("yyyy-MM-dd")" required /></div>
+            <div class="col-md-4">
+                <label class="form-label">@Localizer["ActionType"] *</label>
+                <select name="ActionType" class="form-select" required>@foreach (var t in Enum.GetValues<DisciplinaryActionType>()) { <option value="@t">@t</option> }</select>
+            </div>
+            <div class="col-md-4"><label class="form-label">@Localizer["WarningLevel"]</label><input type="number" name="WarningLevel" class="form-control" min="1" max="3" /></div>
+            <div class="col-md-4"><label class="form-label">@Localizer["SuspensionDays"]</label><input type="number" name="SuspensionDays" class="form-control" /></div>
+            <div class="col-md-4"><label class="form-label">@Localizer["PenaltyAmount"]</label><input type="number" step="0.01" name="PenaltyAmount" class="form-control" /></div>
+            <div class="col-md-8"><label class="form-label">@Localizer["IncidentDescription"]</label><textarea name="IncidentDescription" class="form-control" rows="2"></textarea></div>
+            <div class="col-12"><label class="form-label">@Localizer["Notes"]</label><textarea name="Notes" class="form-control" rows="2"></textarea></div>
+        </div>
+        <div class="mt-4"><button type="submit" class="btn btn-accent"><i class="fas fa-save me-1"></i>@Localizer["Save"]</button></div>
+    </form>
+</div>

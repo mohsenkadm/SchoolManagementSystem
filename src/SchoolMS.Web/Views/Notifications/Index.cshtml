@@ -1,0 +1,67 @@
+@model List<SchoolMS.Application.DTOs.NotificationDto>
+@using SchoolMS.Domain.Enums
+@{ ViewData["Title"] = Localizer["Notifications"].Value; }
+@Html.AntiForgeryToken()
+
+<div class="page-header" data-aos="fade-down">
+    <div>
+        <h4 class="page-title"><i class="fas fa-bell text-primary"></i>@Localizer["Notifications"]</h4>
+        <span class="record-count"><i class="fas fa-layer-group"></i> @Model.Count</span>
+    </div>
+    <div class="page-actions">
+        <a href="@Url.Action("Create")" class="btn btn-accent"><i class="fas fa-plus me-1"></i>@Localizer["AddNotification"]</a>
+    </div>
+</div>
+
+<div class="stat-ribbon" data-aos="fade-up">
+    <div class="stat-item stagger-item">
+        <div class="stat-icon bg-success-soft"><i class="fas fa-paper-plane"></i></div>
+        <div class="stat-info"><h6>@Localizer["Sent"]</h6><div class="stat-value">@Model.Count(n => n.IsSent)</div></div>
+    </div>
+    <div class="stat-item stagger-item">
+        <div class="stat-icon bg-warning-soft"><i class="fas fa-clock"></i></div>
+        <div class="stat-info"><h6>@Localizer["Pending"]</h6><div class="stat-value">@Model.Count(n => !n.IsSent)</div></div>
+    </div>
+</div>
+
+<div class="filter-panel" data-aos="fade-up">
+    <div class="filter-title"><i class="fas fa-filter"></i> @Localizer["Filter"]</div>
+    <div class="row g-2 align-items-end">
+        <div class="col-md-4"><input type="text" id="searchInput" class="form-control" placeholder="🔍 @Localizer["Search"]..." /></div>
+        <div class="col-md-3"><select id="filterTarget" class="form-select"><option value="">@Localizer["AllTargets"]</option>@foreach (var t in Model.Select(n => n.Target.ToString()).Distinct()) { <option value="@t">@t</option> }</select></div>
+        <div class="col-md-2"><button class="btn btn-filter w-100" onclick="applyFilters()"><i class="fas fa-search"></i> @Localizer["Filter"]</button></div>
+        <div class="col-md-3"><button class="btn btn-reset w-100" onclick="resetFilters()"><i class="fas fa-redo"></i> @Localizer["Reset"]</button></div>
+    </div>
+</div>
+
+<div class="table-card hover-lift" data-aos="fade-up">
+    <table id="dataTable" class="table table-hover" style="width:100%">
+        <thead><tr><th>#</th><th>@Localizer["Title"]</th><th>@Localizer["Target"]</th><th>@Localizer["Status"]</th><th>@Localizer["SentAt"]</th><th>@Localizer["Actions"]</th></tr></thead>
+        <tbody>
+            @for (int i = 0; i < Model.Count; i++)
+            {
+                <tr class="table-row-animated">
+                    <td>@(i + 1)</td><td>@Model[i].Title</td><td><span class="badge bg-secondary">@Model[i].Target</span></td>
+                    <td>@if (Model[i].IsSent) { <span class="status-badge status-active"><span class="status-dot"></span> @Localizer["Sent"]</span> } else { <span class="badge bg-warning">@Localizer["Pending"]</span> }</td>
+                    <td>@Model[i].SentAt?.ToString("yyyy-MM-dd HH:mm")</td>
+                    <td>
+                        <div class="d-flex gap-1">
+                            @if (!Model[i].IsSent) { <button class="btn btn-sm btn-success" onclick="send(@Model[i].Id)" data-bs-toggle="tooltip" title="@Localizer["Send"]"><i class="fas fa-paper-plane"></i></button> }
+                            <button class="btn btn-sm btn-danger" onclick="del(@Model[i].Id)" data-bs-toggle="tooltip" title="@Localizer["Delete"]"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+@section Scripts {
+<script>
+    var dt;
+    $(function () { dt = $('#dataTable').DataTable({ responsive: true, pageLength: 25, dom: 'rtip' }); $('#searchInput').on('keyup', function () { dt.search(this.value).draw(); }); });
+    function applyFilters() { dt.search($('#searchInput').val()); dt.column(2).search($('#filterTarget').val()); dt.draw(); }
+    function resetFilters() { $('#searchInput, #filterTarget').val(''); dt.search('').columns().search('').draw(); }
+    function del(id) { confirmDelete('@Url.Action("Delete")', id, function () { location.reload(); }); }
+    function send(id) { $.post('@Url.Action("Send")', { id: id }, function () { location.reload(); }); }
+</script>
+}

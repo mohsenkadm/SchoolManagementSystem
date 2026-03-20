@@ -1,0 +1,84 @@
+@using SchoolMS.Application.DTOs
+@{
+    var isEdit = Model != null;
+    var item = isEdit ? (AssetDto)Model : null;
+    var categories = ViewBag.Categories as List<AssetCategoryDto> ?? new();
+    var isSuperAdmin = (bool)(ViewBag.IsSuperAdmin ?? false);
+    var schools = ViewBag.Schools as List<SchoolDto> ?? new();
+    var branches = ViewBag.Branches as List<BranchDto> ?? new();
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4" data-aos="fade-down">
+    <h4 class="mb-0"><i class="fas @(isEdit ? "fa-edit" : "fa-plus-circle") me-2 text-primary"></i>@(isEdit ? Localizer["EditAsset"] : Localizer["AddAsset"])</h4>
+    <a href="@Url.Action("Index")" class="btn btn-secondary"><i class="fas fa-arrow-left me-1"></i>@Localizer["Back"]</a>
+</div>
+<div class="dashboard-card card p-4" data-aos="fade-up">
+    <form asp-action="@(isEdit ? "Edit" : "Create")" method="post">
+        @Html.AntiForgeryToken()
+        @if (isEdit) { <input type="hidden" name="Id" value="@item!.Id" /> }
+        <div class="row g-3">
+            @if (isSuperAdmin)
+            {
+                <div class="col-md-4">
+                    <label class="form-label">@Localizer["School"] *</label>
+                    <select id="schoolSelect" name="SchoolId" class="form-select select2" required>
+                        <option value="">-- @Localizer["Select"] --</option>
+                        @foreach (var s in schools) { <option value="@s.Id" selected="@(item?.SchoolId == s.Id)">@s.Name</option> }
+                    </select>
+                </div>
+            }
+            <div class="col-md-4"><label class="form-label">@Localizer["AssetName"] *</label><input type="text" name="AssetName" class="form-control" value="@item?.AssetName" required /></div>
+            <div class="col-md-4">
+                <label class="form-label">@Localizer["Category"] *</label>
+                <select name="AssetCategoryId" class="form-select select2" required>
+                    <option value="">-- @Localizer["SelectCategory"] --</option>
+                    @foreach (var c in categories) { <option value="@c.Id" selected="@(item?.AssetCategoryId == c.Id)">@c.CategoryName</option> }
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">@Localizer["Branch"]</label>
+                <select id="branchSelect" name="BranchId" class="form-select select2" required>
+                    @foreach (var b in branches) { <option value="@b.Id" selected="@(item?.BranchId == b.Id)">@b.Name</option> }
+                </select>
+            </div>
+            <div class="col-md-3"><label class="form-label">@Localizer["Code"]</label><input type="text" name="AssetCode" class="form-control" value="@item?.AssetCode" /></div>
+            <div class="col-md-3"><label class="form-label">@Localizer["SerialNumber"]</label><input type="text" name="SerialNumber" class="form-control" value="@item?.SerialNumber" /></div>
+            <div class="col-md-3"><label class="form-label">@Localizer["PurchaseDate"]</label><input type="date" name="PurchaseDate" class="form-control" value="@item?.PurchaseDate?.ToString("yyyy-MM-dd")" /></div>
+            <div class="col-md-3"><label class="form-label">@Localizer["PurchasePrice"]</label><input type="number" step="0.01" name="PurchasePrice" class="form-control" value="@(item?.PurchasePrice ?? 0)" /></div>
+            <div class="col-md-3"><label class="form-label">@Localizer["CurrentValue"]</label><input type="number" step="0.01" name="CurrentValue" class="form-control" value="@(item?.CurrentValue ?? 0)" /></div>
+            <div class="col-md-3"><label class="form-label">@Localizer["Condition"]</label><input type="text" name="Condition" class="form-control" value="@item?.Condition" /></div>
+            <div class="col-md-3"><label class="form-label">@Localizer["Location"]</label><input type="text" name="Location" class="form-control" value="@item?.Location" /></div>
+            <div class="col-md-3">
+                <label class="form-label">@Localizer["Status"]</label>
+                <select name="Status" class="form-select">
+                    @foreach (var s in Enum.GetValues<AssetStatus>()) { <option value="@s" selected="@(item?.Status == s)">@s</option> }
+                </select>
+            </div>
+            <div class="col-md-6"><label class="form-label">@Localizer["Description"]</label><textarea name="Description" class="form-control" rows="2">@item?.Description</textarea></div>
+            <div class="col-md-6"><label class="form-label">@Localizer["AssignedTo"]</label><input type="text" name="AssignedTo" class="form-control" value="@item?.AssignedTo" /></div>
+        </div>
+        <div class="mt-4 d-flex gap-2">
+            <button type="submit" class="btn btn-accent"><i class="fas fa-save me-1"></i>@Localizer["Save"]</button>
+            <a href="@Url.Action("Index")" class="btn btn-secondary">@Localizer["Cancel"]</a>
+        </div>
+    </form>
+</div>
+@if (isSuperAdmin)
+{
+    @section Scripts {
+    <script>
+        $(function () {
+            $('#schoolSelect').on('change', function () {
+                var schoolId = $(this).val();
+                var $branch = $('#branchSelect');
+                $branch.html('');
+                if (schoolId) {
+                    $.getJSON('@Url.Action("GetBranchesBySchool")', { schoolId: schoolId }, function (data) {
+                        $.each(data, function (_, b) { $branch.append('<option value="' + b.id + '">' + b.name + '</option>'); });
+                    });
+                }
+            });
+        });
+    </script>
+    }
+}

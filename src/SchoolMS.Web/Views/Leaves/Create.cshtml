@@ -1,0 +1,79 @@
+@using SchoolMS.Application.DTOs
+@{
+    var isEdit = Model != null;
+    var item = isEdit ? (LeaveRequestDto)Model : null;
+    var isSuperAdmin = (bool)(ViewBag.IsSuperAdmin ?? false);
+    var schools = ViewBag.Schools as List<SchoolDto> ?? new();
+    var currentSchoolId = ViewBag.CurrentSchoolId as int?;
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4" data-aos="fade-down">
+    <h4 class="mb-0"><i class="fas @(isEdit ? "fa-edit" : "fa-plus-circle") me-2 text-primary"></i>@(isEdit ? Localizer["EditLeave"] : Localizer["AddLeave"])</h4>
+    <a href="@Url.Action("Index")" class="btn btn-secondary"><i class="fas fa-arrow-left me-1"></i>@Localizer["Back"]</a>
+</div>
+<div class="dashboard-card card p-4" data-aos="fade-up">
+    <form asp-action="@(isEdit ? "Edit" : "Create")" method="post">
+        @Html.AntiForgeryToken()
+        @if (isEdit) { <input type="hidden" name="Id" value="@item!.Id" /> }
+        <div class="row g-3">
+            @if (isSuperAdmin)
+            {
+                <div class="col-md-4">
+                    <label class="form-label">@Localizer["School"] *</label>
+                    <select id="schoolSelect" name="SchoolId" class="form-select select2">
+                        <option value="">-- @Localizer["Select"] --</option>
+                        @foreach (var s in schools) { <option value="@s.Id">@s.Name</option> }
+                    </select>
+                </div>
+            }
+            <div class="col-md-4">
+                <label class="form-label">@Localizer["PersonType"] *</label>
+                <select id="personTypeSelect" name="PersonType" class="form-select" required>
+                    <option value="">-- @Localizer["Select"] --</option>
+                    <option value="Student" selected="@(item?.PersonType == PersonType.Student)">@Localizer["Student"]</option>
+                    <option value="Teacher" selected="@(item?.PersonType == PersonType.Teacher)">@Localizer["Teacher"]</option>
+                    <option value="Staff" selected="@(item?.PersonType == PersonType.Staff)">@Localizer["Staff"]</option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">@Localizer["Person"] *</label>
+                <select id="personSelect" name="PersonId" class="form-select select2" required>
+                    <option value="">-- @Localizer["SelectPersonType"] --</option>
+                </select>
+            </div>
+            <div class="col-md-4"><label class="form-label">@Localizer["StartDate"] *</label><input type="date" name="StartDate" class="form-control" value="@(item?.StartDate.ToString("yyyy-MM-dd") ?? DateTime.Today.ToString("yyyy-MM-dd"))" required /></div>
+            <div class="col-md-4"><label class="form-label">@Localizer["EndDate"] *</label><input type="date" name="EndDate" class="form-control" value="@(item?.EndDate.ToString("yyyy-MM-dd") ?? DateTime.Today.AddDays(1).ToString("yyyy-MM-dd"))" required /></div>
+            <div class="col-md-4"><label class="form-label">@Localizer["Reason"]</label><textarea name="Reason" class="form-control" rows="2">@item?.Reason</textarea></div>
+        </div>
+        <div class="mt-4 d-flex gap-2">
+            <button type="submit" class="btn btn-accent"><i class="fas fa-save me-1"></i>@Localizer["Save"]</button>
+            <a href="@Url.Action("Index")" class="btn btn-secondary">@Localizer["Cancel"]</a>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+<script>
+    var isSuperAdmin = @Json.Serialize(isSuperAdmin);
+    var editPersonId = @(item?.PersonId ?? 0);
+
+    function loadPersons() {
+        var personType = $('#personTypeSelect').val();
+        var schoolId = isSuperAdmin ? ($('#schoolSelect').val() || '') : '@(currentSchoolId)';
+        if (!personType) { $('#personSelect').html('<option value="">-- Select type first --</option>'); return; }
+        $.get('@Url.Action("GetPersonsByType")', { personType: personType, schoolId: schoolId }, function (data) {
+            var html = '<option value="">-- Select --</option>';
+            $.each(data, function (i, p) { html += '<option value="' + p.id + '"' + (p.id == editPersonId ? ' selected' : '') + '>' + p.name + '</option>'; });
+            $('#personSelect').html(html);
+            if (typeof $.fn.select2 !== 'undefined') { $('#personSelect').select2({ theme: 'bootstrap-5', width: '100%' }); }
+        });
+    }
+
+    $('#personTypeSelect').on('change', loadPersons);
+    if (isSuperAdmin) { $('#schoolSelect').on('change', loadPersons); }
+
+    $(function () {
+        if (@Json.Serialize(isEdit)) { loadPersons(); }
+    });
+</script>
+}

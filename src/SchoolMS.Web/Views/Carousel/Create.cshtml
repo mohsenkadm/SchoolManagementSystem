@@ -1,0 +1,185 @@
+@using SchoolMS.Application.DTOs
+@{
+    var item = Model as CarouselImageDto;
+    var isEdit = item != null && item.Id > 0;
+    var branches = ViewBag.Branches as List<BranchDto> ?? new();
+    var isSuperAdmin = (bool)(ViewBag.IsSuperAdmin ?? false);
+    var schools = ViewBag.Schools as List<SchoolDto> ?? new();
+    var errorMsg = TempData["Error"] as string;
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4" data-aos="fade-down">
+    <h4 class="mb-0"><i class="fas @(isEdit ? "fa-edit" : "fa-plus-circle") me-2 text-primary"></i>@(isEdit ? Localizer["EditImage"] : Localizer["AddImage"])</h4>
+    <a href="@Url.Action("Index")" class="btn btn-secondary"><i class="fas fa-arrow-left me-1"></i>@Localizer["Back"]</a>
+</div>
+
+<div class="dashboard-card card p-4" data-aos="fade-up">
+    <form asp-action="@(isEdit ? "Edit" : "Create")" method="post" enctype="multipart/form-data">
+        @Html.AntiForgeryToken()
+        @if (isEdit) { <input type="hidden" name="Id" value="@item!.Id" /> }
+
+        @if (!string.IsNullOrEmpty(errorMsg))
+        {
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="fas fa-exclamation-triangle me-1"></i>@errorMsg
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        }
+
+        <div class="row g-3">
+            @if (isSuperAdmin)
+            {
+                <div class="col-md-6">
+                    <label class="form-label">@Localizer["School"] *</label>
+                    <select name="SchoolId" id="schoolSelect" class="form-select select2" required>
+                        <option value="">-- @Localizer["SelectSchool"] --</option>
+                        @foreach (var s in schools)
+                        {
+                            var isSelected = item?.SchoolId == s.Id;
+                            <option value="@s.Id" selected="@isSelected">@s.Name</option>
+                        }
+                    </select>
+                </div>
+            }
+            <div class="col-md-6">
+                <label class="form-label">@Localizer["Branch"]</label>
+                <select name="BranchId" id="branchSelect" class="form-select select2">
+                    <option value="">-- @Localizer["SelectBranch"] --</option>
+                    @foreach (var b in branches)
+                    {
+                        var isSelected = item?.BranchId == b.Id;
+                        <option value="@b.Id" selected="@isSelected">@b.Name</option>
+                    }
+                </select>
+            </div>
+
+            <!-- Image Upload -->
+            <div class="col-md-12">
+                <label class="form-label">@Localizer["Image"] *</label>
+                <div id="dropZone" style="border:2px dashed #cbd5e1;border-radius:12px;padding:2rem;text-align:center;cursor:pointer;transition:all 0.3s ease;background:#f8fafc;">
+                    <div id="dropContent">
+                        <i class="fas fa-cloud-upload-alt fa-3x text-muted mb-2 d-block"></i>
+                        <h6 class="text-muted mb-1">@Localizer["DragDropImage"]</h6>
+                        <p class="text-muted small mb-2">@Localizer["Or"]</p>
+                        <label for="imageFile" class="btn btn-outline-primary btn-sm"><i class="fas fa-folder-open me-1"></i>@Localizer["BrowseFiles"]</label>
+                        <input type="file" id="imageFile" name="ImageFile" class="d-none" accept="image/png,image/jpeg,image/webp,image/gif" />
+                        <p class="text-muted small mt-2 mb-0">PNG, JPG, WEBP, GIF — Max 5MB</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Image Preview -->
+            <div class="col-md-12" id="previewContainer" style="@(isEdit && !string.IsNullOrEmpty(item?.ImageUrl) ? "" : "display:none;")">
+                <div class="position-relative d-inline-block">
+                    <img id="imagePreview" src="@(item?.ImageUrl ?? "")" style="max-height:220px;border-radius:12px;object-fit:cover;box-shadow:0 4px 15px rgba(0,0,0,.12);" alt="" />
+                    <button type="button" class="btn btn-sm btn-danger position-absolute top-0 end-0 m-1" onclick="clearImage()" style="border-radius:50%;width:28px;height:28px;padding:0;">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Hidden field to keep existing ImageUrl on edit if no new file uploaded -->
+            @if (isEdit && !string.IsNullOrEmpty(item?.ImageUrl))
+            {
+                <input type="hidden" name="ImageUrl" id="existingImageUrl" value="@item.ImageUrl" />
+            }
+
+            <div class="col-md-3">
+                <label class="form-label">@Localizer["Order"]</label>
+                <input type="number" name="SortOrder" class="form-control" value="@(item?.SortOrder ?? 0)" />
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">@Localizer["Active"]</label>
+                <div class="form-check form-switch mt-2">
+                    <input class="form-check-input" type="checkbox" name="IsActive" value="true" @(item?.IsActive != false ? "checked" : "") />
+                    <label class="form-check-label">@Localizer["Active"]</label>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-4 d-flex gap-2">
+            <button type="submit" class="btn btn-accent"><i class="fas fa-save me-1"></i>@Localizer["Save"]</button>
+            <a href="@Url.Action("Index")" class="btn btn-secondary">@Localizer["Cancel"]</a>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+<script>
+    var maxSize = 5 * 1024 * 1024;
+    var validTypes = ['image/png', 'image/jpeg', 'image/webp', 'image/gif'];
+    var dropZone = document.getElementById('dropZone');
+    var fileInput = document.getElementById('imageFile');
+
+    // Drag & drop
+    if (dropZone) {
+        ['dragenter', 'dragover'].forEach(function (evt) {
+            dropZone.addEventListener(evt, function (e) { e.preventDefault(); dropZone.style.borderColor = '#6366f1'; dropZone.style.background = '#eef2ff'; });
+        });
+        ['dragleave', 'drop'].forEach(function (evt) {
+            dropZone.addEventListener(evt, function (e) { e.preventDefault(); dropZone.style.borderColor = '#cbd5e1'; dropZone.style.background = '#f8fafc'; });
+        });
+        dropZone.addEventListener('drop', function (e) {
+            var files = e.dataTransfer.files;
+            if (files.length > 0) { fileInput.files = files; onFileSelected(files[0]); }
+        });
+        dropZone.addEventListener('click', function (e) {
+            if (e.target === dropZone || e.target.closest('#dropContent')) fileInput.click();
+        });
+    }
+
+    if (fileInput) {
+        fileInput.addEventListener('change', function () {
+            if (this.files.length > 0) onFileSelected(this.files[0]);
+        });
+    }
+
+    function onFileSelected(file) {
+        if (!validTypes.includes(file.type)) {
+            toastr.error('Invalid file type. Please select PNG, JPG, WEBP, or GIF.');
+            return;
+        }
+        if (file.size > maxSize) {
+            toastr.error('File too large. Maximum 5MB.');
+            return;
+        }
+        var reader = new FileReader();
+        reader.onload = function (e) {
+            $('#imagePreview').attr('src', e.target.result);
+            $('#previewContainer').show();
+        };
+        reader.readAsDataURL(file);
+        // Clear the hidden existing URL so the new file takes priority
+        $('#existingImageUrl').remove();
+    }
+
+    function clearImage() {
+        fileInput.value = '';
+        $('#imagePreview').attr('src', '');
+        $('#previewContainer').hide();
+        $('#existingImageUrl').remove();
+    }
+
+    @if (isSuperAdmin)
+    {
+        <text>
+    // School → Branch cascading
+    $(function () {
+        $('#schoolSelect').on('change', function () {
+            var schoolId = $(this).val();
+            var brSel = $('#branchSelect');
+            brSel.html('<option value="">-- @Localizer["SelectBranch"] --</option>');
+            if (!schoolId) return;
+
+            $.get('@Url.Action("GetBranchesBySchool")?schoolId=' + schoolId, function (data) {
+                data.forEach(function (b) {
+                    brSel.append('<option value="' + b.id + '">' + b.name + '</option>');
+                });
+                if (brSel.hasClass('select2-hidden-accessible')) brSel.trigger('change.select2');
+            });
+        });
+    });
+        </text>
+    }
+</script>
+}

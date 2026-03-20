@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+
+  <!-- Auth Messages -->
+  <data name="InvalidCredentials" xml:space="preserve"><value>Invalid email or password.</value></data>
+  <data name="SchoolNotFound" xml:space="preserve"><value>School not found or inactive.</value></data>
+  <data name="UserNotBelongToSchool" xml:space="preserve"><value>User does not belong to this school.</value></data>
+  <data name="LoginSuccess" xml:space="preserve"><value>Login successful.</value></data>
+
+  <!-- CRUD Messages -->
+  <data name="NotFound" xml:space="preserve"><value>Record not found.</value></data>
+  <data name="CreatedSuccess" xml:space="preserve"><value>Created successfully.</value></data>
+  <data name="UpdatedSuccess" xml:space="preserve"><value>Updated successfully.</value></data>
+  <data name="DeletedSuccess" xml:space="preserve"><value>Deleted successfully.</value></data>
+  <data name="ValidationError" xml:space="preserve"><value>Validation error. Please check the input.</value></data>
+
+  <!-- Entities -->
+  <data name="Students" xml:space="preserve"><value>Students</value></data>
+  <data name="Teachers" xml:space="preserve"><value>Teachers</value></data>
+  <data name="Subjects" xml:space="preserve"><value>Subjects</value></data>
+  <data name="Divisions" xml:space="preserve"><value>Divisions</value></data>
+  <data name="Grades" xml:space="preserve"><value>Grades</value></data>
+  <data name="Branches" xml:space="preserve"><value>Branches</value></data>
+</root>

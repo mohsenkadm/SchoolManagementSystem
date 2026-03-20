@@ -1,0 +1,76 @@
+@model SchoolMS.Application.DTOs.HrPerformanceReviewDto
+@{ ViewData["Title"] = $"{Localizer["ReviewDetails"].Value} — {Model?.EmployeeName}"; }
+
+<div class="page-header" data-aos="fade-down">
+    <div><h4 class="page-title"><i class="fas fa-star text-primary"></i> @Localizer["ReviewDetails"]</h4></div>
+    <div class="page-actions"><a href="@Url.Action("Reviews")" class="btn btn-secondary"><i class="fas fa-arrow-left me-1"></i>@Localizer["Back"]</a></div>
+</div>
+
+@if (Model != null)
+{
+    <div class="stat-ribbon" data-aos="fade-up">
+        <div class="stat-item stagger-item"><div class="stat-icon bg-primary-soft"><i class="fas fa-user"></i></div><div class="stat-info"><h6>@Localizer["Employee"]</h6><div class="stat-value">@Model.EmployeeName</div></div></div>
+        <div class="stat-item stagger-item"><div class="stat-icon bg-info-soft"><i class="fas fa-sync"></i></div><div class="stat-info"><h6>@Localizer["Cycle"]</h6><div class="stat-value">@Model.CycleName</div></div></div>
+        <div class="stat-item stagger-item"><div class="stat-icon bg-success-soft"><i class="fas fa-percentage"></i></div><div class="stat-info"><h6>@Localizer["Score"]</h6><div class="stat-value">@Model.Percentage.ToString("N1")%</div></div></div>
+        <div class="stat-item stagger-item"><div class="stat-icon bg-warning-soft"><i class="fas fa-award"></i></div><div class="stat-info"><h6>@Localizer["Rating"]</h6><div class="stat-value">@Model.PerformanceRating</div></div></div>
+    </div>
+
+    <div class="row g-3 mt-2" data-aos="fade-up">
+        <div class="col-md-8">
+            <div class="dashboard-card card p-3">
+                <h6><i class="fas fa-chart-bar me-1 text-primary"></i>@Localizer["Scores"]</h6>
+                <table class="table table-sm table-hover">
+                    <thead><tr><th>@Localizer["Criteria"]</th><th>@Localizer["Score"]</th><th>@Localizer["MaxScore"]</th><th>@Localizer["Weighted"]</th><th>@Localizer["Comments"]</th></tr></thead>
+                    <tbody>
+                        @foreach (var s in Model.Scores)
+                        {
+                            <tr>
+                                <td>@s.CriteriaName</td>
+                                <td><span class="badge @(s.Score >= s.MaxScore * 0.8m ? "bg-success" : s.Score >= s.MaxScore * 0.6m ? "bg-warning" : "bg-danger")">@s.Score</span></td>
+                                <td>@s.MaxScore</td><td>@s.WeightedScore.ToString("N2")</td><td>@s.Comments</td>
+                            </tr>
+                        }
+                    </tbody>
+                    <tfoot><tr class="fw-bold"><td>@Localizer["Total"]</td><td>@Model.TotalScore</td><td>@Model.MaxPossibleScore</td><td>@Model.Percentage.ToString("N1")%</td><td></td></tr></tfoot>
+                </table>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="dashboard-card card p-3 mb-3">
+                <h6><i class="fas fa-info-circle me-1 text-info"></i>@Localizer["Details"]</h6>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item d-flex justify-content-between"><span>@Localizer["Status"]</span><span class="badge bg-primary">@Model.Status</span></li>
+                    @if (Model.CompletedDate.HasValue) { <li class="list-group-item d-flex justify-content-between"><span>@Localizer["CompletedDate"]</span><span>@Model.CompletedDate.Value.ToString("dd/MM/yyyy")</span></li> }
+                </ul>
+            </div>
+            @if (!string.IsNullOrEmpty(Model.Strengths))
+            {
+                <div class="dashboard-card card p-3 mb-3">
+                    <h6><i class="fas fa-thumbs-up me-1 text-success"></i>@Localizer["Strengths"]</h6>
+                    <p class="mb-0">@Model.Strengths</p>
+                </div>
+            }
+            @if (!string.IsNullOrEmpty(Model.AreasForImprovement))
+            {
+                <div class="dashboard-card card p-3 mb-3">
+                    <h6><i class="fas fa-exclamation-circle me-1 text-warning"></i>@Localizer["AreasForImprovement"]</h6>
+                    <p class="mb-0">@Model.AreasForImprovement</p>
+                </div>
+            }
+            @if (!string.IsNullOrEmpty(Model.ManagerComments))
+            {
+                <div class="dashboard-card card p-3 mb-3">
+                    <h6><i class="fas fa-comment me-1 text-info"></i>@Localizer["ManagerComments"]</h6>
+                    <p class="mb-0">@Model.ManagerComments</p>
+                </div>
+            }
+            @if (!string.IsNullOrEmpty(Model.Recommendation))
+            {
+                <div class="dashboard-card card p-3">
+                    <h6><i class="fas fa-lightbulb me-1 text-warning"></i>@Localizer["Recommendation"]</h6>
+                    <p class="mb-0">@Model.Recommendation</p>
+                </div>
+            }
+        </div>
+    </div>
+}

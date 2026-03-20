@@ -1,0 +1,52 @@
+@model List<SchoolMS.Application.DTOs.HrAllowanceTypeDto>
+@{ ViewData["Title"] = Localizer["AllowanceTypes"].Value; }
+@Html.AntiForgeryToken()
+
+<div class="page-header" data-aos="fade-down">
+    <div><h4 class="page-title"><i class="fas fa-plus-circle text-success"></i> @Localizer["AllowanceTypes"]</h4></div>
+    <div class="page-actions"><a href="@Url.Action("Payroll")" class="btn btn-secondary"><i class="fas fa-arrow-left me-1"></i>@Localizer["Back"]</a></div>
+</div>
+
+<div class="row g-3" data-aos="fade-up">
+    <div class="col-md-8">
+        <div class="table-card hover-lift">
+            <table id="dataTable" class="table table-hover" style="width:100%">
+                <thead><tr><th>#</th><th>@Localizer["Name"]</th><th>@Localizer["Code"]</th><th>@Localizer["CalcType"]</th><th>@Localizer["Default"]</th><th>@Localizer["Taxable"]</th><th>@Localizer["Active"]</th><th>@Localizer["Actions"]</th></tr></thead>
+                <tbody>
+                    @for (int i = 0; i < Model.Count; i++)
+                    {
+                        var a = Model[i];
+                        <tr>
+                            <td>@(i + 1)</td><td>@a.AllowanceName</td><td>@a.AllowanceCode</td>
+                            <td><span class="badge bg-info">@a.CalculationType</span></td><td>@a.DefaultValue?.ToString("N0")</td>
+                            <td>@(a.IsTaxable ? "✅" : "❌")</td><td>@(a.IsActive ? "✅" : "❌")</td>
+                            <td><button class="btn btn-sm btn-danger" onclick="del(@a.Id)"><i class="fas fa-trash"></i></button></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="dashboard-card card p-3">
+            <h6><i class="fas fa-plus me-1"></i>@Localizer["Add"]</h6>
+            <form asp-action="CreateAllowanceType" method="post">
+                @Html.AntiForgeryToken()
+                <div class="mb-2"><input type="text" name="AllowanceName" class="form-control form-control-sm" placeholder="@Localizer["Name"] *" required /></div>
+                <div class="mb-2"><input type="text" name="AllowanceCode" class="form-control form-control-sm" placeholder="@Localizer["Code"]" /></div>
+                <div class="mb-2"><select name="CalculationType" class="form-select form-select-sm">@foreach (var t in Enum.GetValues<AllowanceCalculation>()) { <option value="@t">@t</option> }</select></div>
+                <div class="mb-2"><input type="number" step="0.01" name="DefaultValue" class="form-control form-control-sm" placeholder="@Localizer["Default"]" /></div>
+                <div class="form-check mb-2"><input class="form-check-input" type="checkbox" name="IsTaxable" value="true" /><label class="form-check-label">@Localizer["Taxable"]</label></div>
+                <div class="form-check mb-2"><input class="form-check-input" type="checkbox" name="IsRecurring" value="true" checked /><label class="form-check-label">@Localizer["Recurring"]</label></div>
+                <button type="submit" class="btn btn-accent btn-sm w-100"><i class="fas fa-save me-1"></i>@Localizer["Save"]</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    $(function () { $('#dataTable').DataTable({ responsive: true, dom: 'rtip' }); });
+    function del(id) { confirmDelete('@Url.Action("DeleteAllowanceType")', id, function () { location.reload(); }); }
+</script>
+}

@@ -1,0 +1,170 @@
+@using SchoolMS.Application.DTOs
+@model List<QuizGroupDto>
+@{ ViewData["Title"] = Localizer["Quizzes"].Value; }
+@Html.AntiForgeryToken()
+@{
+    var isSuperAdmin = (bool)(ViewBag.IsSuperAdmin ?? false);
+    var schools = ViewBag.Schools as List<SchoolDto> ?? new();
+    var branches = ViewBag.Branches as List<BranchDto> ?? new();
+}
+
+<div class="page-header" data-aos="fade-down">
+    <div>
+        <h4 class="page-title"><i class="fas fa-question-circle text-primary"></i>@Localizer["Quizzes"]</h4>
+        <span class="record-count"><i class="fas fa-layer-group"></i> @Model.Count</span>
+    </div>
+    <div class="page-actions">
+        <a href="@Url.Action("Create")" class="btn btn-accent"><i class="fas fa-plus me-1"></i>@Localizer["AddQuizGroup"]</a>
+    </div>
+</div>
+
+<div class="stat-ribbon" data-aos="fade-up">
+    <div class="stat-item stagger-item"><div class="stat-icon bg-primary-soft"><i class="fas fa-question-circle"></i></div><div class="stat-info"><h6>@Localizer["Total"]</h6><div class="stat-value">@Model.Count</div></div></div>
+    <div class="stat-item stagger-item"><div class="stat-icon bg-info-soft"><i class="fas fa-list-ol"></i></div><div class="stat-info"><h6>@Localizer["Questions"]</h6><div class="stat-value">@Model.Sum(q => q.QuestionCount)</div></div></div>
+    <div class="stat-item stagger-item"><div class="stat-icon bg-success-soft"><i class="fas fa-book"></i></div><div class="stat-info"><h6>@Localizer["Subjects"]</h6><div class="stat-value">@Model.Select(q => q.SubjectId).Distinct().Count()</div></div></div>
+</div>
+
+<div class="filter-panel" data-aos="fade-up">
+    <div class="filter-title"><i class="fas fa-filter"></i> @Localizer["Filter"]</div>
+    <div class="row g-2 align-items-end">
+        @if (isSuperAdmin)
+        {
+            <div class="col-md-2">
+                <select id="filterSchool" class="form-select select2"><option value="">@Localizer["AllSchools"]</option>
+                    @foreach (var s in schools) { <option value="@s.Name">@s.Name</option> }
+                </select>
+            </div>
+        }
+        <div class="col-md-2">
+            <select id="filterBranch" class="form-select"><option value="">@Localizer["AllBranches"]</option>
+                @foreach (var b in branches) { <option value="@b.Name">@b.Name</option> }
+            </select>
+        </div>
+        <div class="col-md-3"><input type="text" id="searchInput" class="form-control" placeholder="🔍 @Localizer["Search"]..." /></div>
+        <div class="col-md-2"><select id="filterSubject" class="form-select"><option value="">@Localizer["AllSubjects"]</option>@foreach (var s in Model.Select(q => q.SubjectName).Distinct().OrderBy(s => s)) { <option value="@s">@s</option> }</select></div>
+        <div class="col-md-1"><button class="btn btn-filter w-100" onclick="applyFilters()"><i class="fas fa-search"></i></button></div>
+        <div class="col-md-1"><button class="btn btn-reset w-100" onclick="resetFilters()"><i class="fas fa-redo"></i></button></div>
+    </div>
+</div>
+
+<div class="table-card hover-lift" data-aos="fade-up">
+    <table id="dataTable" class="table table-hover" style="width:100%">
+        <thead><tr><th>#</th><th>@Localizer["GroupName"]</th><th>@Localizer["Subject"]</th><th>@Localizer["Teacher"]</th><th>@Localizer["Grade"]</th><th>@Localizer["Questions"]</th><th>@Localizer["Actions"]</th></tr></thead>
+        <tbody>
+            @for (int i = 0; i < Model.Count; i++)
+            {
+                <tr class="table-row-animated">
+                    <td>@(i + 1)</td><td>@Model[i].GroupName</td><td>@Model[i].SubjectName</td><td>@Model[i].TeacherName</td><td>@Model[i].GradeName</td><td><span class="badge bg-info">@Model[i].QuestionCount</span></td>
+                    <td>
+                        <div class="d-flex gap-1">
+                            <button class="btn btn-sm btn-info" onclick="manageQuestions(@Model[i].Id, '@Model[i].GroupName')" data-bs-toggle="tooltip" title="@Localizer["Questions"]"><i class="fas fa-list-ol"></i></button>
+                            <button class="btn btn-sm btn-danger" onclick="del(@Model[i].Id)" data-bs-toggle="tooltip" title="@Localizer["Delete"]"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+<!-- Questions Modal -->
+<div class="modal fade" id="questionsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg"><div class="modal-content">
+        <div class="modal-header">
+            <h5 class="modal-title"><i class="fas fa-list-ol me-2"></i><span id="questionsGroupName"></span> - @Localizer["Questions"]</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+            <div id="questionsList" class="mb-4"></div>
+            <hr />
+            <h6><i class="fas fa-plus-circle me-1"></i>@Localizer["AddQuestion"]</h6>
+            <input type="hidden" id="qGroupId" />
+            <div class="row g-3">
+                <div class="col-md-12"><label class="form-label">@Localizer["QuestionText"] *</label><textarea id="qText" class="form-control" rows="2" required></textarea></div>
+                <div class="col-md-4">
+                    <label class="form-label">@Localizer["Type"]</label>
+                    <select id="qType" class="form-select" onchange="toggleOptions()">
+                        <option value="0">Yes / No</option>
+                        <option value="1">Multiple Choice</option>
+                        <option value="2">Free Text</option>
+                    </select>
+                </div>
+                <div class="col-md-4"><label class="form-label">@Localizer["CorrectAnswer"]</label><input type="text" id="qAnswer" class="form-control" /></div>
+                <div class="col-md-4"><label class="form-label">@Localizer["Points"]</label><input type="number" id="qPoints" class="form-control" value="1" min="1" /></div>
+                <div class="col-md-12" id="optionsRow" style="display:none"><label class="form-label">Options (comma-separated)</label><input type="text" id="qOptions" class="form-control" placeholder="Option A, Option B, Option C, Option D" /></div>
+                <div class="col-md-12"><button class="btn btn-accent" onclick="addQuestion()"><i class="fas fa-plus me-1"></i>@Localizer["AddQuestion"]</button></div>
+            </div>
+        </div>
+        <div class="modal-footer"><button class="btn btn-secondary" data-bs-dismiss="modal">@Localizer["Close"]</button></div>
+    </div></div>
+</div>
+
+@section Scripts {
+<script>
+    var isSuperAdmin = @Json.Serialize(isSuperAdmin);
+    var dt;
+    $(function () { dt = $('#dataTable').DataTable({ responsive: true, pageLength: 25, dom: 'rtip' }); $('#searchInput').on('keyup', function () { dt.search(this.value).draw(); }); });
+    function applyFilters() { dt.search($('#searchInput').val()); dt.column(2).search($('#filterSubject').val()); dt.draw(); }
+    function resetFilters() { $('#searchInput, #filterSubject, #filterBranch').val(''); if (isSuperAdmin) { $('#filterSchool').val(''); } dt.search('').columns().search('').draw(); }
+    function del(id) { confirmDelete('@Url.Action("DeleteGroup")', id, function () { location.reload(); }); }
+
+    function toggleOptions() { $('#optionsRow').toggle($('#qType').val() === '1'); }
+
+    function manageQuestions(groupId, groupName) {
+        $('#qGroupId').val(groupId);
+        $('#questionsGroupName').text(groupName);
+        loadQuestions(groupId);
+        new bootstrap.Modal('#questionsModal').show();
+    }
+
+    function loadQuestions(groupId) {
+        $('#questionsList').html('<div class="text-center"><i class="fas fa-spinner fa-spin"></i></div>');
+        $.getJSON('@Url.Action("GetQuestions")', { groupId: groupId }, function (data) {
+            if (!data || data.length === 0) {
+                $('#questionsList').html('<p class="text-muted text-center">No questions yet.</p>');
+                return;
+            }
+            var typeNames = ['Yes/No', 'Multiple Choice', 'Free Text'];
+            var html = '<table class="table table-sm table-bordered"><thead><tr><th>#</th><th>@Localizer["QuestionText"]</th><th>@Localizer["Type"]</th><th>@Localizer["CorrectAnswer"]</th><th>@Localizer["Points"]</th><th></th></tr></thead><tbody>';
+            $.each(data, function (i, q) {
+                html += '<tr><td>' + (i + 1) + '</td><td>' + q.questionText + '</td><td><span class="badge bg-secondary">' + (typeNames[q.type] || q.type) + '</span></td><td>' + (q.correctAnswer || '-') + '</td><td>' + q.points + '</td>';
+                html += '<td><button class="btn btn-sm btn-danger" onclick="delQuestion(' + q.id + ')"><i class="fas fa-trash"></i></button></td></tr>';
+            });
+            html += '</tbody></table>';
+            $('#questionsList').html(html);
+        });
+    }
+
+    function addQuestion() {
+        var groupId = parseInt($('#qGroupId').val());
+        var text = $('#qText').val();
+        if (!text) { toastr.warning('Please enter question text.'); return; }
+        var payload = {
+            quizGroupId: groupId,
+            questionText: text,
+            type: parseInt($('#qType').val()),
+            options: $('#qType').val() === '1' ? $('#qOptions').val() : null,
+            correctAnswer: $('#qAnswer').val(),
+            points: parseInt($('#qPoints').val()) || 1
+        };
+        $.ajax({
+            url: '@Url.Action("AddQuestion")', type: 'POST', contentType: 'application/json',
+            data: JSON.stringify(payload),
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            success: function () { toastr.success('Question added!'); $('#qText').val(''); $('#qAnswer').val(''); $('#qOptions').val(''); loadQuestions(groupId); },
+            error: function () { toastr.error('Failed to add question.'); }
+        });
+    }
+
+    function delQuestion(id) {
+        var groupId = parseInt($('#qGroupId').val());
+        $.ajax({
+            url: '@Url.Action("DeleteQuestion")'.replace('Question', 'Question/' + id),
+            type: 'DELETE',
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            success: function () { toastr.success('Question deleted!'); loadQuestions(groupId); },
+            error: function () { toastr.error('Failed to delete question.'); }
+        });
+    }
+</script>
+}
