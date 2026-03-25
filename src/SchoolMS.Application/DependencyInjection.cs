@@ -10,12 +10,14 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddApplication(this IServiceCollection services)
     {
-        services.AddAutoMapper(typeof(MappingProfile));
+        services.AddAutoMapper(cfg => 
+        {
+            cfg.AddProfile<MappingProfile>();
+        });
 
         // Core
         services.AddScoped<IStudentService, StudentService>();
         services.AddScoped<ITeacherService, TeacherService>();
-        services.AddScoped<IStaffService, StaffService>();
         services.AddScoped<IDashboardService, DashboardService>();
         services.AddScoped<ISubjectService, SubjectService>();
         services.AddScoped<IDivisionService, DivisionService>();
@@ -67,6 +69,7 @@ public static class DependencyInjection
         services.AddScoped<IOnlineSubscriptionPlanService, OnlineSubscriptionPlanService>();
         services.AddScoped<IStudentSubscriptionService, StudentSubscriptionService>();
         services.AddScoped<IPromoCodeService, PromoCodeService>();
+        services.AddScoped<ITeacherEarningService, TeacherEarningService>();
 
         // OneSignal Push Notifications
         services.AddHttpClient<IOneSignalNotificationService, OneSignalNotificationService>();

@@ -1,5 +1,11 @@
-@model List<SchoolMS.Application.DTOs.HrFingerprintRecordDto>
-@{ ViewData["Title"] = Localizer["Fingerprint"].Value; }
+@using SchoolMS.Application.DTOs
+@model List<HrFingerprintRecordDto>
+@{
+    ViewData["Title"] = Localizer["Fingerprint"].Value;
+    var isSuperAdmin = (bool)(ViewBag.IsSuperAdmin ?? false);
+    var schools = ViewBag.Schools as List<SchoolDto> ?? new();
+    var branches = ViewBag.Branches as List<BranchDto> ?? new();
+}
 
 <div class="page-header" data-aos="fade-down">
     <div><h4 class="page-title"><i class="fas fa-hand-pointer text-primary"></i> @Localizer["Fingerprint"]</h4></div>
@@ -7,16 +13,34 @@
 </div>
 
 <div class="filter-panel" data-aos="fade-up">
+    <div class="filter-title"><i class="fas fa-filter"></i> @Localizer["Filter"]</div>
     <div class="row g-2 align-items-end">
-        <div class="col-md-3"><label class="form-label">@Localizer["FromDate"]</label><input type="date" id="fromDate" class="form-control" value="@DateTime.UtcNow.ToString("yyyy-MM-dd")" /></div>
-        <div class="col-md-3"><label class="form-label">@Localizer["ToDate"]</label><input type="date" id="toDate" class="form-control" value="@DateTime.UtcNow.ToString("yyyy-MM-dd")" /></div>
-        <div class="col-md-2"><button class="btn btn-filter w-100" onclick="location.href='?fromDate='+$('#fromDate').val()+'&toDate='+$('#toDate').val()"><i class="fas fa-search"></i></button></div>
+        @if (isSuperAdmin)
+        {
+            <div class="col-md-2">
+                <select id="filterSchool" class="form-select select2">
+                    <option value="">@Localizer["AllSchools"]</option>
+                    @foreach (var s in schools) { <option value="@s.Name">@s.Name</option> }
+                </select>
+            </div>
+        }
+        <div class="col-md-2">
+            <select id="filterBranch" class="form-select">
+                <option value="">@Localizer["AllBranches"]</option>
+                @foreach (var b in branches) { <option value="@b.Name">@b.Name</option> }
+            </select>
+        </div>
+        <div class="col-md-2"><label class="form-label">@Localizer["FromDate"]</label><input type="date" id="fromDate" class="form-control" value="@DateTime.UtcNow.ToString("yyyy-MM-dd")" /></div>
+        <div class="col-md-2"><label class="form-label">@Localizer["ToDate"]</label><input type="date" id="toDate" class="form-control" value="@DateTime.UtcNow.ToString("yyyy-MM-dd")" /></div>
+        <div class="col-md-2"><input type="text" id="searchInput" class="form-control" placeholder="🔍 @Localizer["Search"]..." /></div>
+        <div class="col-md-1"><button class="btn btn-filter w-100" onclick="applyFilters()"><i class="fas fa-search"></i></button></div>
+        <div class="col-md-1"><button class="btn btn-reset w-100" onclick="resetFilters()"><i class="fas fa-redo"></i></button></div>
     </div>
 </div>
 
 <div class="table-card hover-lift" data-aos="fade-up">
     <table id="dataTable" class="table table-hover" style="width:100%">
-        <thead><tr><th>#</th><th>@Localizer["Employee"]</th><th>@Localizer["DateTime"]</th><th>@Localizer["Type"]</th><th>@Localizer["Source"]</th></tr></thead>
+        <thead><tr><th>#</th><th>@Localizer["Employee"]</th><th>@Localizer["DateTime"]</th><th>@Localizer["Type"]</th><th>@Localizer["Source"]</th>@if (isSuperAdmin) { <th>@Localizer["School"]</th> }</tr></thead>
         <tbody>
             @for (int i = 0; i < Model.Count; i++)
             {
@@ -25,6 +49,7 @@
                     <td>@(i + 1)</td><td>@r.EmployeeName</td><td>@r.RecordDateTime.ToString("dd/MM/yyyy hh:mm tt")</td>
                     <td><span class="badge @(r.Type == FingerprintType.CheckIn ? "bg-success" : "bg-warning")">@r.Type</span></td>
                     <td><span class="badge bg-info">@r.Source</span></td>
+                    @if (isSuperAdmin) { <td>@r.SchoolName</td> }
                 </tr>
             }
         </tbody>
@@ -32,5 +57,25 @@
 </div>
 
 @section Scripts {
-<script>$(function () { $('#dataTable').DataTable({ responsive: true, pageLength: 50, dom: 'rtip', order: [[2, 'desc']] }); });</script>
+<script>
+    var isSuperAdmin = @(isSuperAdmin ? "true" : "false");
+    var dt;
+    var schoolCol = isSuperAdmin ? 5 : -1;
+    $(function () {
+        dt = $('#dataTable').DataTable({ responsive: true, pageLength: 50, dom: 'rtip', order: [[2, 'desc']] });
+        $('#searchInput').on('keyup', function () { dt.search(this.value).draw(); });
+    });
+    function applyFilters() {
+        var from = $('#fromDate').val(), to = $('#toDate').val();
+        if (from || to) { location.href = '?fromDate=' + from + '&toDate=' + to; return; }
+        dt.search($('#searchInput').val());
+        if (isSuperAdmin) { dt.column(schoolCol).search($('#filterSchool').val()); }
+        dt.draw();
+    }
+    function resetFilters() {
+        $('#searchInput, #filterBranch').val('');
+        if (isSuperAdmin) { $('#filterSchool').val(''); }
+        dt.search('').columns().search('').draw();
+    }
+</script>
 }

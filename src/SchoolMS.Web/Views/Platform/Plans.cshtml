@@ -33,8 +33,11 @@
                                 }
                             </div>
                             <div class="card-footer bg-white text-center">
-                                <button class="btn btn-sm btn-outline-primary" onclick="editPlan(@p.Id, '@p.PlanName', @p.Price, @p.MaxUsers, @p.MaxStudents, @p.DurationMonths, @p.IncludesHrModule.ToString().ToLower(), @p.IncludesCourses.ToString().ToLower(), @p.IncludesLiveStream.ToString().ToLower(), @p.StorageLimitGB)"><i class="fas fa-edit me-1"></i>@Localizer["Edit"]</button>
-                                <button class="btn btn-sm btn-outline-danger" onclick="deletePlan(@p.Id)"><i class="fas fa-trash me-1"></i>@Localizer["Delete"]</button>
+                                <div class="action-group" style="justify-content:center;width:100%;">
+                                    <button class="btn-act btn-act-edit" onclick="editPlan(@p.Id, '@p.PlanName', @p.Price, @p.MaxUsers, @p.MaxStudents, @p.DurationMonths, @p.IncludesHrModule.ToString().ToLower(), @p.IncludesCourses.ToString().ToLower(), @p.IncludesLiveStream.ToString().ToLower(), @p.StorageLimitGB)"><i class="fas fa-edit"></i></button>
+                                    <span class="action-divider"></span>
+                                    <button class="btn-act btn-act-delete" onclick="deletePlan(@p.Id)"><i class="fas fa-trash"></i></button>
+                                </div>
                             </div>
                         </div>
                     </div>

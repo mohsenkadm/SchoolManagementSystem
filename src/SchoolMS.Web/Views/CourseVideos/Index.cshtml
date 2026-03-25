@@ -168,9 +168,12 @@
                     </div>
                 </div>
                 <div class="card-footer bg-transparent border-0 p-3 pt-0">
-                    <div class="d-flex gap-1">
-                        <a href="@Url.Action("Edit", new { id = v.Id })" class="btn btn-sm btn-primary flex-fill" title="@Localizer["Edit"]"><i class="fas fa-edit me-1"></i>@Localizer["Edit"]</a>
-                        <button class="btn btn-sm btn-danger" onclick="del(@v.Id)" title="@Localizer["Delete"]"><i class="fas fa-trash"></i></button>
+                    <div class="action-group">
+                        <a href="@Url.Action("Comments", new { courseVideoId = v.Id })" class="btn-act btn-act-view" title="Comments"><i class="fas fa-comments"></i></a>
+                        <a href="@Url.Action("QuizQuestions", new { courseVideoId = v.Id })" class="btn-act btn-act-warning" title="Quiz"><i class="fas fa-question-circle"></i> @v.QuizQuestionCount</a>
+                        <span class="action-divider"></span>
+                        <a href="@Url.Action("Edit", new { id = v.Id })" class="btn-act btn-act-edit" title="@Localizer["Edit"]"><i class="fas fa-edit"></i></a>
+                        <button class="btn-act btn-act-delete" onclick="del(@v.Id)" title="@Localizer["Delete"]"><i class="fas fa-trash"></i></button>
                     </div>
                 </div>
             </div>
@@ -273,13 +276,16 @@
                         }
                     </td>
                     <td>
-                        <div class="d-flex gap-1">
+                        <div class="action-group">
                             @if (hasVideo)
                             {
-                                <button class="btn btn-sm btn-success" onclick="playVideo('@v.VideoUrl', '@v.Title')" data-bs-toggle="tooltip" title="@Localizer["Play"]"><i class="fas fa-play"></i></button>
+                                <button class="btn-act btn-act-success" onclick="playVideo('@v.VideoUrl', '@v.Title')" data-bs-toggle="tooltip" title="@Localizer["Play"]"><i class="fas fa-play"></i></button>
                             }
-                            <a href="@Url.Action("Edit", new { id = v.Id })" class="btn btn-sm btn-primary" data-bs-toggle="tooltip" title="@Localizer["Edit"]"><i class="fas fa-edit"></i></a>
-                            <button class="btn btn-sm btn-danger" onclick="del(@v.Id)" data-bs-toggle="tooltip" title="@Localizer["Delete"]"><i class="fas fa-trash"></i></button>
+                            <a href="@Url.Action("Comments", new { courseVideoId = v.Id })" class="btn-act btn-act-view" data-bs-toggle="tooltip" title="Comments"><i class="fas fa-comments"></i></a>
+                            <a href="@Url.Action("QuizQuestions", new { courseVideoId = v.Id })" class="btn-act btn-act-warning" data-bs-toggle="tooltip" title="Quiz"><i class="fas fa-question-circle"></i></a>
+                            <span class="action-divider"></span>
+                            <a href="@Url.Action("Edit", new { id = v.Id })" class="btn-act btn-act-edit" data-bs-toggle="tooltip" title="@Localizer["Edit"]"><i class="fas fa-edit"></i></a>
+                            <button class="btn-act btn-act-delete" onclick="del(@v.Id)" data-bs-toggle="tooltip" title="@Localizer["Delete"]"><i class="fas fa-trash"></i></button>
                         </div>
                     </td>
                 </tr>

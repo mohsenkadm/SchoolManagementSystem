@@ -27,6 +27,22 @@ public class HrDepartmentService : IHrDepartmentService
             .Include(d => d.ParentDepartment)
             .Include(d => d.Employees)
             .ToListAsync();
+        return MapDepartments(items);
+    }
+
+    public async Task<List<HrDepartmentDto>> GetBySchoolIdAsync(int schoolId)
+    {
+        var items = await _repository.Query()
+            .Where(d => d.SchoolId == schoolId)
+            .Include(d => d.Branch)
+            .Include(d => d.ParentDepartment)
+            .Include(d => d.Employees)
+            .ToListAsync();
+        return MapDepartments(items);
+    }
+
+    private static List<HrDepartmentDto> MapDepartments(List<HrDepartment> items)
+    {
         return items.Select(d => new HrDepartmentDto
         {
             Id = d.Id,

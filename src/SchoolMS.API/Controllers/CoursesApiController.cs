@@ -44,13 +44,17 @@ public class CoursesApiController : ControllerBase
     private string UserName => User.FindFirst(ClaimTypes.Name)?.Value ?? "";
 
     [HttpGet]
-    public async Task<ActionResult<List<CourseDto>>> GetAll(int schoolId)
+    public async Task<ActionResult<List<CourseDto>>> GetAll(int schoolId,
+        [FromQuery] int? subjectId = null, [FromQuery] int? teacherId = null)
     {
         if (UserTypeClaim == nameof(UserType.Teacher))
         {
             var teacher = await _teacherRepo.Query().FirstOrDefaultAsync(t => t.Username == UserName);
             if (teacher == null) return Ok(new List<CourseDto>());
-            return Ok(await _service.GetByTeacherIdAsync(teacher.Id));
+            var courses = await _service.GetByTeacherIdAsync(teacher.Id);
+            if (subjectId.HasValue)
+                courses = courses.Where(c => c.SubjectId == subjectId.Value).ToList();
+            return Ok(courses);
         }
 
         if (UserTypeClaim == nameof(UserType.Student))
@@ -58,10 +62,20 @@ public class CoursesApiController : ControllerBase
             var student = await _studentRepo.Query().FirstOrDefaultAsync(s => s.Username == UserName);
             if (student == null) return Ok(new List<CourseDto>());
             var subjectIds = await GetApprovedSubjectIdsAsync(student.Id);
-            return Ok(await _service.GetBySubjectIdsAsync(subjectIds));
+            var courses = await _service.GetBySubjectIdsAsync(subjectIds);
+            if (subjectId.HasValue)
+                courses = courses.Where(c => c.SubjectId == subjectId.Value).ToList();
+            if (teacherId.HasValue)
+                courses = courses.Where(c => c.TeacherId == teacherId.Value).ToList();
+            return Ok(courses);
         }
 
-        return Ok(await _service.GetAllAsync());
+        var all = await _service.GetAllAsync();
+        if (subjectId.HasValue)
+            all = all.Where(c => c.SubjectId == subjectId.Value).ToList();
+        if (teacherId.HasValue)
+            all = all.Where(c => c.TeacherId == teacherId.Value).ToList();
+        return Ok(all);
     }
 
     // جلب أفضل 10 كورسات للطلاب حسب عدد الاشتراكات

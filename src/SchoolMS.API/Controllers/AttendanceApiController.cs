@@ -25,41 +25,49 @@ public class AttendanceApiController : ControllerBase
 
     // حضور المعلم - يتم جلب معرف المعلم من التوكن
     [HttpGet("teacher")]
-    public async Task<ActionResult<List<AttendanceDto>>> GetTeacherAttendance(int schoolId)
+    public async Task<ActionResult<List<AttendanceDto>>> GetTeacherAttendance(int schoolId,
+        [FromQuery] DateTime? dateFrom = null, [FromQuery] DateTime? dateTo = null,
+        [FromQuery] AttendanceType? type = null, [FromQuery] int? academicYearId = null)
     {
         var userType = GetUserTypeFromToken();
         if (userType != "Teacher") return Forbid();
         var personId = GetPersonIdFromToken();
-        return Ok(await _service.GetByPersonAsync(personId, PersonType.Teacher, schoolId));
+        return Ok(await _service.GetByPersonAsync(personId, PersonType.Teacher, schoolId, dateFrom, dateTo, type, academicYearId));
     }
 
     // حضور الموظف - يتم جلب معرف الموظف من التوكن
     [HttpGet("staff")]
-    public async Task<ActionResult<List<AttendanceDto>>> GetStaffAttendance(int schoolId)
+    public async Task<ActionResult<List<AttendanceDto>>> GetStaffAttendance(int schoolId,
+        [FromQuery] DateTime? dateFrom = null, [FromQuery] DateTime? dateTo = null,
+        [FromQuery] AttendanceType? type = null, [FromQuery] int? academicYearId = null)
     {
         var userType = GetUserTypeFromToken();
         if (userType != "Staff") return Forbid();
         var personId = GetPersonIdFromToken();
-        return Ok(await _service.GetByPersonAsync(personId, PersonType.Staff, schoolId));
+        return Ok(await _service.GetByPersonAsync(personId, PersonType.Staff, schoolId, dateFrom, dateTo, type, academicYearId));
     }
 
     // حضور الطالب - يتم جلب معرف الطالب من التوكن
     [HttpGet("student")]
-    public async Task<ActionResult<List<AttendanceDto>>> GetStudentAttendance(int schoolId)
+    public async Task<ActionResult<List<AttendanceDto>>> GetStudentAttendance(int schoolId,
+        [FromQuery] DateTime? dateFrom = null, [FromQuery] DateTime? dateTo = null,
+        [FromQuery] AttendanceType? type = null, [FromQuery] int? academicYearId = null)
     {
         var userType = GetUserTypeFromToken();
         if (userType != "Student") return Forbid();
         var personId = GetPersonIdFromToken();
-        return Ok(await _service.GetByPersonAsync(personId, PersonType.Student, schoolId));
+        return Ok(await _service.GetByPersonAsync(personId, PersonType.Student, schoolId, dateFrom, dateTo, type, academicYearId));
     }
 
     // حضور أبناء ولي الأمر - يتم جلب معرف ولي الأمر من التوكن
     [HttpGet("parent/children")]
-    public async Task<ActionResult<List<AttendanceDto>>> GetParentChildrenAttendance(int schoolId)
+    public async Task<ActionResult<List<AttendanceDto>>> GetParentChildrenAttendance(int schoolId,
+        [FromQuery] DateTime? dateFrom = null, [FromQuery] DateTime? dateTo = null,
+        [FromQuery] AttendanceType? type = null, [FromQuery] int? academicYearId = null)
     {
         var userType = GetUserTypeFromToken();
         if (userType != "Parent") return Forbid();
         var parentId = GetPersonIdFromToken();
-        return Ok(await _service.GetByParentChildrenAsync(parentId, schoolId));
+        return Ok(await _service.GetByParentChildrenAsync(parentId, schoolId, dateFrom, dateTo, type, academicYearId));
     }
 }

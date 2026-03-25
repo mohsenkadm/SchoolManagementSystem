@@ -44,13 +44,14 @@ public class HomeworkService : IHomeworkService
     }
 
     public async Task<List<HomeworkDto>> GetBySchoolIdAsync(int schoolId, int? branchId = null, int? classRoomId = null,
-        int? subjectId = null, int? teacherId = null)
+        int? subjectId = null, int? teacherId = null, int? academicYearId = null)
     {
         var query = _repository.Query().Where(h => h.SchoolId == schoolId);
         if (branchId.HasValue) query = query.Where(h => h.ClassRoom.BranchId == branchId.Value);
         if (classRoomId.HasValue) query = query.Where(h => h.ClassRoomId == classRoomId.Value);
         if (subjectId.HasValue) query = query.Where(h => h.SubjectId == subjectId.Value);
         if (teacherId.HasValue) query = query.Where(h => h.TeacherId == teacherId.Value);
+        if (academicYearId.HasValue) query = query.Where(h => h.AcademicYearId == academicYearId.Value);
         var items = await query
             .Include(h => h.Teacher).Include(h => h.ClassRoom).ThenInclude(c => c.Grade)
             .Include(h => h.ClassRoom).ThenInclude(c => c.Division)
@@ -61,11 +62,15 @@ public class HomeworkService : IHomeworkService
         return items.Select(MapToDto).ToList();
     }
 
-    public async Task<List<HomeworkDto>> GetByClassRoomIdsAsync(List<int> classRoomIds, int schoolId)
+    public async Task<List<HomeworkDto>> GetByClassRoomIdsAsync(List<int> classRoomIds, int schoolId,
+        int? subjectId = null, int? academicYearId = null)
     {
         if (classRoomIds.Count == 0) return new List<HomeworkDto>();
-        var items = await _repository.Query()
-            .Where(h => h.SchoolId == schoolId && classRoomIds.Contains(h.ClassRoomId))
+        var query = _repository.Query()
+            .Where(h => h.SchoolId == schoolId && classRoomIds.Contains(h.ClassRoomId));
+        if (subjectId.HasValue) query = query.Where(h => h.SubjectId == subjectId.Value);
+        if (academicYearId.HasValue) query = query.Where(h => h.AcademicYearId == academicYearId.Value);
+        var items = await query
             .Include(h => h.Teacher).Include(h => h.ClassRoom).ThenInclude(c => c.Grade)
             .Include(h => h.ClassRoom).ThenInclude(c => c.Division)
             .Include(h => h.Subject).Include(h => h.AcademicYear)

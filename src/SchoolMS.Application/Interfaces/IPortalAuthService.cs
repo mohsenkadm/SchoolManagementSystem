@@ -8,4 +8,5 @@ public interface IPortalAuthService
     Task<PortalLoginResultDto> StudentLoginAsync(PortalLoginDto dto);
     Task<PortalLoginResultDto> ParentLoginAsync(PortalLoginDto dto);
     Task<PortalLoginResultDto> StaffLoginAsync(PortalLoginDto dto);
+    Task<bool> LogoutStudentDeviceAsync(int studentId);
 }

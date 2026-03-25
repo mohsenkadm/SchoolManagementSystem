@@ -42,6 +42,7 @@
         </div>
         <div class="col-md-3"><input type="text" id="searchInput" class="form-control" placeholder="🔍 @Localizer["Search"]..." /></div>
         <div class="col-md-2"><select id="filterSubject" class="form-select"><option value="">@Localizer["AllSubjects"]</option>@foreach (var s in Model.Select(q => q.SubjectName).Distinct().OrderBy(s => s)) { <option value="@s">@s</option> }</select></div>
+        <div class="col-md-2"><select id="filterTeacher" class="form-select"><option value="">@Localizer["AllTeachers"]</option>@foreach (var t in Model.Select(q => q.TeacherName).Distinct().OrderBy(t => t)) { <option value="@t">@t</option> }</select></div>
         <div class="col-md-1"><button class="btn btn-filter w-100" onclick="applyFilters()"><i class="fas fa-search"></i></button></div>
         <div class="col-md-1"><button class="btn btn-reset w-100" onclick="resetFilters()"><i class="fas fa-redo"></i></button></div>
     </div>
@@ -56,9 +57,9 @@
                 <tr class="table-row-animated">
                     <td>@(i + 1)</td><td>@Model[i].GroupName</td><td>@Model[i].SubjectName</td><td>@Model[i].TeacherName</td><td>@Model[i].GradeName</td><td><span class="badge bg-info">@Model[i].QuestionCount</span></td>
                     <td>
-                        <div class="d-flex gap-1">
-                            <button class="btn btn-sm btn-info" onclick="manageQuestions(@Model[i].Id, '@Model[i].GroupName')" data-bs-toggle="tooltip" title="@Localizer["Questions"]"><i class="fas fa-list-ol"></i></button>
-                            <button class="btn btn-sm btn-danger" onclick="del(@Model[i].Id)" data-bs-toggle="tooltip" title="@Localizer["Delete"]"><i class="fas fa-trash"></i></button>
+                        <div class="action-group">
+                            <button class="btn-act btn-act-view" onclick="manageQuestions(@Model[i].Id, '@Model[i].GroupName')" data-bs-toggle="tooltip" title="@Localizer["Questions"]"><i class="fas fa-list-ol"></i></button>
+                            <button class="btn-act btn-act-delete" onclick="del(@Model[i].Id)" data-bs-toggle="tooltip" title="@Localizer["Delete"]"><i class="fas fa-trash"></i></button>
                         </div>
                     </td>
                 </tr>
@@ -104,8 +105,8 @@
     var isSuperAdmin = @Json.Serialize(isSuperAdmin);
     var dt;
     $(function () { dt = $('#dataTable').DataTable({ responsive: true, pageLength: 25, dom: 'rtip' }); $('#searchInput').on('keyup', function () { dt.search(this.value).draw(); }); });
-    function applyFilters() { dt.search($('#searchInput').val()); dt.column(2).search($('#filterSubject').val()); dt.draw(); }
-    function resetFilters() { $('#searchInput, #filterSubject, #filterBranch').val(''); if (isSuperAdmin) { $('#filterSchool').val(''); } dt.search('').columns().search('').draw(); }
+    function applyFilters() { dt.search($('#searchInput').val()); dt.column(2).search($('#filterSubject').val()); dt.column(3).search($('#filterTeacher').val()); dt.draw(); }
+    function resetFilters() { $('#searchInput, #filterSubject, #filterTeacher, #filterBranch').val(''); if (isSuperAdmin) { $('#filterSchool').val(''); } dt.search('').columns().search('').draw(); }
     function del(id) { confirmDelete('@Url.Action("DeleteGroup")', id, function () { location.reload(); }); }
 
     function toggleOptions() { $('#optionsRow').toggle($('#qType').val() === '1'); }
@@ -128,7 +129,7 @@
             var html = '<table class="table table-sm table-bordered"><thead><tr><th>#</th><th>@Localizer["QuestionText"]</th><th>@Localizer["Type"]</th><th>@Localizer["CorrectAnswer"]</th><th>@Localizer["Points"]</th><th></th></tr></thead><tbody>';
             $.each(data, function (i, q) {
                 html += '<tr><td>' + (i + 1) + '</td><td>' + q.questionText + '</td><td><span class="badge bg-secondary">' + (typeNames[q.type] || q.type) + '</span></td><td>' + (q.correctAnswer || '-') + '</td><td>' + q.points + '</td>';
-                html += '<td><button class="btn btn-sm btn-danger" onclick="delQuestion(' + q.id + ')"><i class="fas fa-trash"></i></button></td></tr>';
+                html += '<td><button class="btn-act btn-act-delete" onclick="delQuestion(' + q.id + ')"><i class="fas fa-trash"></i></button></td></tr>';
             });
             html += '</tbody></table>';
             $('#questionsList').html(html);

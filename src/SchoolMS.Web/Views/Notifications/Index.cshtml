@@ -45,9 +45,9 @@
                     <td>@if (Model[i].IsSent) { <span class="status-badge status-active"><span class="status-dot"></span> @Localizer["Sent"]</span> } else { <span class="badge bg-warning">@Localizer["Pending"]</span> }</td>
                     <td>@Model[i].SentAt?.ToString("yyyy-MM-dd HH:mm")</td>
                     <td>
-                        <div class="d-flex gap-1">
-                            @if (!Model[i].IsSent) { <button class="btn btn-sm btn-success" onclick="send(@Model[i].Id)" data-bs-toggle="tooltip" title="@Localizer["Send"]"><i class="fas fa-paper-plane"></i></button> }
-                            <button class="btn btn-sm btn-danger" onclick="del(@Model[i].Id)" data-bs-toggle="tooltip" title="@Localizer["Delete"]"><i class="fas fa-trash"></i></button>
+                        <div class="action-group">
+                            @if (!Model[i].IsSent) { <button class="btn-act btn-act-success" onclick="send(@Model[i].Id)" data-bs-toggle="tooltip" title="@Localizer["Send"]"><i class="fas fa-paper-plane"></i></button> }
+                            <button class="btn-act btn-act-delete" onclick="del(@Model[i].Id)" data-bs-toggle="tooltip" title="@Localizer["Delete"]"><i class="fas fa-trash"></i></button>
                         </div>
                     </td>
                 </tr>

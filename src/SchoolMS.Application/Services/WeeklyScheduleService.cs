@@ -29,10 +29,15 @@ public class WeeklyScheduleService : IWeeklyScheduleService
         return _mapper.Map<List<WeeklyScheduleDto>>(items);
     }
 
-    public async Task<List<WeeklyScheduleDto>> GetBySchoolIdAsync(int schoolId)
+    public async Task<List<WeeklyScheduleDto>> GetBySchoolIdAsync(int schoolId,
+        int? subjectId = null, int? teacherId = null, DayOfWeek? dayOfWeek = null, int? classRoomId = null)
     {
-        var items = await _repository.Query()
-            .Where(w => w.SchoolId == schoolId)
+        var query = _repository.Query().Where(w => w.SchoolId == schoolId);
+        if (subjectId.HasValue) query = query.Where(w => w.SubjectId == subjectId.Value);
+        if (teacherId.HasValue) query = query.Where(w => w.TeacherId == teacherId.Value);
+        if (dayOfWeek.HasValue) query = query.Where(w => w.DayOfWeek == dayOfWeek.Value);
+        if (classRoomId.HasValue) query = query.Where(w => w.ClassRoomId == classRoomId.Value);
+        var items = await query
             .Include(w => w.ClassRoom).ThenInclude(c => c.Grade)
             .Include(w => w.ClassRoom).ThenInclude(c => c.Division)
             .Include(w => w.ClassRoom).ThenInclude(c => c.Branch)
@@ -42,11 +47,15 @@ public class WeeklyScheduleService : IWeeklyScheduleService
         return _mapper.Map<List<WeeklyScheduleDto>>(items);
     }
 
-    public async Task<List<WeeklyScheduleDto>> GetByClassRoomIdsAsync(List<int> classRoomIds, int schoolId)
+    public async Task<List<WeeklyScheduleDto>> GetByClassRoomIdsAsync(List<int> classRoomIds, int schoolId,
+        int? subjectId = null, DayOfWeek? dayOfWeek = null)
     {
         if (classRoomIds.Count == 0) return new List<WeeklyScheduleDto>();
-        var items = await _repository.Query()
-            .Where(w => w.SchoolId == schoolId && classRoomIds.Contains(w.ClassRoomId))
+        var query = _repository.Query()
+            .Where(w => w.SchoolId == schoolId && classRoomIds.Contains(w.ClassRoomId));
+        if (subjectId.HasValue) query = query.Where(w => w.SubjectId == subjectId.Value);
+        if (dayOfWeek.HasValue) query = query.Where(w => w.DayOfWeek == dayOfWeek.Value);
+        var items = await query
             .Include(w => w.ClassRoom).ThenInclude(c => c.Grade)
             .Include(w => w.ClassRoom).ThenInclude(c => c.Division)
             .Include(w => w.ClassRoom).ThenInclude(c => c.Branch)

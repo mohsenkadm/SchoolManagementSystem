@@ -151,7 +151,7 @@
                 '<td><span class="badge ' + typeBadges[item.personType] + '">' + typeNames[item.personType] + '</span></td>' +
                 '<td><code>' + item.badgeCardNumber + '</code></td>' +
                 '<td>' + item.addedTime + '</td>' +
-                '<td><button class="btn btn-sm btn-outline-danger" onclick="removeFromBatch(' + i + ')"><i class="fas fa-times"></i></button></td>' +
+                '<td><div class="action-group"><button class="btn-act btn-act-delete" onclick="removeFromBatch(' + i + ')"><i class="fas fa-times"></i></button></div></td>' +
                 '</tr>'
             );
         });

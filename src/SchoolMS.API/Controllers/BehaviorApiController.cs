@@ -19,16 +19,18 @@ public class BehaviorApiController : ControllerBase
 
     // جلب سجلات سلوك طالب معين
     [HttpGet("student/{studentId}")]
-    public async Task<ActionResult<List<StudentBehaviorDto>>> GetByStudent(int schoolId, int studentId)
-        => Ok(await _service.GetByStudentIdAsync(studentId));
+    public async Task<ActionResult<List<StudentBehaviorDto>>> GetByStudent(int schoolId, int studentId,
+        [FromQuery] int? academicYearId = null)
+        => Ok(await _service.GetByStudentIdAsync(studentId, academicYearId));
 
     // جلب سجلات سلوك أبناء ولي الأمر - يتم جلب معرف ولي الأمر من التوكن
     [HttpGet("parent/children")]
-    public async Task<ActionResult<List<StudentBehaviorDto>>> GetByParentChildren(int schoolId)
+    public async Task<ActionResult<List<StudentBehaviorDto>>> GetByParentChildren(int schoolId,
+        [FromQuery] int? academicYearId = null)
     {
         var userType = User.FindFirst("UserType")?.Value;
         if (userType != "Parent") return Forbid();
         var parentId = int.Parse(User.FindFirst("PersonId")?.Value ?? throw new UnauthorizedAccessException());
-        return Ok(await _service.GetByParentChildrenAsync(parentId, schoolId));
+        return Ok(await _service.GetByParentChildrenAsync(parentId, schoolId, academicYearId));
     }
 }

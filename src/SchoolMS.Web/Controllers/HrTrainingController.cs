@@ -12,16 +12,38 @@ public class HrTrainingController : Controller
 {
     private readonly IHrTrainingService _service;
     private readonly IHrEmployeeService _empService;
+    private readonly IBranchService _branchService;
+    private readonly IPlatformService _platformService;
     private readonly IOneSignalNotificationService _pushService;
 
-    public HrTrainingController(IHrTrainingService service, IHrEmployeeService empService, IOneSignalNotificationService pushService)
-    { _service = service; _empService = empService; _pushService = pushService; }
+    public HrTrainingController(IHrTrainingService service, IHrEmployeeService empService, IBranchService branchService, IPlatformService platformService, IOneSignalNotificationService pushService)
+    { _service = service; _empService = empService; _branchService = branchService; _platformService = platformService; _pushService = pushService; }
 
+    private bool IsSuperAdmin => User.IsInRole("SuperAdmin");
     private int? CurrentSchoolId { get { var c = User.FindFirst("SchoolId"); return c != null && int.TryParse(c.Value, out var id) ? id : null; } }
 
     // Programs
     [HasPermission("HrTraining", "View")]
-    public async Task<IActionResult> Index() => View(await _service.GetProgramsAsync());
+    public async Task<IActionResult> Index()
+    {
+        ViewBag.IsSuperAdmin = IsSuperAdmin;
+        if (IsSuperAdmin)
+        {
+            ViewBag.Schools = await _platformService.GetAllSchoolsAsync();
+            ViewBag.Branches = await _branchService.GetAllAsync();
+        }
+        else
+        {
+            ViewBag.Schools = new List<SchoolDto>();
+            ViewBag.Branches = CurrentSchoolId.HasValue
+                ? await _branchService.GetBySchoolIdAsync(CurrentSchoolId.Value)
+                : new List<BranchDto>();
+        }
+        var list = CurrentSchoolId.HasValue
+            ? await _service.GetProgramsBySchoolIdAsync(CurrentSchoolId.Value)
+            : await _service.GetProgramsAsync();
+        return View(list);
+    }
 
     [HasPermission("HrTraining", "View")]
     public async Task<IActionResult> Details(int id) => View(await _service.GetProgramByIdAsync(id));
@@ -48,7 +70,9 @@ public class HrTrainingController : Controller
     // Enrollment
     [HasPermission("HrTraining", "View")]
     public async Task<IActionResult> Records(int? programId, int? employeeId)
-        => View(await _service.GetRecordsAsync(programId, employeeId));
+        => View(CurrentSchoolId.HasValue
+            ? await _service.GetRecordsBySchoolIdAsync(CurrentSchoolId.Value, programId, employeeId)
+            : await _service.GetRecordsAsync(programId, employeeId));
 
     [HasPermission("HrTraining", "Add")]
     public async Task<IActionResult> Enroll(int programId)

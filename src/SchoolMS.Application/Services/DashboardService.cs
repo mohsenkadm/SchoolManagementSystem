@@ -12,18 +12,20 @@ public class DashboardService : IDashboardService
 {
     private readonly IRepository<Student> _studentRepo;
     private readonly IRepository<Teacher> _teacherRepo;
-    private readonly IRepository<Staff> _staffRepo;
+    private readonly IRepository<HrEmployee> _staffRepo;
     private readonly IRepository<InstallmentPayment> _paymentRepo;
     private readonly IRepository<Expense> _expenseRepo;
     private readonly IRepository<Attendance> _attendanceRepo;
+    private readonly IRepository<SchoolSubscription> _subscriptionRepo;
 
     public DashboardService(
         IRepository<Student> studentRepo,
         IRepository<Teacher> teacherRepo,
-        IRepository<Staff> staffRepo,
+        IRepository<HrEmployee> staffRepo,
         IRepository<InstallmentPayment> paymentRepo,
         IRepository<Expense> expenseRepo,
-        IRepository<Attendance> attendanceRepo)
+        IRepository<Attendance> attendanceRepo,
+        IRepository<SchoolSubscription> subscriptionRepo)
     {
         _studentRepo = studentRepo;
         _teacherRepo = teacherRepo;
@@ -31,9 +33,10 @@ public class DashboardService : IDashboardService
         _paymentRepo = paymentRepo;
         _expenseRepo = expenseRepo;
         _attendanceRepo = attendanceRepo;
+        _subscriptionRepo = subscriptionRepo;
     }
 
-    public async Task<DashboardDto> GetDashboardDataAsync(int? branchId)
+    public async Task<DashboardDto> GetDashboardDataAsync(int? branchId, int? schoolId = null)
     {
         var now = DateTime.UtcNow;
         var startOfMonth = new DateTime(now.Year, now.Month, 1);
@@ -98,6 +101,32 @@ public class DashboardService : IDashboardService
             });
         }
 
+        // Subscription expiry alert (within 10 days or already expired)
+        SubscriptionExpiryAlertDto? subscriptionAlert = null;
+        if (schoolId.HasValue)
+        {
+            var activeSub = await _subscriptionRepo.Query()
+                .Where(s => s.SchoolId == schoolId.Value && s.IsActive)
+                .Include(s => s.SystemSubscriptionPlan)
+                .OrderByDescending(s => s.ExpiryDate)
+                .FirstOrDefaultAsync();
+
+            if (activeSub != null)
+            {
+                var daysRemaining = (int)(activeSub.ExpiryDate - now).TotalDays;
+                if (daysRemaining <= 10)
+                {
+                    subscriptionAlert = new SubscriptionExpiryAlertDto
+                    {
+                        PlanName = activeSub.SystemSubscriptionPlan.PlanName,
+                        ExpiryDate = activeSub.ExpiryDate,
+                        DaysRemaining = Math.Max(0, daysRemaining),
+                        IsExpired = daysRemaining < 0
+                    };
+                }
+            }
+        }
+
         return new DashboardDto
         {
             TotalStudents = totalStudents,
@@ -107,7 +136,8 @@ public class DashboardService : IDashboardService
             ExpensesThisMonth = expensesThisMonth,
             AttendanceRateToday = Math.Round(attendanceRate, 1),
             OverdueInstallments = overdueCount,
-            MonthlyFinancials = monthlyFinancials
+            MonthlyFinancials = monthlyFinancials,
+            SubscriptionExpiryAlert = subscriptionAlert
         };
     }
 }

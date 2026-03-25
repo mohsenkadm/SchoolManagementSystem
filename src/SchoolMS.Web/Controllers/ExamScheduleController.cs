@@ -39,15 +39,27 @@ public class ExamScheduleController : Controller
     }
 
     [HasPermission("ExamSchedule", "View")]
-    public async Task<IActionResult> Index()
+    public async Task<IActionResult> Index(int? academicYearId = null, int? examTypeId = null,
+        int? subjectId = null, int? teacherId = null, int? classRoomId = null)
     {
         ViewData["Title"] = "Exam Schedule";
         ViewBag.IsSuperAdmin = IsSuperAdmin;
         ViewBag.Schools = IsSuperAdmin ? await _platformService.GetAllSchoolsAsync() : new List<SchoolDto>();
+        ViewBag.AcademicYears = IsSuperAdmin
+            ? await _yearService.GetAllAsync()
+            : await _yearService.GetAllAsync(CurrentSchoolId ?? 0);
+        ViewBag.ExamTypes = await _examTypeService.GetAllAsync();
+        ViewBag.Subjects = await _subjectService.GetAllAsync();
+        ViewBag.Teachers = await _teacherService.GetAllAsync();
+        ViewBag.ClassRooms = await _classRoomService.GetAllAsync();
+        ViewBag.SelectedAcademicYearId = academicYearId;
+        ViewBag.SelectedExamTypeId = examTypeId;
+
         var all = IsSuperAdmin
             ? await _service.GetAllAsync()
             : CurrentSchoolId.HasValue
-                ? await _service.GetBySchoolIdAsync(CurrentSchoolId.Value)
+                ? await _service.GetBySchoolIdAsync(CurrentSchoolId.Value, examTypeId: examTypeId,
+                    classRoomId: classRoomId, subjectId: subjectId, teacherId: teacherId, academicYearId: academicYearId)
                 : new List<ExamScheduleDto>();
         return View(all);
     }

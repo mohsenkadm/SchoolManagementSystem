@@ -34,10 +34,15 @@
                             </td>
                             <td>@(s.ExpiryDate?.ToString("MMM dd, yyyy") ?? "—")</td>
                             <td>
-                                <button class="btn btn-sm btn-outline-primary" onclick="editSchool(@s.Id)"><i class="fas fa-edit"></i></button>
-                                <button class="btn btn-sm btn-outline-info" onclick="manageSubscription(@s.Id, '@s.Name')"><i class="fas fa-file-contract"></i></button>
-                                <button class="btn btn-sm btn-outline-warning" onclick="toggleSchool(@s.Id)"><i class="fas fa-power-off"></i></button>
-                                <button class="btn btn-sm btn-outline-danger" onclick="deleteSchool(@s.Id)"><i class="fas fa-trash"></i></button>
+                                <div class="action-group">
+                                    <button class="btn-act btn-act-edit" onclick="editSchool(@s.Id)" title="@Localizer["Edit"]"><i class="fas fa-edit"></i></button>
+                                    <button class="btn-act btn-act-view" onclick="manageSubscription(@s.Id, '@s.Name')" title="@Localizer["ManageSubscription"]"><i class="fas fa-file-contract"></i></button>
+                                    <button class="btn-act btn-act-success" onclick="viewStorageUsage(@s.Id, '@s.Name')" title="@Localizer["StorageUsage"]"><i class="fas fa-hdd"></i></button>
+                                    <button class="btn-act btn-act-dark" onclick="viewSchoolHistory(@s.Id, '@s.Name')" title="@Localizer["SubscriptionHistory"]"><i class="fas fa-history"></i></button>
+                                    <span class="action-divider"></span>
+                                    <button class="btn-act btn-act-warning" onclick="toggleSchool(@s.Id)" title="@Localizer["Status"]"><i class="fas fa-power-off"></i></button>
+                                    <button class="btn-act btn-act-delete" onclick="deleteSchool(@s.Id)" title="@Localizer["Delete"]"><i class="fas fa-trash"></i></button>
+                                </div>
                             </td>
                         </tr>
                     }
@@ -49,19 +54,75 @@
 
 <!-- Create/Edit School Modal -->
 <div class="modal fade" id="schoolModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
+    <div class="modal-dialog modal-xl">
         <div class="modal-content">
             <div class="modal-header"><h5 class="modal-title" id="schoolModalTitle">@Localizer["AddSchool"]</h5><button class="btn-close" data-bs-dismiss="modal"></button></div>
             <div class="modal-body">
                 <input type="hidden" id="schoolId" />
+
+                <!-- Basic Info -->
+                <h6><i class="fas fa-info-circle me-1"></i>@Localizer["BasicInfo"]</h6>
                 <div class="row g-3">
                     <div class="col-md-6"><label class="form-label">@Localizer["SchoolName"] *</label><input type="text" class="form-control" id="schoolName" required /></div>
                     <div class="col-md-6"><label class="form-label">@Localizer["SchoolSlug"] *</label><input type="text" class="form-control" id="schoolSlug" required placeholder="e.g. my-school" /></div>
                     <div class="col-md-12"><label class="form-label">@Localizer["Address"]</label><input type="text" class="form-control" id="schoolAddress" /></div>
                     <div class="col-md-4"><label class="form-label">@Localizer["ExpiryDate"]</label><input type="date" class="form-control" id="schoolExpiry" /></div>
+                    <div class="col-md-4"><label class="form-label">@Localizer["DefaultCommissionRate"] (%)</label><input type="number" class="form-control" id="schoolCommissionRate" min="0" max="100" step="0.01" value="0" /></div>
                     <div class="col-md-4"><div class="form-check mt-4"><input type="checkbox" class="form-check-input" id="schoolActive" checked /><label class="form-check-label">@Localizer["Active"]</label></div></div>
-                    <div class="col-md-4"><div class="form-check mt-4"><input type="checkbox" class="form-check-input" id="schoolOnline" /><label class="form-check-label">@Localizer["OnlinePlatform"]</label></div></div>
                 </div>
+
+                <hr />
+
+                <!-- HR Settings -->
+                <div class="mb-3">
+                    <h6 class="d-flex align-items-center">
+                        <i class="fas fa-users-cog me-1"></i>@Localizer["HrSettings"]
+                        <div class="form-check form-switch ms-3">
+                            <input type="checkbox" class="form-check-input" id="hrModuleEnabled" />
+                            <label class="form-check-label" for="hrModuleEnabled">@Localizer["EnableHrModule"]</label>
+                        </div>
+                    </h6>
+                </div>
+                <div id="hrSettingsPanel" style="display:none;">
+                    <div class="row g-3">
+                        <div class="col-md-4"><div class="form-check"><input type="checkbox" class="form-check-input" id="hrRequireApprovalForLeaves" /><label class="form-check-label">@Localizer["RequireApprovalForLeaves"]</label></div></div>
+                        <div class="col-md-4"><div class="form-check"><input type="checkbox" class="form-check-input" id="hrAutoCalculateOvertime" /><label class="form-check-label">@Localizer["AutoCalculateOvertime"]</label></div></div>
+                        <div class="col-md-4"><div class="form-check"><input type="checkbox" class="form-check-input" id="hrAutoDeductAbsence" /><label class="form-check-label">@Localizer["AutoDeductAbsence"]</label></div></div>
+                        <div class="col-md-4"><div class="form-check"><input type="checkbox" class="form-check-input" id="hrEnableFingerprintIntegration" /><label class="form-check-label">@Localizer["EnableFingerprint"]</label></div></div>
+                        <div class="col-md-4"><div class="form-check"><input type="checkbox" class="form-check-input" id="hrEnableSelfService" /><label class="form-check-label">@Localizer["EnableSelfService"]</label></div></div>
+                    </div>
+                    <div class="row g-3 mt-1">
+                        <div class="col-md-3"><label class="form-label">@Localizer["MaxOvertimeHours"] / @Localizer["Month"]</label><input type="number" class="form-control" id="hrMaxOvertimeHours" min="0" value="0" /></div>
+                        <div class="col-md-3"><label class="form-label">@Localizer["OvertimeRateMultiplier"]</label><input type="number" class="form-control" id="hrOvertimeRateMultiplier" min="0" step="0.1" value="1.5" /></div>
+                        <div class="col-md-3"><label class="form-label">@Localizer["LateGracePeriod"] (@Localizer["Minutes"])</label><input type="number" class="form-control" id="hrLateGracePeriod" min="0" value="0" /></div>
+                        <div class="col-md-3"><label class="form-label">@Localizer["WorkingDaysPerMonth"]</label><input type="number" class="form-control" id="hrWorkingDaysPerMonth" min="1" max="31" value="26" /></div>
+                    </div>
+                    <div class="row g-3 mt-1">
+                        <div class="col-md-3"><label class="form-label">@Localizer["WorkDayStart"]</label><input type="time" class="form-control" id="hrWorkDayStart" value="08:00" /></div>
+                        <div class="col-md-3"><label class="form-label">@Localizer["WorkDayEnd"]</label><input type="time" class="form-control" id="hrWorkDayEnd" value="15:00" /></div>
+                        <div class="col-md-3"><label class="form-label">@Localizer["AbsenceDeductionPerDay"]</label><input type="number" class="form-control" id="hrAbsenceDeductionPerDay" min="0" step="0.01" value="0" /></div>
+                        <div class="col-md-3">
+                            <label class="form-label">@Localizer["AbsenceDeductionType"]</label>
+                            <select class="form-select" id="hrAbsenceDeductionType">
+                                <option value="Fixed">@Localizer["Fixed"]</option>
+                                <option value="Percentage">@Localizer["Percentage"]</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row g-3 mt-1">
+                        <div class="col-md-4"><label class="form-label">@Localizer["LateDeductionPerMinute"]</label><input type="number" class="form-control" id="hrLateDeductionPerMinute" min="0" step="0.01" value="0" /></div>
+                        <div class="col-md-4"><label class="form-label">@Localizer["EarlyLeaveDeductionPerMinute"]</label><input type="number" class="form-control" id="hrEarlyLeaveDeductionPerMinute" min="0" step="0.01" value="0" /></div>
+                        <div class="col-md-4">
+                            <label class="form-label">@Localizer["SalaryCalculationMethod"]</label>
+                            <select class="form-select" id="hrSalaryCalculationMethod">
+                                <option value="Monthly">@Localizer["Monthly"]</option>
+                                <option value="Daily">@Localizer["Daily"]</option>
+                                <option value="Hourly">@Localizer["Hourly"]</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
                 <hr />
                 <div id="adminFields">
                     <h6><i class="fas fa-user-shield me-1"></i>@Localizer["SchoolAdminAccount"]</h6>
@@ -132,6 +193,56 @@
     </div>
 </div>
 
+<!-- Storage Usage Modal -->
+<div class="modal fade" id="storageModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header"><h5 class="modal-title"><i class="fas fa-hdd me-2"></i>@Localizer["StorageUsage"] — <span id="storageSchoolName"></span></h5><button class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body">
+                <div class="row g-3 mb-4">
+                    <div class="col-md-4 text-center">
+                        <div class="card border-0 bg-primary bg-opacity-10">
+                            <div class="card-body"><h6 class="text-muted mb-1">@Localizer["Plan"] @Localizer["StorageUsage"]</h6><h3 class="fw-bold text-primary" id="storagePlanLimit">0 GB</h3></div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 text-center">
+                        <div class="card border-0 bg-success bg-opacity-10">
+                            <div class="card-body"><h6 class="text-muted mb-1">Extra Storage</h6><h3 class="fw-bold text-success" id="storageExtra">0 GB</h3></div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 text-center">
+                        <div class="card border-0 bg-warning bg-opacity-10">
+                            <div class="card-body"><h6 class="text-muted mb-1">Used</h6><h3 class="fw-bold text-warning" id="storageUsed">0 GB</h3></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">@Localizer["StorageUsage"]</label>
+                    <div class="progress" style="height: 25px;">
+                        <div class="progress-bar bg-primary" id="storageProgressBar" role="progressbar" style="width: 0%">0%</div>
+                    </div>
+                    <small class="text-muted" id="storageProgressText"></small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Subscription History Modal -->
+<div class="modal fade" id="historyModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header"><h5 class="modal-title"><i class="fas fa-history me-2"></i>@Localizer["SubscriptionHistory"] — <span id="historySchoolName"></span></h5><button class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body">
+                <table class="table table-sm table-hover" id="historyTable">
+                    <thead><tr><th>@Localizer["Plan"]</th><th>@Localizer["ActivatedAt"]</th><th>@Localizer["ExpiryDate"]</th><th>@Localizer["StorageUsage"]</th><th>@Localizer["Status"]</th></tr></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
 <script>
     $(document).ready(function () { $('#dataTable').DataTable(); });
@@ -139,10 +250,20 @@
     function getHeaders() { return { 'Content-Type': 'application/json', 'RequestVerificationToken': token }; }
 
     let isEdit = false;
+    $('#hrModuleEnabled').change(function () { $('#hrSettingsPanel').toggle(this.checked); });
+
     function openCreate() {
         isEdit = false; $('#schoolModalTitle').text('Add School'); $('#schoolId').val('');
         $('#schoolName,#schoolSlug,#schoolAddress,#adminName,#adminEmail,#adminPassword').val('');
-        $('#schoolExpiry').val(''); $('#schoolActive').prop('checked', true); $('#schoolOnline').prop('checked', false);
+        $('#schoolExpiry').val(''); $('#schoolActive').prop('checked', true);
+        $('#schoolCommissionRate').val(0);
+        $('#hrModuleEnabled').prop('checked', false); $('#hrSettingsPanel').hide();
+        $('#hrRequireApprovalForLeaves,#hrAutoCalculateOvertime,#hrAutoDeductAbsence,#hrEnableFingerprintIntegration,#hrEnableSelfService').prop('checked', false);
+        $('#hrMaxOvertimeHours').val(0); $('#hrOvertimeRateMultiplier').val(1.5); $('#hrLateGracePeriod').val(0);
+        $('#hrWorkDayStart').val('08:00'); $('#hrWorkDayEnd').val('15:00'); $('#hrWorkingDaysPerMonth').val(26);
+        $('#hrAbsenceDeductionPerDay').val(0); $('#hrAbsenceDeductionType').val('Fixed');
+        $('#hrLateDeductionPerMinute').val(0); $('#hrEarlyLeaveDeductionPerMinute').val(0);
+        $('#hrSalaryCalculationMethod').val('Monthly');
         $('#adminFields').show(); $('#subscriptionPlan').val('');
     }
     function editSchool(id) {
@@ -150,27 +271,67 @@
         $.getJSON('@Url.Action("GetSchool", "Platform")?id=' + id, function (s) {
             $('#schoolId').val(s.id); $('#schoolName').val(s.name); $('#schoolSlug').val(s.slug);
             $('#schoolAddress').val(s.address); $('#schoolActive').prop('checked', s.isActive);
-            $('#schoolOnline').prop('checked', s.onlinePlatformEnabled);
             if (s.expiryDate) $('#schoolExpiry').val(s.expiryDate.split('T')[0]);
+            $('#schoolCommissionRate').val(s.defaultTeacherCommissionRate || 0);
+            $('#hrModuleEnabled').prop('checked', s.isHrModuleEnabled);
+            $('#hrSettingsPanel').toggle(s.isHrModuleEnabled);
+            $('#hrRequireApprovalForLeaves').prop('checked', s.hrRequireApprovalForLeaves);
+            $('#hrAutoCalculateOvertime').prop('checked', s.hrAutoCalculateOvertime);
+            $('#hrAutoDeductAbsence').prop('checked', s.hrAutoDeductAbsence);
+            $('#hrEnableFingerprintIntegration').prop('checked', s.hrEnableFingerprintIntegration);
+            $('#hrEnableSelfService').prop('checked', s.hrEnableSelfService);
+            $('#hrMaxOvertimeHours').val(s.hrMaxOvertimeHoursPerMonth || 0);
+            $('#hrOvertimeRateMultiplier').val(s.hrOvertimeRateMultiplier || 1.5);
+            $('#hrLateGracePeriod').val(s.hrLateGracePeriodMinutes || 0);
+            if (s.hrWorkDayStart) $('#hrWorkDayStart').val(s.hrWorkDayStart.substring(0, 5));
+            if (s.hrWorkDayEnd) $('#hrWorkDayEnd').val(s.hrWorkDayEnd.substring(0, 5));
+            $('#hrWorkingDaysPerMonth').val(s.hrWorkingDaysPerMonth || 26);
+            $('#hrAbsenceDeductionPerDay').val(s.hrAbsenceDeductionPerDay || 0);
+            $('#hrAbsenceDeductionType').val(s.hrAbsenceDeductionType || 'Fixed');
+            $('#hrLateDeductionPerMinute').val(s.hrLateDeductionPerMinute || 0);
+            $('#hrEarlyLeaveDeductionPerMinute').val(s.hrEarlyLeaveDeductionPerMinute || 0);
+            $('#hrSalaryCalculationMethod').val(s.hrSalaryCalculationMethod || 'Monthly');
             new bootstrap.Modal('#schoolModal').show();
         });
     }
+    function getHrData() {
+        return {
+            defaultTeacherCommissionRate: parseFloat($('#schoolCommissionRate').val()) || 0,
+            isHrModuleEnabled: $('#hrModuleEnabled').is(':checked'),
+            hrRequireApprovalForLeaves: $('#hrRequireApprovalForLeaves').is(':checked'),
+            hrAutoCalculateOvertime: $('#hrAutoCalculateOvertime').is(':checked'),
+            hrAutoDeductAbsence: $('#hrAutoDeductAbsence').is(':checked'),
+            hrEnableFingerprintIntegration: $('#hrEnableFingerprintIntegration').is(':checked'),
+            hrEnableSelfService: $('#hrEnableSelfService').is(':checked'),
+            hrMaxOvertimeHoursPerMonth: parseInt($('#hrMaxOvertimeHours').val()) || 0,
+            hrOvertimeRateMultiplier: parseFloat($('#hrOvertimeRateMultiplier').val()) || 1.5,
+            hrLateGracePeriodMinutes: parseInt($('#hrLateGracePeriod').val()) || 0,
+            hrWorkDayStart: $('#hrWorkDayStart').val() + ':00',
+            hrWorkDayEnd: $('#hrWorkDayEnd').val() + ':00',
+            hrWorkingDaysPerMonth: parseInt($('#hrWorkingDaysPerMonth').val()) || 26,
+            hrAbsenceDeductionPerDay: parseFloat($('#hrAbsenceDeductionPerDay').val()) || 0,
+            hrAbsenceDeductionType: $('#hrAbsenceDeductionType').val(),
+            hrLateDeductionPerMinute: parseFloat($('#hrLateDeductionPerMinute').val()) || 0,
+            hrEarlyLeaveDeductionPerMinute: parseFloat($('#hrEarlyLeaveDeductionPerMinute').val()) || 0,
+            hrSalaryCalculationMethod: $('#hrSalaryCalculationMethod').val()
+        };
+    }
     function saveSchool() {
+        var hrData = getHrData();
         if (isEdit) {
             $.ajax({ url: '@Url.Action("UpdateSchool", "Platform")', method: 'PUT', headers: getHeaders(),
-                data: JSON.stringify({ id: +$('#schoolId').val(), name: $('#schoolName').val(), slug: $('#schoolSlug').val(),
+                data: JSON.stringify(Object.assign({ id: +$('#schoolId').val(), name: $('#schoolName').val(), slug: $('#schoolSlug').val(),
                     address: $('#schoolAddress').val(), isActive: $('#schoolActive').is(':checked'),
-                    expiryDate: $('#schoolExpiry').val() || null, onlinePlatformEnabled: $('#schoolOnline').is(':checked') }),
+                    expiryDate: $('#schoolExpiry').val() || null }, hrData)),
                 success: () => location.reload(),
                 error: (xhr) => toastr.error(xhr.responseJSON?.error || 'Error')
             });
         } else {
             $.ajax({ url: '@Url.Action("CreateSchool", "Platform")', method: 'POST', headers: getHeaders(),
-                data: JSON.stringify({ name: $('#schoolName').val(), slug: $('#schoolSlug').val(), address: $('#schoolAddress').val(),
+                data: JSON.stringify(Object.assign({ name: $('#schoolName').val(), slug: $('#schoolSlug').val(), address: $('#schoolAddress').val(),
                     isActive: $('#schoolActive').is(':checked'), expiryDate: $('#schoolExpiry').val() || null,
-                    onlinePlatformEnabled: $('#schoolOnline').is(':checked'),
                     adminEmail: $('#adminEmail').val(), adminPassword: $('#adminPassword').val(),
-                    adminFullName: $('#adminName').val(), subscriptionPlanId: $('#subscriptionPlan').val() || null }),
+                    adminFullName: $('#adminName').val(), subscriptionPlanId: $('#subscriptionPlan').val() || null }, hrData)),
                 success: () => { toastr.success('School created!'); location.reload(); },
                 error: (xhr) => toastr.error(xhr.responseJSON?.error || 'Error creating school')
             });
@@ -194,7 +355,7 @@
                 html += `<tr><td>${s.planName}</td><td>${new Date(s.activatedAt).toLocaleDateString()}</td>
                     <td>${new Date(s.expiryDate).toLocaleDateString()}</td>
                     <td>${s.isActive ? '<span class="badge bg-success">Active</span>' : '<span class="badge bg-secondary">Inactive</span>'}</td>
-                    <td>${s.isActive ? `<button class="btn btn-sm btn-outline-danger" onclick="cancelSub(${s.id})">Cancel</button>` : ''}</td></tr>`;
+                    <td>${s.isActive ? `<button class="btn-act btn-act-delete" onclick="cancelSub(${s.id})">Cancel</button>` : ''}</td></tr>`;
             });
             $('#subTable tbody').html(html || '<tr><td colspan="5" class="text-center text-muted">No subscriptions</td></tr>');
             new bootstrap.Modal('#subModal').show();
@@ -209,6 +370,50 @@
     function cancelSub(id) {
         $.ajax({ url: '@Url.Action("CancelSubscription", "Platform")?id=' + id, method: 'POST', headers: getHeaders(),
             success: () => { toastr.info('Subscription cancelled.'); manageSubscription($('#subSchoolId').val(), $('#subSchoolName').text()); }
+        });
+    }
+    function viewStorageUsage(schoolId, name) {
+        $('#storageSchoolName').text(name);
+        $.getJSON('@Url.Action("GetSubscriptions", "Platform")?schoolId=' + schoolId, function (data) {
+            var active = data.find(s => s.isActive);
+            if (active) {
+                var planGB = active.storageLimitGB || 0;
+                var extraGB = active.extraStorageGB || 0;
+                var usedGB = active.usedStorageGB || 0;
+                var totalGB = planGB + extraGB;
+                var pct = totalGB > 0 ? Math.min(100, ((usedGB / totalGB) * 100)).toFixed(1) : 0;
+                $('#storagePlanLimit').text(planGB.toFixed(1) + ' GB');
+                $('#storageExtra').text(extraGB.toFixed(1) + ' GB');
+                $('#storageUsed').text(usedGB.toFixed(2) + ' GB');
+                $('#storageProgressBar').css('width', pct + '%').text(pct + '%')
+                    .removeClass('bg-primary bg-warning bg-danger')
+                    .addClass(pct > 90 ? 'bg-danger' : pct > 70 ? 'bg-warning' : 'bg-primary');
+                $('#storageProgressText').text(usedGB.toFixed(2) + ' / ' + totalGB.toFixed(1) + ' GB used');
+            } else {
+                $('#storagePlanLimit, #storageExtra, #storageUsed').text('0 GB');
+                $('#storageProgressBar').css('width', '0%').text('0%');
+                $('#storageProgressText').text('No active subscription');
+            }
+            new bootstrap.Modal('#storageModal').show();
+        });
+    }
+    function viewSchoolHistory(schoolId, name) {
+        $('#historySchoolName').text(name);
+        $.getJSON('@Url.Action("GetSubscriptions", "Platform")?schoolId=' + schoolId, function (data) {
+            let html = '';
+            data.forEach(s => {
+                var totalGB = (s.storageLimitGB || 0) + (s.extraStorageGB || 0);
+                var usedGB = s.usedStorageGB || 0;
+                html += `<tr>
+                    <td><strong>${s.planName}</strong></td>
+                    <td>${new Date(s.activatedAt).toLocaleDateString()}</td>
+                    <td>${new Date(s.expiryDate).toLocaleDateString()}</td>
+                    <td>${usedGB.toFixed(2)} / ${totalGB.toFixed(1)} GB</td>
+                    <td>${s.isActive ? '<span class="badge bg-success">Active</span>' : '<span class="badge bg-secondary">Expired</span>'}</td>
+                </tr>`;
+            });
+            $('#historyTable tbody').html(html || '<tr><td colspan="5" class="text-center text-muted">No subscription history</td></tr>');
+            new bootstrap.Modal('#historyModal').show();
         });
     }
 </script>

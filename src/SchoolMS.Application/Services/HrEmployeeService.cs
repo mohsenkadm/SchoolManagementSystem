@@ -30,6 +30,25 @@ public class HrEmployeeService : IHrEmployeeService
             .OrderByDescending(e => e.CreatedAt)
             .ToListAsync();
 
+        return MapEmployeeList(items);
+    }
+
+    public async Task<List<HrEmployeeListDto>> GetBySchoolIdAsync(int schoolId)
+    {
+        var items = await _repository.Query()
+            .Where(e => e.SchoolId == schoolId)
+            .Include(e => e.Department)
+            .Include(e => e.JobTitle)
+            .Include(e => e.Branch)
+            .OrderByDescending(e => e.CreatedAt)
+            .ToListAsync();
+
+        return MapEmployeeList(items);
+    }
+
+    private static List<HrEmployeeListDto> MapEmployeeList(List<HrEmployee> items)
+    {
+
         return items.Select(e => new HrEmployeeListDto
         {
             Id = e.Id,

@@ -14,15 +14,14 @@ public class SalariesController : Controller
     private readonly IPlatformService _platformService;
     private readonly ITeacherService _teacherService;
     private readonly IStudentService _studentService;
-    private readonly IStaffService _staffService;
     private readonly IOneSignalNotificationService _pushService;
 
     public SalariesController(ISalaryService service, IPlatformService platformService,
-        ITeacherService teacherService, IStudentService studentService, IStaffService staffService,
+        ITeacherService teacherService, IStudentService studentService,
         IOneSignalNotificationService pushService)
     {
         _service = service; _platformService = platformService;
-        _teacherService = teacherService; _studentService = studentService; _staffService = staffService;
+        _teacherService = teacherService; _studentService = studentService;
         _pushService = pushService;
     }
 
@@ -69,12 +68,6 @@ public class SalariesController : Controller
             var all = await _teacherService.GetAllAsync();
             var filtered = sid.HasValue ? all.Where(t => t.SchoolId == sid.Value).ToList() : all;
             return Json(filtered.Select(t => new { id = t.Id, name = t.FullName, baseSalary = t.BaseSalary }));
-        }
-        else if (personType == "Staff")
-        {
-            var all = await _staffService.GetAllAsync();
-            var filtered = sid.HasValue ? all.Where(s => s.SchoolId == sid.Value).ToList() : all;
-            return Json(filtered.Select(s => new { id = s.Id, name = s.FullName, baseSalary = s.BaseSalary }));
         }
         return Json(new List<object>());
     }

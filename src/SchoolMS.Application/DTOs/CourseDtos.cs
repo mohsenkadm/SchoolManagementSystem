@@ -14,6 +14,7 @@ public class CourseDto
     public string? ThumbnailImage { get; set; }
     public string? BackgroundImage { get; set; }
     public bool IsPublished { get; set; }
+    public decimal? CommissionRate { get; set; }
     public int VideoCount { get; set; }
     public int LiveStreamCount { get; set; }
     public int SubscriberCount { get; set; }
@@ -29,6 +30,7 @@ public class CreateCourseDto
     public string? ThumbnailImage { get; set; }
     public string? BackgroundImage { get; set; }
     public bool IsPublished { get; set; }
+    public decimal? CommissionRate { get; set; }
     public int SchoolId { get; set; }
 }
 
@@ -53,6 +55,8 @@ public class CourseVideoDto
     public int LikeCount { get; set; }
     public double AverageRating { get; set; }
     public int RatingCount { get; set; }
+    public bool IsWatched { get; set; }
+    public int QuizQuestionCount { get; set; }
 }
 
 public class CreateCourseVideoDto
@@ -64,6 +68,7 @@ public class CreateCourseVideoDto
     public bool IsFreeTrial { get; set; }
     public bool IsScheduled { get; set; }
     public DateTime? ScheduledPublishAt { get; set; }
+    public List<CreateVideoQuizQuestionDto>? QuizQuestions { get; set; }
 }
 
 public class VideoSortDto
@@ -154,4 +159,104 @@ public class VideoRateRequestDto
 {
     public int StudentId { get; set; }
     public int Rating { get; set; }
+}
+
+// ===== Video Comments =====
+public class VideoCommentDto
+{
+    public int Id { get; set; }
+    public int CourseVideoId { get; set; }
+    public int StudentId { get; set; }
+    public string? StudentName { get; set; }
+    public string Comment { get; set; } = string.Empty;
+    public DateTime CommentDate { get; set; }
+}
+
+public class CreateVideoCommentDto
+{
+    public int CourseVideoId { get; set; }
+    public int StudentId { get; set; }
+    public string Comment { get; set; } = string.Empty;
+}
+
+// ===== Live Stream Comments =====
+public class LiveStreamCommentDto
+{
+    public int Id { get; set; }
+    public int LiveStreamId { get; set; }
+    public int? StudentId { get; set; }
+    public int? TeacherId { get; set; }
+    public string? SenderName { get; set; }
+    public string? SenderType { get; set; }
+    public string Comment { get; set; } = string.Empty;
+    public DateTime SentAt { get; set; }
+}
+
+public class CreateLiveStreamCommentDto
+{
+    public int LiveStreamId { get; set; }
+    public int? StudentId { get; set; }
+    public int? TeacherId { get; set; }
+    public string SenderName { get; set; } = string.Empty;
+    public string SenderType { get; set; } = string.Empty;
+    public string Comment { get; set; } = string.Empty;
+}
+
+// ===== Video Quiz =====
+public class VideoQuizQuestionDto
+{
+    public int Id { get; set; }
+    public int CourseVideoId { get; set; }
+    public string? VideoTitle { get; set; }
+    public string QuestionText { get; set; } = string.Empty;
+    public List<string> Options { get; set; } = [];
+    public string CorrectAnswer { get; set; } = string.Empty;
+    public int SortOrder { get; set; }
+    public int AnswerCount { get; set; }
+}
+
+public class CreateVideoQuizQuestionDto
+{
+    public int CourseVideoId { get; set; }
+    public string QuestionText { get; set; } = string.Empty;
+    public List<string> Options { get; set; } = [];
+    public string CorrectAnswer { get; set; } = string.Empty;
+    public int SortOrder { get; set; }
+}
+
+public class VideoQuizAnswerDto
+{
+    public int Id { get; set; }
+    public int VideoQuizQuestionId { get; set; }
+    public string? QuestionText { get; set; }
+    public int StudentId { get; set; }
+    public string? StudentName { get; set; }
+    public string? SelectedAnswer { get; set; }
+    public bool IsCorrect { get; set; }
+    public DateTime AnsweredAt { get; set; }
+}
+
+public class SubmitVideoQuizAnswerDto
+{
+    public int VideoQuizQuestionId { get; set; }
+    public int StudentId { get; set; }
+    public string SelectedAnswer { get; set; } = string.Empty;
+}
+
+// ===== Video Notes =====
+public class VideoNoteDto
+{
+    public int Id { get; set; }
+    public int CourseVideoId { get; set; }
+    public int StudentId { get; set; }
+    public string NoteText { get; set; } = string.Empty;
+    public DateTime CreatedAt { get; set; }
+    public DateTime? UpdatedAt { get; set; }
+}
+
+public class SaveVideoNoteDto
+{
+    public int CourseVideoId { get; set; }
+    public int StudentId { get; set; }
+    public string NoteText { get; set; } = string.Empty;
 }

@@ -23,6 +23,9 @@ public class HrWorkShiftService : IHrWorkShiftService
     public async Task<List<HrWorkShiftDto>> GetAllAsync()
         => _mapper.Map<List<HrWorkShiftDto>>(await _repository.GetAllAsync());
 
+    public async Task<List<HrWorkShiftDto>> GetBySchoolIdAsync(int schoolId)
+        => _mapper.Map<List<HrWorkShiftDto>>(await _repository.Query().Where(w => w.SchoolId == schoolId).ToListAsync());
+
     public async Task<HrWorkShiftDto?> GetByIdAsync(int id)
     {
         var entity = await _repository.GetByIdAsync(id);

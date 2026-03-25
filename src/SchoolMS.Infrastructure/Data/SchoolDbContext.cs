@@ -6,12 +6,14 @@ namespace SchoolMS.Infrastructure.Data;
 
 public class SchoolDbContext : IdentityDbContext<ApplicationUser>
 {
-    private readonly int? _currentSchoolId;
+    // Public property so EF Core correctly parameterizes the query filter
+    // across cached model instances (evaluated per-query from the current DbContext).
+    public int? CurrentSchoolId { get; set; }
 
     public SchoolDbContext(DbContextOptions<SchoolDbContext> options, ITenantProvider tenantProvider)
         : base(options)
     {
-        _currentSchoolId = tenantProvider.GetCurrentSchoolId();
+        CurrentSchoolId = tenantProvider.GetCurrentSchoolId();
     }
 
     // Core
@@ -22,7 +24,6 @@ public class SchoolDbContext : IdentityDbContext<ApplicationUser>
     // People
     public DbSet<Student> Students => Set<Student>();
     public DbSet<Teacher> Teachers => Set<Teacher>();
-    public DbSet<Staff> StaffMembers => Set<Staff>();
 
     // Academic Structure
     public DbSet<Subject> Subjects => Set<Subject>();
@@ -83,6 +84,9 @@ public class SchoolDbContext : IdentityDbContext<ApplicationUser>
     // Carousel
     public DbSet<CarouselImage> CarouselImages => Set<CarouselImage>();
 
+    // Teacher Earnings
+    public DbSet<TeacherEarning> TeacherEarnings => Set<TeacherEarning>();
+
     // Online Platform
     public DbSet<OnlineSubscriptionPlan> OnlineSubscriptionPlans => Set<OnlineSubscriptionPlan>();
     public DbSet<StudentSubscription> StudentSubscriptions => Set<StudentSubscription>();
@@ -98,10 +102,14 @@ public class SchoolDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<VideoLike> VideoLikes => Set<VideoLike>();
     public DbSet<VideoSeen> VideoSeens => Set<VideoSeen>();
     public DbSet<LiveStreamSeen> LiveStreamSeens => Set<LiveStreamSeen>();
+    public DbSet<VideoQuizQuestion> VideoQuizQuestions => Set<VideoQuizQuestion>();
+    public DbSet<VideoQuizAnswer> VideoQuizAnswers => Set<VideoQuizAnswer>();
+    public DbSet<VideoNote> VideoNotes => Set<VideoNote>();
 
     // System
     public DbSet<SystemSubscriptionPlan> SystemSubscriptionPlans => Set<SystemSubscriptionPlan>();
     public DbSet<SchoolSubscription> SchoolSubscriptions => Set<SchoolSubscription>();
+    public DbSet<StoragePlan> StoragePlans => Set<StoragePlan>();
     public DbSet<StorageRequest> StorageRequests => Set<StorageRequest>();
 
     // Permissions
@@ -210,7 +218,7 @@ public class SchoolDbContext : IdentityDbContext<ApplicationUser>
             e.HasOne(u => u.Branch).WithMany().HasForeignKey(u => u.BranchId).OnDelete(DeleteBehavior.NoAction);
             e.HasQueryFilter(u =>
                 !u.IsDeleted &&
-                (_currentSchoolId == null || u.SchoolId == _currentSchoolId));
+                (CurrentSchoolId == null || u.SchoolId == CurrentSchoolId));
         });
 
         // Global query filter for soft delete and multi-tenancy
@@ -340,11 +348,6 @@ public class SchoolDbContext : IdentityDbContext<ApplicationUser>
             e.HasOne(t => t.Branch).WithMany(b => b.Teachers).HasForeignKey(t => t.BranchId).OnDelete(DeleteBehavior.NoAction);
         });
 
-        builder.Entity<Staff>(e =>
-        {
-            e.HasOne(s => s.Branch).WithMany(b => b.StaffMembers).HasForeignKey(s => s.BranchId).OnDelete(DeleteBehavior.NoAction);
-        });
-
         builder.Entity<Grade>(e =>
         {
             e.HasOne(g => g.Division).WithMany(d => d.Grades).HasForeignKey(g => g.DivisionId).OnDelete(DeleteBehavior.NoAction);
@@ -367,6 +370,7 @@ public class SchoolDbContext : IdentityDbContext<ApplicationUser>
         {
             e.HasOne(lc => lc.LiveStream).WithMany(ls => ls.Comments).HasForeignKey(lc => lc.LiveStreamId).OnDelete(DeleteBehavior.NoAction);
             e.HasOne(lc => lc.Student).WithMany().HasForeignKey(lc => lc.StudentId).OnDelete(DeleteBehavior.NoAction);
+            e.HasOne(lc => lc.Teacher).WithMany().HasForeignKey(lc => lc.TeacherId).OnDelete(DeleteBehavior.NoAction);
         });
 
         builder.Entity<VideoComment>(e =>
@@ -423,9 +427,17 @@ public class SchoolDbContext : IdentityDbContext<ApplicationUser>
             e.HasOne(u => u.StudentSubscription).WithMany().HasForeignKey(u => u.StudentSubscriptionId).OnDelete(DeleteBehavior.NoAction);
         });
 
+        builder.Entity<TeacherEarning>(e =>
+        {
+            e.HasOne(te => te.Teacher).WithMany().HasForeignKey(te => te.TeacherId).OnDelete(DeleteBehavior.NoAction);
+            e.HasOne(te => te.Course).WithMany().HasForeignKey(te => te.CourseId).OnDelete(DeleteBehavior.NoAction);
+            e.HasOne(te => te.StudentSubscription).WithMany().HasForeignKey(te => te.StudentSubscriptionId).OnDelete(DeleteBehavior.NoAction);
+        });
+
         builder.Entity<StorageRequest>(e =>
         {
             e.HasOne(sr => sr.SchoolSubscription).WithMany(ss => ss.StorageRequests).HasForeignKey(sr => sr.SchoolSubscriptionId).OnDelete(DeleteBehavior.NoAction);
+            e.HasOne(sr => sr.StoragePlan).WithMany(sp => sp.StorageRequests).HasForeignKey(sr => sr.StoragePlanId).OnDelete(DeleteBehavior.NoAction);
         });
 
         builder.Entity<ChatRoom>(e =>
@@ -433,6 +445,7 @@ public class SchoolDbContext : IdentityDbContext<ApplicationUser>
             e.HasOne(cr => cr.Branch).WithMany().HasForeignKey(cr => cr.BranchId).OnDelete(DeleteBehavior.NoAction);
             e.HasOne(cr => cr.ClassRoom).WithMany().HasForeignKey(cr => cr.ClassRoomId).OnDelete(DeleteBehavior.NoAction);
             e.HasOne(cr => cr.Subject).WithMany().HasForeignKey(cr => cr.SubjectId).OnDelete(DeleteBehavior.NoAction);
+            e.HasOne(cr => cr.Teacher).WithMany().HasForeignKey(cr => cr.TeacherId).OnDelete(DeleteBehavior.NoAction);
         });
 
         builder.Entity<UserPermission>(e =>
@@ -569,7 +582,7 @@ public class SchoolDbContext : IdentityDbContext<ApplicationUser>
             e.HasOne(emp => emp.JobTitle).WithMany().HasForeignKey(emp => emp.JobTitleId).OnDelete(DeleteBehavior.NoAction);
             e.HasOne(emp => emp.JobGrade).WithMany().HasForeignKey(emp => emp.JobGradeId).OnDelete(DeleteBehavior.NoAction);
             e.HasOne(emp => emp.JobGradeStep).WithMany().HasForeignKey(emp => emp.JobGradeStepId).OnDelete(DeleteBehavior.NoAction);
-            e.HasOne(emp => emp.Branch).WithMany().HasForeignKey(emp => emp.BranchId).OnDelete(DeleteBehavior.NoAction);
+            e.HasOne(emp => emp.Branch).WithMany(b => b.StaffMembers).HasForeignKey(emp => emp.BranchId).OnDelete(DeleteBehavior.NoAction);
             e.HasOne(emp => emp.WorkShift).WithMany(ws => ws.Employees).HasForeignKey(emp => emp.WorkShiftId).OnDelete(DeleteBehavior.NoAction);
             e.HasOne(emp => emp.DirectManager).WithMany().HasForeignKey(emp => emp.DirectManagerId).OnDelete(DeleteBehavior.NoAction);
             e.HasIndex(emp => emp.EmployeeNumber);
@@ -753,6 +766,24 @@ public class SchoolDbContext : IdentityDbContext<ApplicationUser>
             e.HasOne(r => r.Employee).WithMany().HasForeignKey(r => r.EmployeeId).OnDelete(DeleteBehavior.NoAction);
         });
 
+        // Video Quiz & Notes
+        builder.Entity<VideoQuizQuestion>(e =>
+        {
+            e.HasOne(q => q.CourseVideo).WithMany(cv => cv.QuizQuestions).HasForeignKey(q => q.CourseVideoId).OnDelete(DeleteBehavior.NoAction);
+        });
+
+        builder.Entity<VideoQuizAnswer>(e =>
+        {
+            e.HasOne(a => a.VideoQuizQuestion).WithMany(q => q.Answers).HasForeignKey(a => a.VideoQuizQuestionId).OnDelete(DeleteBehavior.NoAction);
+            e.HasOne(a => a.Student).WithMany().HasForeignKey(a => a.StudentId).OnDelete(DeleteBehavior.NoAction);
+        });
+
+        builder.Entity<VideoNote>(e =>
+        {
+            e.HasOne(n => n.CourseVideo).WithMany(cv => cv.Notes).HasForeignKey(n => n.CourseVideoId).OnDelete(DeleteBehavior.NoAction);
+            e.HasOne(n => n.Student).WithMany().HasForeignKey(n => n.StudentId).OnDelete(DeleteBehavior.NoAction);
+        });
+
         // Decimal precision
         foreach (var property in builder.Model.GetEntityTypes()
             .SelectMany(t => t.GetProperties())
@@ -765,57 +796,72 @@ public class SchoolDbContext : IdentityDbContext<ApplicationUser>
 
     private void ApplyGlobalFilters<T>(ModelBuilder builder) where T : BaseEntity
     {
-        // The filter expression must ALWAYS include the school condition inside the expression.
-        // OnModelCreating runs once and the model is cached — a runtime 'if' outside the
-        // expression would permanently decide the filter shape for all future requests.
-        // By keeping the check inside the expression, EF Core re-evaluates _currentSchoolId
-        // from the current DbContext instance on every query.
+        // The filter uses the public CurrentSchoolId property so EF Core can
+        // correctly parameterize it across the cached model. EF Core reads
+        // the property from the CURRENT DbContext instance on every query.
         builder.Entity<T>().HasQueryFilter(e =>
             !e.IsDeleted &&
-            (_currentSchoolId == null || e.SchoolId == _currentSchoolId));
+            (CurrentSchoolId == null || e.SchoolId == CurrentSchoolId));
     }
 
-    public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    private void ApplyTenantAndAuditFields()
     {
         foreach (var entry in ChangeTracker.Entries<BaseEntity>())
         {
             switch (entry.State)
             {
-                case Microsoft.EntityFrameworkCore.EntityState.Added:
+                case EntityState.Added:
                     entry.Entity.CreatedAt = DateTime.UtcNow;
-                    // Auto-fill SchoolId from tenant context when not explicitly set
                     if (entry.Entity.SchoolId == 0)
                     {
-                        if (_currentSchoolId.HasValue)
-                            entry.Entity.SchoolId = _currentSchoolId.Value;
+                        if (CurrentSchoolId.HasValue)
+                            entry.Entity.SchoolId = CurrentSchoolId.Value;
                         else if (entry.Entity is not School)
                             throw new InvalidOperationException(
                                 $"Cannot save {entry.Entity.GetType().Name}: SchoolId is 0 and no tenant context is available. " +
                                 "Ensure the user has a SchoolId claim or set SchoolId explicitly.");
                     }
                     break;
-                case Microsoft.EntityFrameworkCore.EntityState.Modified:
+                case EntityState.Modified:
                     entry.Entity.UpdatedAt = DateTime.UtcNow;
                     break;
             }
         }
 
-        // ApplicationUser does not inherit BaseEntity — handle SchoolId separately
         foreach (var entry in ChangeTracker.Entries<ApplicationUser>())
         {
-            if (entry.State == Microsoft.EntityFrameworkCore.EntityState.Added)
+            if (entry.State == EntityState.Added && entry.Entity.SchoolId == 0)
             {
-                if (entry.Entity.SchoolId == 0)
-                {
-                    if (_currentSchoolId.HasValue)
-                        entry.Entity.SchoolId = _currentSchoolId.Value;
-                    else
-                        throw new InvalidOperationException(
-                            "Cannot save ApplicationUser: SchoolId is 0 and no tenant context is available.");
-                }
+                if (CurrentSchoolId.HasValue)
+                    entry.Entity.SchoolId = CurrentSchoolId.Value;
+                else
+                    throw new InvalidOperationException(
+                        "Cannot save ApplicationUser: SchoolId is 0 and no tenant context is available.");
             }
         }
+    }
 
+    public override int SaveChanges()
+    {
+        ApplyTenantAndAuditFields();
+        return base.SaveChanges();
+    }
+
+    public override int SaveChanges(bool acceptAllChangesOnSuccess)
+    {
+        ApplyTenantAndAuditFields();
+        return base.SaveChanges(acceptAllChangesOnSuccess);
+    }
+
+    public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    {
+        ApplyTenantAndAuditFields();
         return base.SaveChangesAsync(cancellationToken);
+    }
+
+    public override Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default)
+    {
+        ApplyTenantAndAuditFields();
+        return base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
     }
 }

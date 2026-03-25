@@ -73,6 +73,22 @@
                 </div>
             </form>
         </div>
+
+        <!-- Quiz Questions Section (inline on create/edit page) -->
+        <div class="dashboard-card card p-4 mt-4" data-aos="fade-up">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h6 class="mb-0"><i class="fas fa-question-circle me-2 text-warning"></i>@Localizer["QuizQuestions"]</h6>
+                <button type="button" class="btn-act btn-act-warning" onclick="addQuizRow()"><i class="fas fa-plus me-1"></i>@Localizer["AddQuestion"]</button>
+            </div>
+            @if (isEdit)
+            {
+                <p class="text-muted small mb-2">
+                    <a href="@Url.Action("QuizQuestions", new { courseVideoId = video?.Id })" class="text-primary"><i class="fas fa-external-link-alt me-1"></i>@Localizer["ManageQuiz"]</a>
+                </p>
+            }
+            <div id="quizQuestionsContainer"></div>
+            <p class="text-muted small mt-2 mb-0" id="quizEmptyMsg"><i class="fas fa-info-circle me-1"></i>@Localizer["NoQuizQuestionsYet"]</p>
+        </div>
     </div>
 
     <!-- RIGHT COLUMN: Upload & Preview -->
@@ -172,7 +188,7 @@
                             <strong id="fileName" class="d-block"></strong>
                             <small id="fileSize" class="text-muted"></small>
                         </div>
-                        <button type="button" class="btn btn-sm btn-outline-danger" onclick="clearFile()"><i class="fas fa-times"></i></button>
+                        <button type="button" class="btn-act btn-act-delete" onclick="clearFile()"><i class="fas fa-times"></i></button>
                     </div>
                 </div>
 
@@ -487,6 +503,93 @@
     function toggleScheduleDate() {
         var checked = document.getElementById('isScheduled').checked;
         document.getElementById('scheduleDateGroup').style.display = checked ? '' : 'none';
+    }
+
+    // ===== Inline Quiz Questions (for new video creation) =====
+    var quizCounter = 0;
+    function addQuizRow() {
+        quizCounter++;
+        var idx = quizCounter;
+        var html = `
+        <div class="border rounded p-3 mb-2 quiz-row" id="quiz-row-${idx}" style="background:#fffbeb;">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <strong class="small text-warning"><i class="fas fa-question me-1"></i>Question ${idx}</strong>
+                <button type="button" class="btn-act btn-act-delete" onclick="removeQuizRow(${idx})"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="mb-2"><input type="text" class="form-control form-control-sm quiz-text" placeholder="Question text..." /></div>
+            <div class="quiz-options mb-2">
+                <div class="input-group input-group-sm mb-1"><span class="input-group-text">A</span><input type="text" class="form-control quiz-opt" placeholder="Option A" /></div>
+                <div class="input-group input-group-sm mb-1"><span class="input-group-text">B</span><input type="text" class="form-control quiz-opt" placeholder="Option B" /></div>
+            </div>
+            <div class="d-flex gap-2">
+                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="addQuizOption(${idx})"><i class="fas fa-plus me-1"></i>Option</button>
+                <select class="form-select form-select-sm quiz-correct" style="max-width:200px;"><option value="">Correct answer...</option></select>
+            </div>
+        </div>`;
+        $('#quizQuestionsContainer').append(html);
+        $('#quizEmptyMsg').hide();
+        refreshQuizCorrectOptions(idx);
+    }
+    function removeQuizRow(idx) {
+        $('#quiz-row-' + idx).remove();
+        if ($('.quiz-row').length === 0) $('#quizEmptyMsg').show();
+    }
+    function addQuizOption(idx) {
+        var container = $('#quiz-row-' + idx + ' .quiz-options');
+        var num = container.find('.quiz-opt').length;
+        var lbl = String.fromCharCode(65 + num);
+        container.append(`<div class="input-group input-group-sm mb-1"><span class="input-group-text">${lbl}</span><input type="text" class="form-control quiz-opt" placeholder="Option ${lbl}" /></div>`);
+        refreshQuizCorrectOptions(idx);
+    }
+    $(document).on('input', '.quiz-opt', function () {
+        var row = $(this).closest('.quiz-row');
+        var idx = row.attr('id').replace('quiz-row-', '');
+        refreshQuizCorrectOptions(idx);
+    });
+    function refreshQuizCorrectOptions(idx) {
+        var sel = $('#quiz-row-' + idx + ' .quiz-correct');
+        var prev = sel.val();
+        sel.empty().append('<option value="">Correct answer...</option>');
+        $('#quiz-row-' + idx + ' .quiz-opt').each(function () {
+            var v = $.trim($(this).val());
+            if (v) sel.append(`<option value="${v}">${v}</option>`);
+        });
+        if (prev) sel.val(prev);
+    }
+    function collectQuizQuestions() {
+        var questions = [];
+        $('.quiz-row').each(function (i) {
+            var text = $.trim($(this).find('.quiz-text').val());
+            var correct = $(this).find('.quiz-correct').val();
+            var opts = [];
+            $(this).find('.quiz-opt').each(function () { var v = $.trim($(this).val()); if (v) opts.push(v); });
+            if (text && opts.length >= 2 && correct) {
+                questions.push({ questionText: text, options: opts, correctAnswer: correct, sortOrder: i });
+            }
+        });
+        return questions;
+    }
+
+    // Inject quiz questions into form data before submit (for new video creation via AJAX)
+    var _origAjaxSubmit = null;
+    if (!isEditMode) {
+        var origSubmitHandler = $('#videoForm').data('events')?.submit;
+        // Intercept the AJAX submission to include quiz data
+        $(document).ajaxSend(function (e, xhr, settings) {
+            if (settings.url === $('#videoForm').attr('action') && settings.data) {
+                var quizData = collectQuizQuestions();
+                if (quizData.length > 0) {
+                    for (var i = 0; i < quizData.length; i++) {
+                        settings.data += '&QuizQuestions[' + i + '].QuestionText=' + encodeURIComponent(quizData[i].questionText);
+                        settings.data += '&QuizQuestions[' + i + '].CorrectAnswer=' + encodeURIComponent(quizData[i].correctAnswer);
+                        settings.data += '&QuizQuestions[' + i + '].SortOrder=' + quizData[i].sortOrder;
+                        for (var j = 0; j < quizData[i].options.length; j++) {
+                            settings.data += '&QuizQuestions[' + i + '].Options[' + j + ']=' + encodeURIComponent(quizData[i].options[j]);
+                        }
+                    }
+                }
+            }
+        });
     }
 </script>
 }

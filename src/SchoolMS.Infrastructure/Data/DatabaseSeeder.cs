@@ -11,10 +11,11 @@ public static class DatabaseSeeder
     // ── Permission page list (shared by every school) ──────────────────
     private static readonly string[] PermissionPages = [
         "Dashboard","Students","Teachers","Staff","Subjects","Divisions","Grades","ClassRooms",
-        "TeacherAssignments","Salaries","Expenses","Installments","ExamSchedule","WeeklySchedule",
+        "AcademicYears","TeacherAssignments","Salaries","Expenses","Installments","ExamSchedule","WeeklySchedule",
         "StudentGrades","Branches","Leaves","Attendance","Notifications","Users","Promotion",
         "Homework","Quizzes","Carousel","OnlinePlans","OnlineSubscriptions","PromoCodes",
-        "Courses","LiveStreams","Chat",
+        "Courses","LiveStreams","Chat","OnlineSubscriptionPlans","StudentSubscriptions","TeacherEarnings",
+        "SchoolSubscriptions",
         "Parents","Events","Announcements","Behavior","Health","Complaints",
         "Visitors","Library","Transport","Assets","AuditLog","Reports",
         "HrDashboard","HrDepartments","HrJobTitles","HrJobGrades","HrEmployees",
@@ -222,10 +223,17 @@ public static class DatabaseSeeder
         context.Teachers.AddRange(teachers);
         await context.SaveChangesAsync();
 
-        // ── Staff ─────────────────────────────────────────────────────
-        var staff1 = new Staff { FullName = "Receptionist " + info.Slug, Position = "Receptionist", Phone = "+966500000001", BadgeCardNumber = $"{info.StudentPrefix}-S001", Username = "reception." + info.Slug, Password = "hashed", BranchId = mainBranch.Id, BaseSalary = 3500m, SchoolId = sid, CreatedAt = now, CreatedBy = "System" };
-        var staff2 = new Staff { FullName = "Accountant " + info.Slug, Position = "Accountant", Phone = "+966500000002", BadgeCardNumber = $"{info.StudentPrefix}-S002", Username = "account." + info.Slug, Password = "hashed", BranchId = mainBranch.Id, BaseSalary = 4500m, SchoolId = sid, CreatedAt = now, CreatedBy = "System" };
-        context.StaffMembers.AddRange(staff1, staff2);
+        // ── Staff (HrEmployee) ────────────────────────────────────────
+        var defaultDept = new HrDepartment { DepartmentName = "General", DepartmentCode = "GEN", IsActive = true, BranchId = mainBranch.Id, SchoolId = sid, CreatedAt = now, CreatedBy = "System" };
+        context.HrDepartments.Add(defaultDept);
+        await context.SaveChangesAsync();
+        var receptionTitle = new HrJobTitle { TitleName = "Receptionist", IsActive = true, DepartmentId = defaultDept.Id, SchoolId = sid, CreatedAt = now, CreatedBy = "System" };
+        var accountTitle = new HrJobTitle { TitleName = "Accountant", IsActive = true, DepartmentId = defaultDept.Id, SchoolId = sid, CreatedAt = now, CreatedBy = "System" };
+        context.HrJobTitles.AddRange(receptionTitle, accountTitle);
+        await context.SaveChangesAsync();
+        var staff1 = new HrEmployee { FullName = "Receptionist " + info.Slug, FirstName = "Receptionist", LastName = info.Slug, EmployeeNumber = $"{info.StudentPrefix}-S001", Phone = "+966500000001", BadgeCardNumber = $"{info.StudentPrefix}-S001", Username = "reception." + info.Slug, Password = "hashed", BranchId = mainBranch.Id, DepartmentId = defaultDept.Id, JobTitleId = receptionTitle.Id, EmployeeType = EmployeeType.FullTime, Category = EmployeeCategory.Admin, HireDate = now, Status = HrEmployeeStatus.Active, SchoolId = sid, CreatedAt = now, CreatedBy = "System" };
+        var staff2 = new HrEmployee { FullName = "Accountant " + info.Slug, FirstName = "Accountant", LastName = info.Slug, EmployeeNumber = $"{info.StudentPrefix}-S002", Phone = "+966500000002", BadgeCardNumber = $"{info.StudentPrefix}-S002", Username = "account." + info.Slug, Password = "hashed", BranchId = mainBranch.Id, DepartmentId = defaultDept.Id, JobTitleId = accountTitle.Id, EmployeeType = EmployeeType.FullTime, Category = EmployeeCategory.Admin, HireDate = now, Status = HrEmployeeStatus.Active, SchoolId = sid, CreatedAt = now, CreatedBy = "System" };
+        context.HrEmployees.AddRange(staff1, staff2);
         await context.SaveChangesAsync();
 
         // ── Teacher Assignments ───────────────────────────────────────
@@ -304,8 +312,8 @@ public static class DatabaseSeeder
         {
             context.SalarySetups.Add(new SalarySetup { PersonId = t.Id, PersonType = PersonType.Teacher, BaseSalary = t.BaseSalary, Allowances = 500m, Deductions = 0m, SchoolId = sid, CreatedAt = now, CreatedBy = "System" });
         }
-        context.SalarySetups.Add(new SalarySetup { PersonId = staff1.Id, PersonType = PersonType.Staff, BaseSalary = staff1.BaseSalary, Allowances = 300m, Deductions = 0m, SchoolId = sid, CreatedAt = now, CreatedBy = "System" });
-        context.SalarySetups.Add(new SalarySetup { PersonId = staff2.Id, PersonType = PersonType.Staff, BaseSalary = staff2.BaseSalary, Allowances = 300m, Deductions = 0m, SchoolId = sid, CreatedAt = now, CreatedBy = "System" });
+        context.SalarySetups.Add(new SalarySetup { PersonId = staff1.Id, PersonType = PersonType.Staff, BaseSalary = 3500m, Allowances = 300m, Deductions = 0m, SchoolId = sid, CreatedAt = now, CreatedBy = "System" });
+        context.SalarySetups.Add(new SalarySetup { PersonId = staff2.Id, PersonType = PersonType.Staff, BaseSalary = 4500m, Allowances = 300m, Deductions = 0m, SchoolId = sid, CreatedAt = now, CreatedBy = "System" });
         await context.SaveChangesAsync();
 
         // ── Fee Installments & Payments ───────────────────────────────

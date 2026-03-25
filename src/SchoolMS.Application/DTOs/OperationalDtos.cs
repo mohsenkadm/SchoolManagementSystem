@@ -34,6 +34,8 @@ public class AttendanceDto
     public string? BranchName { get; set; }
     public string? SchoolName { get; set; }
     public bool IsAutoAbsent { get; set; }
+    public int? AcademicYearId { get; set; }
+    public string? AcademicYearName { get; set; }
 }
 
 public class CreateAttendanceDto
@@ -67,6 +69,7 @@ public class AttendanceFilterDto
     public int? BranchId { get; set; }
     public int? SchoolId { get; set; }
     public string? SearchValue { get; set; }
+    public int? AcademicYearId { get; set; }
 }
 
 public class AttendanceReportDto
@@ -239,6 +242,15 @@ public class DashboardDto
     public int OverdueInstallments { get; set; }
     public List<MonthlyFinancialData> MonthlyFinancials { get; set; } = new();
     public List<RecentActivityDto> RecentActivities { get; set; } = new();
+    public SubscriptionExpiryAlertDto? SubscriptionExpiryAlert { get; set; }
+}
+
+public class SubscriptionExpiryAlertDto
+{
+    public string PlanName { get; set; } = string.Empty;
+    public DateTime ExpiryDate { get; set; }
+    public int DaysRemaining { get; set; }
+    public bool IsExpired { get; set; }
 }
 
 public class MonthlyFinancialData
@@ -331,6 +343,7 @@ public class PortalLoginDto
     public string Username { get; set; } = string.Empty;
     public string Password { get; set; } = string.Empty;
     public int SchoolId { get; set; }
+    public string? DeviceId { get; set; }
 }
 
 public class PortalLoginResultDto
@@ -338,6 +351,7 @@ public class PortalLoginResultDto
     public bool Succeeded { get; set; }
     public string? Token { get; set; }
     public string? Error { get; set; }
+    public string? ErrorMessage { get; set; }
     public string? FullName { get; set; }
     public string? UserType { get; set; }
     public int PersonId { get; set; }

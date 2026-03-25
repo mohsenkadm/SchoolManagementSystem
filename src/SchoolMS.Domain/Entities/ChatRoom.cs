@@ -9,9 +9,11 @@ public class ChatRoom : BaseEntity
     public int? BranchId { get; set; }
     public int? ClassRoomId { get; set; }
     public int? SubjectId { get; set; }
+    public int? TeacherId { get; set; }
 
     public virtual Branch? Branch { get; set; }
     public virtual ClassRoom? ClassRoom { get; set; }
     public virtual Subject? Subject { get; set; }
+    public virtual Teacher? Teacher { get; set; }
     public virtual ICollection<ChatMessage> Messages { get; set; } = new List<ChatMessage>();
 }

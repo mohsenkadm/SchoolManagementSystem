@@ -36,6 +36,26 @@ public class HrLeaveService : IHrLeaveService
         var query = _requestRepo.Query().Include(l => l.Employee).Include(l => l.LeaveType).AsQueryable();
         if (status.HasValue) query = query.Where(l => l.Status == status.Value);
         var items = await query.OrderByDescending(l => l.CreatedAt).ToListAsync();
+        return MapLeaveRequests(items);
+    }
+
+    public async Task<List<HrLeaveRequestDto>> GetRequestsBySchoolIdAsync(int schoolId, HrLeaveStatus? status = null)
+    {
+        var query = _requestRepo.Query().Where(l => l.SchoolId == schoolId).Include(l => l.Employee).Include(l => l.LeaveType).AsQueryable();
+        if (status.HasValue) query = query.Where(l => l.Status == status.Value);
+        var items = await query.OrderByDescending(l => l.CreatedAt).ToListAsync();
+        return MapLeaveRequests(items);
+    }
+
+    public async Task<List<HrHolidayDto>> GetHolidaysBySchoolIdAsync(int schoolId, int? year = null)
+    {
+        var query = _holidayRepo.Query().Where(h => h.SchoolId == schoolId);
+        if (year.HasValue) query = query.Where(h => h.StartDate.Year == year.Value);
+        return _mapper.Map<List<HrHolidayDto>>(await query.OrderBy(h => h.StartDate).ToListAsync());
+    }
+
+    private static List<HrLeaveRequestDto> MapLeaveRequests(List<HrLeaveRequest> items)
+    {
         return items.Select(l => new HrLeaveRequestDto
         {
             Id = l.Id, EmployeeId = l.EmployeeId, EmployeeName = l.Employee?.FullName,

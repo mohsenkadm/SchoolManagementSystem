@@ -30,45 +30,15 @@ public class HrSalaryApiController : ControllerBase
     public async Task<ActionResult<List<HrSalaryDetailDto>>> GetSalaryHistory(int employeeId)
         => Ok(await _service.GetSalaryHistoryAsync(employeeId));
 
-    [HttpPost("setup")]
-    public async Task<ActionResult<HrSalaryDetailDto>> CreateSetup(int schoolId, [FromBody] HrSalaryDetailDto dto)
-    { var r = await _service.CreateSalarySetupAsync(dto); await _pushService.SendToPersonTypesAsync("Salary Setup Created", "A new salary setup has been configured", new[] { "Staff" }, schoolId); return Ok(r); }
-
-    [HttpPut("setup")]
-    public async Task<ActionResult<HrSalaryDetailDto>> UpdateSetup([FromBody] HrSalaryDetailDto dto)
-        => Ok(await _service.UpdateSalarySetupAsync(dto));
-
     // Allowance Types
     [HttpGet("allowance-types")]
     public async Task<ActionResult<List<HrAllowanceTypeDto>>> GetAllowanceTypes()
         => Ok(await _service.GetAllowanceTypesAsync());
 
-    [HttpPost("allowance-types")]
-    public async Task<ActionResult<HrAllowanceTypeDto>> CreateAllowanceType([FromBody] HrAllowanceTypeDto dto)
-        => Ok(await _service.CreateAllowanceTypeAsync(dto));
-
-    [HttpPut("allowance-types")]
-    public async Task<ActionResult<HrAllowanceTypeDto>> UpdateAllowanceType([FromBody] HrAllowanceTypeDto dto)
-        => Ok(await _service.UpdateAllowanceTypeAsync(dto));
-
-    [HttpDelete("allowance-types/{id}")]
-    public async Task<IActionResult> DeleteAllowanceType(int id) { await _service.DeleteAllowanceTypeAsync(id); return Ok(); }
-
     // Deduction Types
     [HttpGet("deduction-types")]
     public async Task<ActionResult<List<HrDeductionTypeDto>>> GetDeductionTypes()
         => Ok(await _service.GetDeductionTypesAsync());
-
-    [HttpPost("deduction-types")]
-    public async Task<ActionResult<HrDeductionTypeDto>> CreateDeductionType([FromBody] HrDeductionTypeDto dto)
-        => Ok(await _service.CreateDeductionTypeAsync(dto));
-
-    [HttpPut("deduction-types")]
-    public async Task<ActionResult<HrDeductionTypeDto>> UpdateDeductionType([FromBody] HrDeductionTypeDto dto)
-        => Ok(await _service.UpdateDeductionTypeAsync(dto));
-
-    [HttpDelete("deduction-types/{id}")]
-    public async Task<IActionResult> DeleteDeductionType(int id) { await _service.DeleteDeductionTypeAsync(id); return Ok(); }
 
     // Payroll
     [HttpPost("payroll/generate")]
@@ -88,82 +58,26 @@ public class HrSalaryApiController : ControllerBase
     public async Task<ActionResult<List<HrMonthlyPayrollDto>>> GetPayrollList([FromQuery] int? year)
         => Ok(await _service.GetPayrollListAsync(year));
 
-    [HttpPost("payroll/{id}/approve")]
-    public async Task<IActionResult> ApprovePayroll(int id, [FromQuery] string approvedBy)
-    {
-        await _service.ApprovePayrollAsync(id, approvedBy);
-        return Ok();
-    }
-
-    [HttpPost("payroll/{id}/mark-paid")]
-    public async Task<IActionResult> MarkPayrollPaid(int id)
-    {
-        await _service.MarkPayrollPaidAsync(id);
-        return Ok();
-    }
 
     // Advances
     [HttpGet("advances")]
-    public async Task<ActionResult<List<HrSalaryAdvanceDto>>> GetAdvances([FromQuery] AdvanceStatus? status)
-        => Ok(await _service.GetAdvancesAsync(status));
-
-    [HttpPost("advances")]
-    public async Task<ActionResult<HrSalaryAdvanceDto>> CreateAdvance([FromBody] HrSalaryAdvanceDto dto)
-        => Ok(await _service.CreateAdvanceAsync(dto));
-
-    [HttpPost("advances/{id}/approve")]
-    public async Task<IActionResult> ApproveAdvance(int id, [FromQuery] string approvedBy,
-        [FromQuery] decimal approvedAmount, [FromQuery] int deductionMonths)
-    {
-        await _service.ApproveAdvanceAsync(id, approvedBy, approvedAmount, deductionMonths);
-        return Ok();
-    }
-
-    [HttpPost("advances/{id}/reject")]
-    public async Task<IActionResult> RejectAdvance(int id, [FromQuery] string rejectedBy, [FromQuery] string reason)
-    {
-        await _service.RejectAdvanceAsync(id, rejectedBy, reason);
-        return Ok();
-    }
+    public async Task<ActionResult<List<HrSalaryAdvanceDto>>> GetAdvances(int schoolId, [FromQuery] AdvanceStatus? status)
+        => Ok(await _service.GetAdvancesBySchoolIdAsync(schoolId, status));
 
     // Loans
     [HttpGet("loans")]
-    public async Task<ActionResult<List<HrEmployeeLoanDto>>> GetLoans([FromQuery] int? employeeId)
-        => Ok(await _service.GetLoansAsync(employeeId));
-
-    [HttpPost("loans")]
-    public async Task<ActionResult<HrEmployeeLoanDto>> CreateLoan([FromBody] HrEmployeeLoanDto dto)
-        => Ok(await _service.CreateLoanAsync(dto));
+    public async Task<ActionResult<List<HrEmployeeLoanDto>>> GetLoans(int schoolId, [FromQuery] int? employeeId)
+        => Ok(await _service.GetLoansBySchoolIdAsync(schoolId, employeeId));
 
     // Bonuses
     [HttpGet("bonuses")]
-    public async Task<ActionResult<List<HrBonusDto>>> GetBonuses([FromQuery] int? month, [FromQuery] int? year)
-        => Ok(await _service.GetBonusesAsync(month, year));
+    public async Task<ActionResult<List<HrBonusDto>>> GetBonuses(int schoolId, [FromQuery] int? month, [FromQuery] int? year)
+        => Ok(await _service.GetBonusesBySchoolIdAsync(schoolId, month, year));
 
-    [HttpPost("bonuses")]
-    public async Task<ActionResult<HrBonusDto>> CreateBonus([FromBody] HrBonusDto dto)
-        => Ok(await _service.CreateBonusAsync(dto));
-
-    [HttpPost("bonuses/{id}/approve")]
-    public async Task<IActionResult> ApproveBonus(int id, [FromQuery] string approvedBy)
-    {
-        await _service.ApproveBonusAsync(id, approvedBy);
-        return Ok();
-    }
 
     // Penalties
     [HttpGet("penalties")]
-    public async Task<ActionResult<List<HrPenaltyDto>>> GetPenalties([FromQuery] int? month, [FromQuery] int? year)
-        => Ok(await _service.GetPenaltiesAsync(month, year));
+    public async Task<ActionResult<List<HrPenaltyDto>>> GetPenalties(int schoolId, [FromQuery] int? month, [FromQuery] int? year)
+        => Ok(await _service.GetPenaltiesBySchoolIdAsync(schoolId, month, year));
 
-    [HttpPost("penalties")]
-    public async Task<ActionResult<HrPenaltyDto>> CreatePenalty([FromBody] HrPenaltyDto dto)
-        => Ok(await _service.CreatePenaltyAsync(dto));
-
-    [HttpPost("penalties/{id}/approve")]
-    public async Task<IActionResult> ApprovePenalty(int id, [FromQuery] string approvedBy)
-    {
-        await _service.ApprovePenaltyAsync(id, approvedBy);
-        return Ok();
-    }
 }

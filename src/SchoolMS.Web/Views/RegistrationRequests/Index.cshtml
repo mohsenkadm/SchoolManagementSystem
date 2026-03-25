@@ -140,8 +140,8 @@
                 data: 'id',
                 orderable: false,
                 render: function (data) {
-                    return '<button class="btn btn-sm btn-outline-primary me-1" onclick="viewDetails(' + data + ')"><i class="fas fa-eye"></i></button>' +
-                        '<button class="btn btn-sm btn-outline-danger" onclick="confirmDelete(\'@Url.Action("Delete")\', ' + data + ', function(){ table.ajax.reload(); })"><i class="fas fa-trash"></i></button>';
+                    return '<div class="action-group"><button class="btn-act btn-act-view" onclick="viewDetails(' + data + ')"><i class="fas fa-eye"></i></button>' +
+                        '<button class="btn-act btn-act-delete" onclick="confirmDelete(\'@Url.Action("Delete")\', ' + data + ', function(){ table.ajax.reload(); })"><i class="fas fa-trash"></i></button></div>';
                 }
             }
         ],

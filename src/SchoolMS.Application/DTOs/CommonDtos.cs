@@ -50,6 +50,7 @@ public class AcademicYearDto
     public DateTime EndDate { get; set; }
     public bool IsCurrent { get; set; }
     public int SchoolId { get; set; }
+    public string? SchoolName { get; set; }
 }
 
 public class BranchDto

@@ -478,4 +478,99 @@
   <data name="SelectTeacher" xml:space="preserve"><value>اختر المعلم</value></data>
   <data name="SelectSubject" xml:space="preserve"><value>اختر المادة</value></data>
   <data name="SelectClassRoom" xml:space="preserve"><value>اختر الفصل</value></data>
+
+  <!-- Layout - Missing Keys -->
+  <data name="ExamTypes" xml:space="preserve"><value>أنواع الامتحانات</value></data>
+  <data name="PaymentsReport" xml:space="preserve"><value>تقرير المدفوعات</value></data>
+  <data name="StudentFeeReport" xml:space="preserve"><value>تقرير رسوم الطلاب</value></data>
+  <data name="AttendanceReport" xml:space="preserve"><value>تقرير الحضور</value></data>
+  <data name="Courses" xml:space="preserve"><value>الدورات</value></data>
+  <data name="LiveStreams" xml:space="preserve"><value>البث المباشر</value></data>
+  <data name="OnlineSubscriptionPlans" xml:space="preserve"><value>خطط الاشتراك الإلكتروني</value></data>
+  <data name="StudentSubscriptions" xml:space="preserve"><value>اشتراكات الطلاب</value></data>
+  <data name="PromoCodes" xml:space="preserve"><value>رموز الخصم</value></data>
+  <data name="SystemAnalytics" xml:space="preserve"><value>تحليلات النظام</value></data>
+
+  <!-- HR Module -->
+  <data name="HrModule" xml:space="preserve"><value>الموارد البشرية</value></data>
+  <data name="HrDashboard" xml:space="preserve"><value>لوحة تحكم الموارد البشرية</value></data>
+  <data name="Employees" xml:space="preserve"><value>الموظفون</value></data>
+  <data name="Departments" xml:space="preserve"><value>الأقسام</value></data>
+  <data name="JobTitles" xml:space="preserve"><value>المسميات الوظيفية</value></data>
+  <data name="JobGrades" xml:space="preserve"><value>الدرجات الوظيفية</value></data>
+  <data name="Contracts" xml:space="preserve"><value>العقود</value></data>
+  <data name="WorkShifts" xml:space="preserve"><value>ورديات العمل</value></data>
+  <data name="HrAttendance" xml:space="preserve"><value>حضور الموظفين</value></data>
+  <data name="Fingerprint" xml:space="preserve"><value>البصمة</value></data>
+  <data name="HrLeaves" xml:space="preserve"><value>إجازات الموظفين</value></data>
+  <data name="Overtime" xml:space="preserve"><value>العمل الإضافي</value></data>
+  <data name="HrSalary" xml:space="preserve"><value>رواتب الموظفين</value></data>
+  <data name="HrPromotions" xml:space="preserve"><value>الترقيات</value></data>
+  <data name="Performance" xml:space="preserve"><value>الأداء</value></data>
+  <data name="Training" xml:space="preserve"><value>التدريب</value></data>
+  <data name="Disciplinary" xml:space="preserve"><value>الإجراءات التأديبية</value></data>
+  <data name="EndOfService" xml:space="preserve"><value>نهاية الخدمة</value></data>
+  <data name="HrSettings" xml:space="preserve"><value>إعدادات الموارد البشرية</value></data>
+
+  <!-- HR Views & Filters -->
+  <data name="AllStatuses" xml:space="preserve"><value>جميع الحالات</value></data>
+  <data name="AllTypes" xml:space="preserve"><value>جميع الأنواع</value></data>
+  <data name="AddEmployee" xml:space="preserve"><value>إضافة موظف</value></data>
+  <data name="EmployeeNo" xml:space="preserve"><value>رقم الموظف</value></data>
+  <data name="OnProbation" xml:space="preserve"><value>تحت التجربة</value></data>
+  <data name="OnLeave" xml:space="preserve"><value>في إجازة</value></data>
+  <data name="Completed" xml:space="preserve"><value>مكتمل</value></data>
+  <data name="Employee" xml:space="preserve"><value>الموظف</value></data>
+  <data name="Department" xml:space="preserve"><value>القسم</value></data>
+  <data name="JobTitle" xml:space="preserve"><value>المسمى الوظيفي</value></data>
+  <data name="Hours" xml:space="preserve"><value>ساعات</value></data>
+  <data name="HrTraining" xml:space="preserve"><value>البرامج التدريبية</value></data>
+  <data name="HrDisciplinary" xml:space="preserve"><value>الإجراءات التأديبية</value></data>
+  <data name="HrEndOfService" xml:space="preserve"><value>نهاية الخدمة</value></data>
+  <data name="TotalSettlement" xml:space="preserve"><value>إجمالي التسوية</value></data>
+  <data name="LeaveTypes" xml:space="preserve"><value>أنواع الإجازات</value></data>
+  <data name="Holidays" xml:space="preserve"><value>العطل الرسمية</value></data>
+  <data name="Days" xml:space="preserve"><value>أيام</value></data>
+  <data name="Effective" xml:space="preserve"><value>ساري المفعول</value></data>
+  <data name="SalaryIncrease" xml:space="preserve"><value>زيادة الراتب</value></data>
+  <data name="EffectiveDate" xml:space="preserve"><value>تاريخ السريان</value></data>
+  <data name="Settlement" xml:space="preserve"><value>التسوية</value></data>
+  <data name="Settled" xml:space="preserve"><value>تمت التسوية</value></data>
+  <data name="ServiceYears" xml:space="preserve"><value>سنوات الخدمة</value></data>
+  <data name="ApproveManager" xml:space="preserve"><value>موافقة (مدير)</value></data>
+  <data name="ApproveHR" xml:space="preserve"><value>موافقة (موارد بشرية)</value></data>
+  <data name="Mandatory" xml:space="preserve"><value>إلزامي</value></data>
+  <data name="Provider" xml:space="preserve"><value>مقدم الخدمة</value></data>
+  <data name="Participants" xml:space="preserve"><value>المشاركون</value></data>
+  <data name="ViolationTypes" xml:space="preserve"><value>أنواع المخالفات</value></data>
+  <data name="Violation" xml:space="preserve"><value>المخالفة</value></data>
+  <data name="IncidentDate" xml:space="preserve"><value>تاريخ الحادثة</value></data>
+  <data name="ActionType" xml:space="preserve"><value>نوع الإجراء</value></data>
+  <data name="Penalty" xml:space="preserve"><value>الغرامة</value></data>
+  <data name="Issued" xml:space="preserve"><value>صادر</value></data>
+  <data name="Resolved" xml:space="preserve"><value>تم الحل</value></data>
+  <data name="Appealed" xml:space="preserve"><value>تم الطعن</value></data>
+  <data name="Expired" xml:space="preserve"><value>منتهي الصلاحية</value></data>
+  <data name="Records" xml:space="preserve"><value>السجلات</value></data>
+  <data name="Requests" xml:space="preserve"><value>الطلبات</value></data>
+  <data name="Planned" xml:space="preserve"><value>مخطط</value></data>
+  <data name="CheckOut" xml:space="preserve"><value>وقت الخروج</value></data>
+  <data name="WorkedHours" xml:space="preserve"><value>ساعات العمل</value></data>
+  <data name="LateMinutes" xml:space="preserve"><value>دقائق التأخير</value></data>
+  <data name="ProcessAttendance" xml:space="preserve"><value>معالجة الحضور</value></data>
+  <data name="Devices" xml:space="preserve"><value>الأجهزة</value></data>
+  <data name="DateTime" xml:space="preserve"><value>التاريخ/الوقت</value></data>
+  <data name="Source" xml:space="preserve"><value>المصدر</value></data>
+  <data name="ContractNo" xml:space="preserve"><value>رقم العقد</value></data>
+  <data name="PendingRenewal" xml:space="preserve"><value>بانتظار التجديد</value></data>
+  <data name="MinSalary" xml:space="preserve"><value>الحد الأدنى للراتب</value></data>
+  <data name="MaxSalary" xml:space="preserve"><value>الحد الأقصى للراتب</value></data>
+  <data name="LateGrace" xml:space="preserve"><value>فترة السماح بالتأخير</value></data>
+  <data name="WorkingHours" xml:space="preserve"><value>ساعات العمل</value></data>
+  <data name="Parent" xml:space="preserve"><value>القسم الرئيسي</value></data>
+  <data name="TotalEmployees" xml:space="preserve"><value>إجمالي الموظفين</value></data>
+  <data name="StorageUsage" xml:space="preserve"><value>استخدام التخزين</value></data>
+  <data name="SubscriptionHistory" xml:space="preserve"><value>سجل الاشتراكات</value></data>
+  <data name="ViewDetails" xml:space="preserve"><value>عرض التفاصيل</value></data>
+  <data name="SchoolUsage" xml:space="preserve"><value>استخدام المدرسة</value></data>
 </root>

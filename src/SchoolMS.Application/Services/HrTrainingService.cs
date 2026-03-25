@@ -28,6 +28,17 @@ public class HrTrainingService : IHrTrainingService
     public async Task<List<HrTrainingProgramDto>> GetProgramsAsync()
     {
         var items = await _programRepo.Query().Include(p => p.Participants).OrderByDescending(p => p.StartDate).ToListAsync();
+        return MapPrograms(items);
+    }
+
+    public async Task<List<HrTrainingProgramDto>> GetProgramsBySchoolIdAsync(int schoolId)
+    {
+        var items = await _programRepo.Query().Where(p => p.SchoolId == schoolId).Include(p => p.Participants).OrderByDescending(p => p.StartDate).ToListAsync();
+        return MapPrograms(items);
+    }
+
+    private static List<HrTrainingProgramDto> MapPrograms(List<HrTrainingProgram> items)
+    {
         return items.Select(p => new HrTrainingProgramDto
         {
             Id = p.Id, ProgramName = p.ProgramName, ProgramNameAr = p.ProgramNameAr,
@@ -76,6 +87,21 @@ public class HrTrainingService : IHrTrainingService
     public async Task<List<HrTrainingRecordDto>> GetRecordsAsync(int? programId = null, int? employeeId = null)
     {
         var query = _recordRepo.Query().Include(r => r.Employee).Include(r => r.TrainingProgram).AsQueryable();
+        if (programId.HasValue) query = query.Where(r => r.TrainingProgramId == programId.Value);
+        if (employeeId.HasValue) query = query.Where(r => r.EmployeeId == employeeId.Value);
+        var items = await query.ToListAsync();
+        return items.Select(r => new HrTrainingRecordDto
+        {
+            Id = r.Id, EmployeeId = r.EmployeeId, EmployeeName = r.Employee?.FullName,
+            TrainingProgramId = r.TrainingProgramId, ProgramName = r.TrainingProgram?.ProgramName,
+            Status = r.Status, Score = r.Score, CertificateIssued = r.CertificateIssued,
+            CertificateNumber = r.CertificateNumber, Feedback = r.Feedback, Rating = r.Rating
+        }).ToList();
+    }
+
+    public async Task<List<HrTrainingRecordDto>> GetRecordsBySchoolIdAsync(int schoolId, int? programId = null, int? employeeId = null)
+    {
+        var query = _recordRepo.Query().Where(r => r.SchoolId == schoolId).Include(r => r.Employee).Include(r => r.TrainingProgram).AsQueryable();
         if (programId.HasValue) query = query.Where(r => r.TrainingProgramId == programId.Value);
         if (employeeId.HasValue) query = query.Where(r => r.EmployeeId == employeeId.Value);
         var items = await query.ToListAsync();

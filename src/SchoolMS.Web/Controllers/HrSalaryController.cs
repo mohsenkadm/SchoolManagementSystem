@@ -98,7 +98,9 @@ public class HrSalaryController : Controller
 
     // Advances
     [HasPermission("HrAdvances", "View")]
-    public async Task<IActionResult> Advances(AdvanceStatus? status) => View(await _service.GetAdvancesAsync(status));
+    public async Task<IActionResult> Advances(AdvanceStatus? status) => View(CurrentSchoolId.HasValue
+        ? await _service.GetAdvancesBySchoolIdAsync(CurrentSchoolId.Value, status)
+        : await _service.GetAdvancesAsync(status));
 
     [HasPermission("HrAdvances", "Add")]
     public async Task<IActionResult> CreateAdvance() { ViewBag.Employees = await _empService.GetAllAsync(); return View(); }
@@ -122,14 +124,18 @@ public class HrSalaryController : Controller
 
     // Loans
     [HasPermission("HrLoans", "View")]
-    public async Task<IActionResult> Loans(int? employeeId) => View(await _service.GetLoansAsync(employeeId));
+    public async Task<IActionResult> Loans(int? employeeId) => View(CurrentSchoolId.HasValue
+        ? await _service.GetLoansBySchoolIdAsync(CurrentSchoolId.Value, employeeId)
+        : await _service.GetLoansAsync(employeeId));
 
     [HttpPost, HasPermission("HrLoans", "Add"), ValidateAntiForgeryToken]
     public async Task<IActionResult> CreateLoan(HrEmployeeLoanDto dto) { await _service.CreateLoanAsync(dto); return RedirectToAction(nameof(Loans)); }
 
     // Bonuses
     [HasPermission("HrBonuses", "View")]
-    public async Task<IActionResult> Bonuses(int? month, int? year) => View(await _service.GetBonusesAsync(month, year));
+    public async Task<IActionResult> Bonuses(int? month, int? year) => View(CurrentSchoolId.HasValue
+        ? await _service.GetBonusesBySchoolIdAsync(CurrentSchoolId.Value, month, year)
+        : await _service.GetBonusesAsync(month, year));
 
     [HttpPost, HasPermission("HrBonuses", "Add"), ValidateAntiForgeryToken]
     public async Task<IActionResult> CreateBonus(HrBonusDto dto) { await _service.CreateBonusAsync(dto); return RedirectToAction(nameof(Bonuses)); }
@@ -139,7 +145,9 @@ public class HrSalaryController : Controller
 
     // Penalties
     [HasPermission("HrPenalties", "View")]
-    public async Task<IActionResult> Penalties(int? month, int? year) => View(await _service.GetPenaltiesAsync(month, year));
+    public async Task<IActionResult> Penalties(int? month, int? year) => View(CurrentSchoolId.HasValue
+        ? await _service.GetPenaltiesBySchoolIdAsync(CurrentSchoolId.Value, month, year)
+        : await _service.GetPenaltiesAsync(month, year));
 
     [HttpPost, HasPermission("HrPenalties", "Add"), ValidateAntiForgeryToken]
     public async Task<IActionResult> CreatePenalty(HrPenaltyDto dto) { await _service.CreatePenaltyAsync(dto); return RedirectToAction(nameof(Penalties)); }

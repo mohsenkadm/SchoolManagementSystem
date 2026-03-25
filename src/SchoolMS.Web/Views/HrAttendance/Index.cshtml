@@ -1,5 +1,11 @@
-@model List<SchoolMS.Application.DTOs.HrDailyAttendanceDto>
-@{ ViewData["Title"] = Localizer["HrAttendance"].Value; }
+@using SchoolMS.Application.DTOs
+@model List<HrDailyAttendanceDto>
+@{
+    ViewData["Title"] = Localizer["HrAttendance"].Value;
+    var isSuperAdmin = (bool)(ViewBag.IsSuperAdmin ?? false);
+    var schools = ViewBag.Schools as List<SchoolDto> ?? new();
+    var branches = ViewBag.Branches as List<BranchDto> ?? new();
+}
 
 <div class="page-header" data-aos="fade-down">
     <div><h4 class="page-title"><i class="fas fa-fingerprint text-primary"></i> @Localizer["HrAttendance"]</h4></div>
@@ -12,9 +18,33 @@
 </div>
 
 <div class="filter-panel" data-aos="fade-up">
+    <div class="filter-title"><i class="fas fa-filter"></i> @Localizer["Filter"]</div>
     <div class="row g-2 align-items-end">
-        <div class="col-md-3"><label class="form-label">@Localizer["Date"]</label><input type="date" id="filterDate" class="form-control" value="@(ViewContext.HttpContext.Request.Query["date"].FirstOrDefault() ?? DateTime.UtcNow.ToString("yyyy-MM-dd"))" /></div>
-        <div class="col-md-2"><button class="btn btn-filter w-100" onclick="location.href='?date='+$('#filterDate').val()"><i class="fas fa-search"></i> @Localizer["Filter"]</button></div>
+        @if (isSuperAdmin)
+        {
+            <div class="col-md-2">
+                <select id="filterSchool" class="form-select select2">
+                    <option value="">@Localizer["AllSchools"]</option>
+                    @foreach (var s in schools) { <option value="@s.Name">@s.Name</option> }
+                </select>
+            </div>
+        }
+        <div class="col-md-2">
+            <select id="filterBranch" class="form-select">
+                <option value="">@Localizer["AllBranches"]</option>
+                @foreach (var b in branches) { <option value="@b.Name">@b.Name</option> }
+            </select>
+        </div>
+        <div class="col-md-2"><label class="form-label">@Localizer["Date"]</label><input type="date" id="filterDate" class="form-control" value="@(ViewContext.HttpContext.Request.Query["date"].FirstOrDefault() ?? DateTime.UtcNow.ToString("yyyy-MM-dd"))" /></div>
+        <div class="col-md-2"><input type="text" id="searchInput" class="form-control" placeholder="🔍 @Localizer["Search"]..." /></div>
+        <div class="col-md-2">
+            <select id="filterStatus" class="form-select">
+                <option value="">@Localizer["AllStatuses"]</option>
+                @foreach (var s in Enum.GetValues<DailyAttendanceStatus>()) { <option value="@s">@s</option> }
+            </select>
+        </div>
+        <div class="col-md-1"><button class="btn btn-filter w-100" onclick="applyFilters()"><i class="fas fa-search"></i></button></div>
+        <div class="col-md-1"><button class="btn btn-reset w-100" onclick="resetFilters()"><i class="fas fa-redo"></i></button></div>
     </div>
 </div>
 
@@ -27,7 +57,7 @@
 
 <div class="table-card hover-lift" data-aos="fade-up">
     <table id="dataTable" class="table table-hover" style="width:100%">
-        <thead><tr><th>#</th><th>@Localizer["Employee"]</th><th>@Localizer["CheckIn"]</th><th>@Localizer["CheckOut"]</th><th>@Localizer["WorkedHours"]</th><th>@Localizer["LateMinutes"]</th><th>@Localizer["Status"]</th></tr></thead>
+        <thead><tr><th>#</th><th>@Localizer["Employee"]</th><th>@Localizer["CheckIn"]</th><th>@Localizer["CheckOut"]</th><th>@Localizer["WorkedHours"]</th><th>@Localizer["LateMinutes"]</th><th>@Localizer["Status"]</th>@if (isSuperAdmin) { <th>@Localizer["School"]</th> }</tr></thead>
         <tbody>
             @for (int i = 0; i < Model.Count; i++)
             {
@@ -38,6 +68,7 @@
                     <td>@a.FirstCheckIn?.ToString("hh:mm tt")</td><td>@a.LastCheckOut?.ToString("hh:mm tt")</td>
                     <td>@a.TotalWorkHours?.ToString("F1") h</td><td>@a.LateMinutes min</td>
                     <td><span class="badge @cls">@a.Status</span></td>
+                    @if (isSuperAdmin) { <td>@a.SchoolName</td> }
                 </tr>
             }
         </tbody>
@@ -45,5 +76,26 @@
 </div>
 
 @section Scripts {
-<script>$(function () { $('#dataTable').DataTable({ responsive: true, pageLength: 50, dom: 'rtip' }); });</script>
+<script>
+    var isSuperAdmin = @(isSuperAdmin ? "true" : "false");
+    var dt;
+    var schoolCol = isSuperAdmin ? 7 : -1;
+    $(function () {
+        dt = $('#dataTable').DataTable({ responsive: true, pageLength: 50, dom: 'rtip' });
+        $('#searchInput').on('keyup', function () { dt.search(this.value).draw(); });
+    });
+    function applyFilters() {
+        var dateVal = $('#filterDate').val();
+        if (dateVal) { location.href = '?date=' + dateVal; return; }
+        dt.search($('#searchInput').val());
+        dt.column(6).search($('#filterStatus').val());
+        if (isSuperAdmin) { dt.column(schoolCol).search($('#filterSchool').val()); }
+        dt.draw();
+    }
+    function resetFilters() {
+        $('#searchInput, #filterBranch, #filterStatus').val('');
+        if (isSuperAdmin) { $('#filterSchool').val(''); }
+        dt.search('').columns().search('').draw();
+    }
+</script>
 }

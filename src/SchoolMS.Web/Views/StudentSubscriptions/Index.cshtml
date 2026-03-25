@@ -164,22 +164,23 @@
                     <td>@Model[i].BranchName</td>
                     @if (isSuperAdmin) { <td>@Model[i].SchoolName</td> }
                     <td>
-                        <div class="d-flex gap-1 flex-wrap">
+                        <div class="action-group">
                             @if (Model[i].Status != SubscriptionStatus.Approved)
                             {
-                                <button class="btn btn-sm btn-success" onclick="changeStatus(@Model[i].Id, 'Approve')" data-bs-toggle="tooltip" title="@Localizer["Approve"]"><i class="fas fa-check"></i></button>
+                                <button class="btn-act btn-act-success" onclick="changeStatus(@Model[i].Id, 'Approve')" data-bs-toggle="tooltip" title="@Localizer["Approve"]"><i class="fas fa-check"></i></button>
                             }
                             @if (Model[i].Status != SubscriptionStatus.Rejected)
                             {
-                                <button class="btn btn-sm btn-warning" onclick="changeStatus(@Model[i].Id, 'Reject')" data-bs-toggle="tooltip" title="@Localizer["Reject"]"><i class="fas fa-ban"></i></button>
+                                <button class="btn-act btn-act-warning" onclick="changeStatus(@Model[i].Id, 'Reject')" data-bs-toggle="tooltip" title="@Localizer["Reject"]"><i class="fas fa-ban"></i></button>
                             }
                             @if (Model[i].Status != SubscriptionStatus.Pending)
                             {
-                                <button class="btn btn-sm btn-secondary" onclick="changeStatus(@Model[i].Id, 'SetPending')" data-bs-toggle="tooltip" title="@Localizer["SetPending"]"><i class="fas fa-clock"></i></button>
+                                <button class="btn-act btn-act-dark" onclick="changeStatus(@Model[i].Id, 'SetPending')" data-bs-toggle="tooltip" title="@Localizer["SetPending"]"><i class="fas fa-clock"></i></button>
                             }
-                            <button class="btn btn-sm btn-info" onclick="changeStatus(@Model[i].Id, 'MarkAsPaid')" data-bs-toggle="tooltip" title="@Localizer["MarkAsPaid"]"><i class="fas fa-money-bill-wave"></i></button>
-                            <a href="@Url.Action("Edit", new { id = Model[i].Id })" class="btn btn-sm btn-primary" data-bs-toggle="tooltip" title="@Localizer["Edit"]"><i class="fas fa-edit"></i></a>
-                            <button class="btn btn-sm btn-danger" onclick="del(@Model[i].Id)" data-bs-toggle="tooltip" title="@Localizer["Delete"]"><i class="fas fa-trash"></i></button>
+                            <button class="btn-act btn-act-view" onclick="changeStatus(@Model[i].Id, 'MarkAsPaid')" data-bs-toggle="tooltip" title="@Localizer["MarkAsPaid"]"><i class="fas fa-money-bill-wave"></i></button>
+                            <span class="action-divider"></span>
+                            <a href="@Url.Action("Edit", new { id = Model[i].Id })" class="btn-act btn-act-edit" data-bs-toggle="tooltip" title="@Localizer["Edit"]"><i class="fas fa-edit"></i></a>
+                            <button class="btn-act btn-act-delete" onclick="del(@Model[i].Id)" data-bs-toggle="tooltip" title="@Localizer["Delete"]"><i class="fas fa-trash"></i></button>
                         </div>
                     </td>
                 </tr>

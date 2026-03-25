@@ -1,20 +1,14 @@
-using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-using System.Text;
-using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Localization;
-using Microsoft.IdentityModel.Tokens;
 using SchoolMS.Application.DTOs;
 using SchoolMS.Application.Interfaces;
 using SchoolMS.API.Resources;
 using SchoolMS.Domain.Entities;
 using SchoolMS.Domain.Interfaces;
-using SchoolMS.Infrastructure.Data;
 
 namespace SchoolMS.API.Controllers;
 
@@ -23,112 +17,27 @@ namespace SchoolMS.API.Controllers;
 [EnableRateLimiting("auth")]
 public class AuthController : ControllerBase
 {
-    private readonly UserManager<ApplicationUser> _userManager;
-    private readonly SignInManager<ApplicationUser> _signInManager;
-    private readonly IConfiguration _configuration;
-    private readonly SchoolDbContext _context;
     private readonly IStringLocalizer<ApiResource> _localizer;
     private readonly IPortalAuthService _portalAuthService;
     private readonly IRepository<Teacher> _teacherRepo;
     private readonly IRepository<Student> _studentRepo;
     private readonly IRepository<Parent> _parentRepo;
-    private readonly IRepository<Staff> _staffRepo;
+    private readonly IRepository<HrEmployee> _staffRepo;
 
     public AuthController(
-        UserManager<ApplicationUser> userManager,
-        SignInManager<ApplicationUser> signInManager,
-        IConfiguration configuration,
-        SchoolDbContext context,
         IStringLocalizer<ApiResource> localizer,
         IPortalAuthService portalAuthService,
         IRepository<Teacher> teacherRepo,
         IRepository<Student> studentRepo,
         IRepository<Parent> parentRepo,
-        IRepository<Staff> staffRepo)
+        IRepository<HrEmployee> staffRepo)
     {
-        _userManager = userManager;
-        _signInManager = signInManager;
-        _configuration = configuration;
-        _context = context;
         _localizer = localizer;
         _portalAuthService = portalAuthService;
         _teacherRepo = teacherRepo;
         _studentRepo = studentRepo;
         _parentRepo = parentRepo;
         _staffRepo = staffRepo;
-    }
-
-    [HttpPost("login")]
-    public async Task<ActionResult<LoginResultDto>> Login([FromBody] LoginDto model)
-    {
-        // Find school if slug provided
-        School? school = null;
-        if (!string.IsNullOrEmpty(model.SchoolSlug))
-        {
-            school = await _context.Schools.IgnoreQueryFilters()
-                .FirstOrDefaultAsync(s => s.Slug == model.SchoolSlug && !s.IsDeleted && s.IsActive);
-            if (school == null)
-                return Unauthorized(new LoginResultDto { Error = _localizer["SchoolNotFound"].Value });
-        }
-
-        var user = await _userManager.FindByEmailAsync(model.Email);
-        if (user == null || user.IsDeleted)
-            return Unauthorized(new LoginResultDto { Error = _localizer["InvalidCredentials"].Value });
-
-        if (school != null && user.SchoolId != school.Id)
-            return Unauthorized(new LoginResultDto { Error = _localizer["InvalidCredentials"].Value });
-
-        var result = await _signInManager.CheckPasswordSignInAsync(user, model.Password, lockoutOnFailure: true);
-        if (!result.Succeeded)
-        {
-            if (result.IsLockedOut)
-                return Unauthorized(new LoginResultDto { Error = _localizer["AccountLockedOut"].Value });
-            return Unauthorized(new LoginResultDto { Error = _localizer["InvalidCredentials"].Value });
-        }
-
-        var isSuperAdmin = await _userManager.IsInRoleAsync(user, "SuperAdmin");
-        var token = GenerateJwtToken(user, isSuperAdmin && school == null);
-        return Ok(new LoginResultDto
-        {
-            Succeeded = true,
-            Token = token,
-            UserName = user.UserName,
-            FullName = user.FullName,
-            SchoolId = user.SchoolId,
-            BranchId = user.BranchId
-        });
-    }
-
-    private string GenerateJwtToken(ApplicationUser user, bool isSuperAdminGlobal = false)
-    {
-        var jwtSettings = _configuration.GetSection("JwtSettings");
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings["Secret"]!));
-        var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-
-        var claims = new List<Claim>
-        {
-            new(ClaimTypes.NameIdentifier, user.Id),
-            new(ClaimTypes.Name, user.UserName ?? ""),
-            new(ClaimTypes.Email, user.Email ?? ""),
-            new("FullName", user.FullName),
-            new("UserType", user.UserType.ToString())
-        };
-
-        // SuperAdmin without school slug → no SchoolId claim → sees all schools
-        if (!isSuperAdminGlobal)
-            claims.Add(new Claim("SchoolId", user.SchoolId.ToString()));
-
-        if (user.BranchId.HasValue)
-            claims.Add(new Claim("BranchId", user.BranchId.Value.ToString()));
-
-        var token = new JwtSecurityToken(
-            issuer: jwtSettings["Issuer"],
-            audience: jwtSettings["Audience"],
-            claims: claims,
-            expires: DateTime.UtcNow.AddMinutes(int.Parse(jwtSettings["ExpiryInMinutes"]!)),
-            signingCredentials: credentials);
-
-        return new JwtSecurityTokenHandler().WriteToken(token);
     }
 
     [HttpPost("teacher-login")]
@@ -142,7 +51,13 @@ public class AuthController : ControllerBase
     public async Task<ActionResult<PortalLoginResultDto>> StudentLogin([FromBody] PortalLoginDto model)
     {
         var result = await _portalAuthService.StudentLoginAsync(model);
-        return result.Succeeded ? Ok(result) : Unauthorized(result);
+        if (result.Succeeded) return Ok(result);
+
+        // Return detailed error message for device conflicts
+        if (result.Error == "DeviceAlreadyActive" || result.Error == "DeviceIdRequired")
+            return Unauthorized(new { result.Error, result.ErrorMessage, result.Succeeded });
+
+        return Unauthorized(result);
     }
 
     [HttpPost("parent-login")]
@@ -221,13 +136,35 @@ public class AuthController : ControllerBase
 
     private async Task<UserProfileDto?> GetStaffProfileAsync(int id)
     {
-        var s = await _staffRepo.Query().Include(x => x.Branch).FirstOrDefaultAsync(x => x.Id == id);
+        var s = await _staffRepo.Query().Include(x => x.Branch).Include(x => x.JobTitle).FirstOrDefaultAsync(x => x.Id == id);
         if (s == null) return null;
         return new UserProfileDto
         {
             Id = s.Id, FullName = s.FullName, UserType = "Staff", Phone = s.Phone,
+            Email = s.Email, ProfileImage = s.ProfileImage,
             Username = s.Username, SchoolId = s.SchoolId,
-            BranchId = s.BranchId, BranchName = s.Branch?.Name, Position = s.Position
+            BranchId = s.BranchId, BranchName = s.Branch?.Name, Position = s.JobTitle?.TitleName
         };
+    }
+
+    /// <summary>
+    /// تسجيل خروج الطالب من الجهاز الحالي — يمسح ActiveDeviceId ليتمكن من الدخول من جهاز آخر
+    /// </summary>
+    [Authorize]
+    [HttpPost("student-logout-device")]
+    public async Task<IActionResult> StudentLogoutDevice()
+    {
+        var userType = User.FindFirst("UserType")?.Value;
+        var personIdClaim = User.FindFirst("PersonId")?.Value;
+
+        if (userType != "Student" || string.IsNullOrEmpty(personIdClaim))
+            return BadRequest(new { error = "OnlyStudents", message = "هذا الإجراء متاح فقط للطلبة." });
+
+        var personId = int.Parse(personIdClaim);
+        var success = await _portalAuthService.LogoutStudentDeviceAsync(personId);
+
+        return success
+            ? Ok(new { success = true, message = "تم تسجيل الخروج من الجهاز بنجاح. يمكنك الآن تسجيل الدخول من جهاز آخر." })
+            : NotFound(new { error = "StudentNotFound", message = "الطالب غير موجود." });
     }
 }

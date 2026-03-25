@@ -20,6 +20,7 @@ public class HrDepartmentDto
     public string? Icon { get; set; }
     public string? Color { get; set; }
     public int EmployeeCount { get; set; }
+    public string? SchoolName { get; set; }
 }
 
 // ============ Job Title ============
@@ -35,6 +36,7 @@ public class HrJobTitleDto
     public decimal? MinSalary { get; set; }
     public decimal? MaxSalary { get; set; }
     public bool IsActive { get; set; }
+    public string? SchoolName { get; set; }
 }
 
 // ============ Job Grade ============
@@ -50,6 +52,7 @@ public class HrJobGradeDto
     public decimal DefaultAllowancePercentage { get; set; }
     public int? MinYearsExperience { get; set; }
     public bool IsActive { get; set; }
+    public string? SchoolName { get; set; }
 }
 
 public class HrJobGradeStepDto
@@ -126,6 +129,7 @@ public class HrEmployeeDto
     public int? GraduationYear { get; set; }
     public int YearsOfExperience { get; set; }
     public string? Notes { get; set; }
+    public string? SchoolName { get; set; }
 }
 
 public class HrEmployeeListDto
@@ -161,6 +165,7 @@ public class HrEmployeeContractDto
     public string? Notes { get; set; }
     public string? SignedBy { get; set; }
     public DateTime? SignedDate { get; set; }
+    public string? SchoolName { get; set; }
 }
 
 // ============ Document ============
@@ -202,6 +207,7 @@ public class HrWorkShiftDto
     public bool IsDefault { get; set; }
     public string? Color { get; set; }
     public bool IsActive { get; set; }
+    public string? SchoolName { get; set; }
 }
 
 // ============ Fingerprint ============
@@ -239,6 +245,7 @@ public class HrFingerprintRecordDto
     public bool IsManualEntry { get; set; }
     public string? ManualEntryReason { get; set; }
     public string? Notes { get; set; }
+    public string? SchoolName { get; set; }
 }
 
 public class HrFingerprintScanDto
@@ -271,6 +278,7 @@ public class HrDailyAttendanceDto
     public decimal? OvertimeAmount { get; set; }
     public bool IsProcessed { get; set; }
     public string? Notes { get; set; }
+    public string? SchoolName { get; set; }
 }
 
 // ============ Overtime ============
@@ -292,6 +300,7 @@ public class HrOvertimeRequestDto
     public string? RejectionReason { get; set; }
     public bool IsFromAttendance { get; set; }
     public string? Notes { get; set; }
+    public string? SchoolName { get; set; }
 }
 
 // ============ Salary ============
@@ -512,6 +521,7 @@ public class HrPromotionDto
     public int? ToJobGradeId { get; set; }
     public int? FromDepartmentId { get; set; }
     public int? ToDepartmentId { get; set; }
+    public string? SchoolName { get; set; }
 }
 
 // ============ Career History ============
@@ -569,6 +579,7 @@ public class HrLeaveRequestDto
     public string? SubstituteName { get; set; }
     public string? RejectionReason { get; set; }
     public string? Notes { get; set; }
+    public string? SchoolName { get; set; }
 }
 
 public class HrLeaveBalanceDto
@@ -700,6 +711,7 @@ public class HrTrainingProgramDto
     public bool IsMandatory { get; set; }
     public string? Notes { get; set; }
     public int ParticipantCount { get; set; }
+    public string? SchoolName { get; set; }
 }
 
 public class HrTrainingRecordDto
@@ -777,6 +789,7 @@ public class HrDisciplinaryActionDto
     public string? IssuedBy { get; set; }
     public DateTime IssuedDate { get; set; }
     public string? Notes { get; set; }
+    public string? SchoolName { get; set; }
 }
 
 // ============ End of Service ============
@@ -802,6 +815,7 @@ public class HrEndOfServiceDto
     public EndOfServiceStatus Status { get; set; }
     public bool AllClearancesCompleted { get; set; }
     public string? Notes { get; set; }
+    public string? SchoolName { get; set; }
 }
 
 // ============ Employee Request ============

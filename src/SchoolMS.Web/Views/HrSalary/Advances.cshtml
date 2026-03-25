@@ -29,11 +29,13 @@
                     <td>@a.ApprovedAmount.ToString("N0")</td><td>@a.MonthlyDeduction.ToString("N0")</td><td>@a.RemainingAmount.ToString("N0")</td>
                     <td><span class="badge @cls">@a.Status</span></td>
                     <td>
+                        <div class="action-group">
                         @if (a.Status == AdvanceStatus.Pending)
                         {
-                            <button class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#approveModal" onclick="setApprove(@a.Id, @a.RequestedAmount)"><i class="fas fa-check"></i></button>
-                            <form asp-action="RejectAdvance" method="post" class="d-inline"><input type="hidden" name="id" value="@a.Id" /><input type="hidden" name="reason" value="Rejected" /><button class="btn btn-sm btn-danger"><i class="fas fa-times"></i></button></form>
+                            <button class="btn-act btn-act-success" data-bs-toggle="modal" data-bs-target="#approveModal" onclick="setApprove(@a.Id, @a.RequestedAmount)"><i class="fas fa-check"></i></button>
+                            <form asp-action="RejectAdvance" method="post" class="d-inline"><input type="hidden" name="id" value="@a.Id" /><input type="hidden" name="reason" value="Rejected" /><button class="btn-act btn-act-delete"><i class="fas fa-times"></i></button></form>
                         }
+                        </div>
                     </td>
                 </tr>
             }

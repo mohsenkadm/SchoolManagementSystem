@@ -11,7 +11,7 @@ public class SubscriptionValidationMiddleware
 
     public SubscriptionValidationMiddleware(RequestDelegate next) => _next = next;
 
-    public async Task InvokeAsync(HttpContext context, SchoolDbContext dbContext)
+    public async Task InvokeAsync(HttpContext context, SchoolDbContext dbContext, SignInManager<ApplicationUser> signInManager)
     {
         if (context.User.Identity?.IsAuthenticated != true)
         {
@@ -26,9 +26,9 @@ public class SubscriptionValidationMiddleware
             return;
         }
 
-        // Allow logout and access denied
+        // Allow logout, access denied, and login paths
         var path = context.Request.Path.Value?.ToLower() ?? "";
-        if (path.Contains("/account/logout") || path.Contains("/account/accessdenied") || path.Contains("/subscription-expired"))
+        if (path.Contains("/account/logout") || path.Contains("/account/login") || path.Contains("/account/accessdenied") || path.Contains("/subscription-expired"))
         {
             await _next(context);
             return;
@@ -37,7 +37,10 @@ public class SubscriptionValidationMiddleware
         var schoolIdClaim = context.User.FindFirst("SchoolId")?.Value;
         if (schoolIdClaim == null || !int.TryParse(schoolIdClaim, out var schoolId))
         {
-            await _next(context);
+            // Non-SuperAdmin without SchoolId claim — stale session.
+            // Sign out and redirect to login to get proper claims.
+            await signInManager.SignOutAsync();
+            context.Response.Redirect("/Account/Login");
             return;
         }
 
@@ -74,6 +77,8 @@ public class SubscriptionValidationMiddleware
                 context.Items["MaxStudents"] = activeSub.SystemSubscriptionPlan.MaxStudents;
                 context.Items["SubscriptionExpiry"] = activeSub.ExpiryDate;
                 context.Items["PlanName"] = activeSub.SystemSubscriptionPlan.PlanName;
+                context.Items["IncludesHrModule"] = activeSub.SystemSubscriptionPlan.IncludesHrModule;
+                context.Items["IncludesCourses"] = activeSub.SystemSubscriptionPlan.IncludesCourses;
             }
         }
 

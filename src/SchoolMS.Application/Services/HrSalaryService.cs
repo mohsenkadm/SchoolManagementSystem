@@ -371,6 +371,14 @@ public class HrSalaryService : IHrSalaryService
         return _mapper.Map<List<HrSalaryAdvanceDto>>(items);
     }
 
+    public async Task<List<HrSalaryAdvanceDto>> GetAdvancesBySchoolIdAsync(int schoolId, AdvanceStatus? status = null)
+    {
+        var query = _advanceRepo.Query().Where(a => a.SchoolId == schoolId).Include(a => a.Employee).AsQueryable();
+        if (status.HasValue) query = query.Where(a => a.Status == status.Value);
+        var items = await query.OrderByDescending(a => a.RequestDate).ToListAsync();
+        return _mapper.Map<List<HrSalaryAdvanceDto>>(items);
+    }
+
     public async Task<HrSalaryAdvanceDto> CreateAdvanceAsync(HrSalaryAdvanceDto dto)
     {
         var entity = _mapper.Map<HrSalaryAdvance>(dto);
@@ -417,6 +425,14 @@ public class HrSalaryService : IHrSalaryService
         return _mapper.Map<List<HrEmployeeLoanDto>>(items);
     }
 
+    public async Task<List<HrEmployeeLoanDto>> GetLoansBySchoolIdAsync(int schoolId, int? employeeId = null)
+    {
+        var query = _loanRepo.Query().Where(l => l.SchoolId == schoolId).Include(l => l.Employee).AsQueryable();
+        if (employeeId.HasValue) query = query.Where(l => l.EmployeeId == employeeId.Value);
+        var items = await query.OrderByDescending(l => l.LoanDate).ToListAsync();
+        return _mapper.Map<List<HrEmployeeLoanDto>>(items);
+    }
+
     public async Task<HrEmployeeLoanDto> CreateLoanAsync(HrEmployeeLoanDto dto)
     {
         var entity = _mapper.Map<HrEmployeeLoan>(dto);
@@ -434,6 +450,15 @@ public class HrSalaryService : IHrSalaryService
     public async Task<List<HrBonusDto>> GetBonusesAsync(int? month = null, int? year = null)
     {
         var query = _bonusRepo.Query().Include(b => b.Employee).AsQueryable();
+        if (month.HasValue) query = query.Where(b => b.Month == month.Value);
+        if (year.HasValue) query = query.Where(b => b.Year == year.Value);
+        var items = await query.OrderByDescending(b => b.CreatedAt).ToListAsync();
+        return _mapper.Map<List<HrBonusDto>>(items);
+    }
+
+    public async Task<List<HrBonusDto>> GetBonusesBySchoolIdAsync(int schoolId, int? month = null, int? year = null)
+    {
+        var query = _bonusRepo.Query().Where(b => b.SchoolId == schoolId).Include(b => b.Employee).AsQueryable();
         if (month.HasValue) query = query.Where(b => b.Month == month.Value);
         if (year.HasValue) query = query.Where(b => b.Year == year.Value);
         var items = await query.OrderByDescending(b => b.CreatedAt).ToListAsync();
@@ -465,6 +490,15 @@ public class HrSalaryService : IHrSalaryService
     public async Task<List<HrPenaltyDto>> GetPenaltiesAsync(int? month = null, int? year = null)
     {
         var query = _penaltyRepo.Query().Include(p => p.Employee).AsQueryable();
+        if (month.HasValue) query = query.Where(p => p.Month == month.Value);
+        if (year.HasValue) query = query.Where(p => p.Year == year.Value);
+        var items = await query.OrderByDescending(p => p.CreatedAt).ToListAsync();
+        return _mapper.Map<List<HrPenaltyDto>>(items);
+    }
+
+    public async Task<List<HrPenaltyDto>> GetPenaltiesBySchoolIdAsync(int schoolId, int? month = null, int? year = null)
+    {
+        var query = _penaltyRepo.Query().Where(p => p.SchoolId == schoolId).Include(p => p.Employee).AsQueryable();
         if (month.HasValue) query = query.Where(p => p.Month == month.Value);
         if (year.HasValue) query = query.Where(p => p.Year == year.Value);
         var items = await query.OrderByDescending(p => p.CreatedAt).ToListAsync();

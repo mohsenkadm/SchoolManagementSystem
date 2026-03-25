@@ -1,0 +1,68 @@
+@using SchoolMS.Application.DTOs
+@model List<VideoCommentDto>
+@{
+    var video = ViewBag.Video as CourseVideoDto;
+    var course = ViewBag.Course as CourseDto;
+}
+
+@Html.AntiForgeryToken()
+
+<div class="page-header" data-aos="fade-down">
+    <div>
+        <h4 class="page-title"><i class="fas fa-comments text-primary"></i> Comments - @video?.Title</h4>
+        <a href="@Url.Action("Index", "CourseVideos", new { courseId = course?.Id })" class="text-muted small">
+            <i class="fas fa-arrow-left me-1"></i>Back to Videos
+        </a>
+    </div>
+</div>
+
+<div class="stat-ribbon" data-aos="fade-up">
+    <div class="stat-item stagger-item">
+        <div class="stat-icon bg-primary-soft"><i class="fas fa-comments"></i></div>
+        <div class="stat-info"><h6>Total Comments</h6><div class="stat-value">@Model.Count</div></div>
+    </div>
+    <div class="stat-item stagger-item">
+        <div class="stat-icon bg-info-soft"><i class="fas fa-video"></i></div>
+        <div class="stat-info"><h6>Video</h6><div class="stat-value">@video?.Title</div></div>
+    </div>
+    <div class="stat-item stagger-item">
+        <div class="stat-icon bg-success-soft"><i class="fas fa-book"></i></div>
+        <div class="stat-info"><h6>Course</h6><div class="stat-value">@course?.Title</div></div>
+    </div>
+</div>
+
+<div class="dashboard-card card" data-aos="fade-up">
+    <div class="card-body">
+        @if (Model.Count == 0)
+        {
+            <div class="text-center text-muted py-5">
+                <i class="fas fa-comments fa-3x mb-3 opacity-50"></i>
+                <p class="mb-0">No comments yet for this video.</p>
+            </div>
+        }
+        else
+        {
+            <div class="list-group list-group-flush">
+                @foreach (var comment in Model)
+                {
+                    <div class="list-group-item px-0 py-3">
+                        <div class="d-flex align-items-start gap-3">
+                            <div class="rounded-circle bg-primary-soft d-flex align-items-center justify-content-center" style="width:40px;height:40px;min-width:40px;">
+                                <i class="fas fa-user-graduate text-primary"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <strong class="text-dark">@comment.StudentName</strong>
+                                    <small class="text-muted">
+                                        <i class="fas fa-clock me-1"></i>@comment.CommentDate.ToString("yyyy-MM-dd HH:mm")
+                                    </small>
+                                </div>
+                                <p class="mb-0 text-muted">@comment.Comment</p>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+</div>

@@ -20,11 +20,15 @@ public class HomeController : Controller
     {
         ViewData["Title"] = "Dashboard";
         int? branchId = null;
+        int? schoolId = null;
         var branchClaim = User.FindFirst("BranchId");
         if (branchClaim != null)
             branchId = int.Parse(branchClaim.Value);
+        var schoolClaim = User.FindFirst("SchoolId");
+        if (schoolClaim != null)
+            schoolId = int.Parse(schoolClaim.Value);
 
-        var dashboard = await _dashboardService.GetDashboardDataAsync(branchId);
+        var dashboard = await _dashboardService.GetDashboardDataAsync(branchId, schoolId);
         return View(dashboard);
     }
 

@@ -4,6 +4,6 @@ namespace SchoolMS.Application.Interfaces;
 
 public interface IDashboardService
 {
-    Task<DashboardDto> GetDashboardDataAsync(int? branchId);
+    Task<DashboardDto> GetDashboardDataAsync(int? branchId, int? schoolId = null);
 }
 

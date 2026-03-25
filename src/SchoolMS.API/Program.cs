@@ -8,6 +8,8 @@ using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using SchoolMS.API.BackgroundServices;
+using SchoolMS.API.Hubs;
 using SchoolMS.Application;
 using SchoolMS.Infrastructure;
 using Serilog;
@@ -36,6 +38,10 @@ builder.Services.AddControllers()
         options.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
         options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
     });
+builder.Services.AddSignalR();
+
+// Background Services
+builder.Services.AddHostedService<ScheduledVideoPublisherService>();
 
 // Supported cultures
 var supportedCultures = new[] { new CultureInfo("en"), new CultureInfo("ar") };
@@ -71,6 +77,18 @@ builder.Services.AddAuthentication(options =>
         ValidIssuer = jwtSettings["Issuer"],
         ValidAudience = jwtSettings["Audience"],
         IssuerSigningKey = new SymmetricSecurityKey(secretKey)
+    };
+    // Allow SignalR to receive the JWT token from the query string
+    options.Events = new JwtBearerEvents
+    {
+        OnMessageReceived = context =>
+        {
+            var accessToken = context.Request.Query["access_token"];
+            var path = context.HttpContext.Request.Path;
+            if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs"))
+                context.Token = accessToken;
+            return Task.CompletedTask;
+        }
     };
 });
 
@@ -146,6 +164,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseStaticFiles();
 
 // Global exception handler
 app.UseExceptionHandler(appBuilder =>
@@ -179,5 +198,9 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+app.MapHub<ApiChatHub>("/hubs/chat");
+app.MapHub<ApiNotificationHub>("/hubs/notifications");
+app.MapHub<ApiLiveStreamChatHub>("/hubs/livestream-chat");
 
 app.Run();

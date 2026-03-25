@@ -12,10 +12,23 @@ public class ChatService : IChatService
 {
     private readonly IRepository<ChatRoom> _roomRepo;
     private readonly IRepository<ChatMessage> _messageRepo;
+    private readonly IRepository<Student> _studentRepo;
+    private readonly IRepository<TeacherAssignment> _assignmentRepo;
     private readonly IUnitOfWork _unitOfWork;
 
-    public ChatService(IRepository<ChatRoom> roomRepo, IRepository<ChatMessage> messageRepo, IUnitOfWork unitOfWork)
-    { _roomRepo = roomRepo; _messageRepo = messageRepo; _unitOfWork = unitOfWork; }
+    public ChatService(
+        IRepository<ChatRoom> roomRepo,
+        IRepository<ChatMessage> messageRepo,
+        IRepository<Student> studentRepo,
+        IRepository<TeacherAssignment> assignmentRepo,
+        IUnitOfWork unitOfWork)
+    {
+        _roomRepo = roomRepo;
+        _messageRepo = messageRepo;
+        _studentRepo = studentRepo;
+        _assignmentRepo = assignmentRepo;
+        _unitOfWork = unitOfWork;
+    }
 
     private static ChatRoomDto MapRoom(ChatRoom r) => new()
     {
@@ -23,14 +36,16 @@ public class ChatService : IChatService
         BranchId = r.BranchId, BranchName = r.Branch?.Name,
         ClassRoomId = r.ClassRoomId,
         ClassRoomName = r.ClassRoom != null ? $"{r.ClassRoom.Grade?.GradeName} - {r.ClassRoom.Division?.DivisionName}" : null,
-        SubjectId = r.SubjectId, SubjectName = r.Subject?.SubjectName
+        SubjectId = r.SubjectId, SubjectName = r.Subject?.SubjectName,
+        TeacherId = r.TeacherId, TeacherName = r.Teacher?.FullName
     };
 
     private IQueryable<ChatRoom> RoomsWithIncludes() => _roomRepo.Query()
         .Include(r => r.Branch)
         .Include(r => r.ClassRoom).ThenInclude(c => c!.Grade)
         .Include(r => r.ClassRoom).ThenInclude(c => c!.Division)
-        .Include(r => r.Subject);
+        .Include(r => r.Subject)
+        .Include(r => r.Teacher);
 
     public async Task<List<ChatRoomDto>> GetAllRoomsAsync()
     {
@@ -58,7 +73,8 @@ public class ChatService : IChatService
         {
             RoomName = dto.RoomName, Type = dto.Type,
             BranchId = dto.BranchId, ClassRoomId = dto.ClassRoomId,
-            SubjectId = dto.SubjectId, SchoolId = dto.SchoolId
+            SubjectId = dto.SubjectId, SchoolId = dto.SchoolId,
+            TeacherId = dto.TeacherId
         };
         await _roomRepo.AddAsync(entity);
         await _unitOfWork.SaveChangesAsync();
@@ -75,7 +91,8 @@ public class ChatService : IChatService
         return items.Select(m => new ChatMessageDto
         {
             Id = m.Id, ChatRoomId = m.ChatRoomId, SenderId = m.SenderId,
-            SenderType = m.SenderType, Message = m.Message,
+            SenderType = m.SenderType, SenderName = m.SenderName,
+            Message = m.Message, FileUrl = m.FileUrl, FileType = m.FileType,
             SentAt = m.SentAt, IsRead = m.IsRead
         }).ToList();
     }
@@ -85,7 +102,10 @@ public class ChatService : IChatService
         var entity = new ChatMessage
         {
             ChatRoomId = dto.ChatRoomId, SenderId = dto.SenderId,
-            SenderType = dto.SenderType ?? string.Empty, Message = dto.Message,
+            SenderType = dto.SenderType ?? string.Empty,
+            SenderName = dto.SenderName ?? string.Empty,
+            Message = dto.Message,
+            FileUrl = dto.FileUrl, FileType = dto.FileType,
             SentAt = DateTime.UtcNow,
             SchoolId = (await _roomRepo.GetByIdAsync(dto.ChatRoomId))?.SchoolId ?? 0
         };
@@ -94,6 +114,35 @@ public class ChatService : IChatService
         dto.Id = entity.Id;
         dto.SentAt = entity.SentAt;
         return dto;
+    }
+
+    public async Task<List<ChatRoomDto>> GetRoomsByStudentAsync(int studentId)
+    {
+        var student = await _studentRepo.Query()
+            .FirstOrDefaultAsync(s => s.Id == studentId);
+        if (student == null) return new List<ChatRoomDto>();
+
+        var items = await RoomsWithIncludes()
+            .Where(r => r.SchoolId == student.SchoolId
+                && r.BranchId == student.BranchId
+                && (r.ClassRoomId == null || r.ClassRoomId == student.ClassRoomId))
+            .ToListAsync();
+        return items.Select(MapRoom).ToList();
+    }
+
+    public async Task<List<ChatRoomDto>> GetRoomsByTeacherAsync(int teacherId)
+    {
+        var classRoomIds = await _assignmentRepo.Query()
+            .Where(a => a.TeacherId == teacherId)
+            .Select(a => a.ClassRoomId)
+            .Distinct()
+            .ToListAsync();
+
+        var items = await RoomsWithIncludes()
+            .Where(r => r.TeacherId == teacherId
+                || (r.ClassRoomId.HasValue && classRoomIds.Contains(r.ClassRoomId.Value)))
+            .ToListAsync();
+        return items.Select(MapRoom).ToList();
     }
 }
 

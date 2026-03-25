@@ -278,6 +278,15 @@ public class MappingProfile : Profile
             .ForMember(d => d.EmployeeName, opt => opt.MapFrom(s => s.Employee != null ? s.Employee.FullName : null));
         CreateMap<HrEmployeeRequestDto, HrEmployeeRequest>();
 
+        // ============ TEACHER EARNING MAPPINGS ============
+        CreateMap<TeacherEarning, TeacherEarningDto>()
+            .ForMember(d => d.TeacherName, opt => opt.MapFrom(s => s.Teacher != null ? s.Teacher.FullName : null))
+            .ForMember(d => d.CourseTitle, opt => opt.MapFrom(s => s.Course != null ? s.Course.Title : null))
+            .ForMember(d => d.StudentName, opt => opt.MapFrom(s => s.StudentSubscription != null && s.StudentSubscription.Student != null ? s.StudentSubscription.Student.FullName : null))
+            .ForMember(d => d.PlanName, opt => opt.MapFrom(s => s.StudentSubscription != null && s.StudentSubscription.OnlineSubscriptionPlan != null ? s.StudentSubscription.OnlineSubscriptionPlan.PlanName : null))
+            .ForMember(d => d.SchoolName, opt => opt.MapFrom(s => s.School != null ? s.School.Name : null));
+        CreateMap<TeacherEarningDto, TeacherEarning>();
+
         // ============ ONLINE SUBSCRIPTION MAPPINGS ============
         CreateMap<OnlineSubscriptionPlan, OnlineSubscriptionPlanDto>()
             .ForMember(d => d.SubjectName, opt => opt.MapFrom(s => s.Subject != null ? s.Subject.SubjectName : null))

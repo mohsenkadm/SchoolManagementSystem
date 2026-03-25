@@ -41,6 +41,7 @@
         <div class="col-md-2"><input type="text" id="searchInput" class="form-control" placeholder="🔍 @Localizer["Search"]..." /></div>
         <div class="col-md-2"><select id="filterDay" class="form-select"><option value="">@Localizer["AllDays"]</option>@foreach (var d in Model.Select(x => x.DayOfWeek).Distinct().OrderBy(d => d)) { <option value="@d">@d</option> }</select></div>
         <div class="col-md-2"><select id="filterSubject" class="form-select"><option value="">@Localizer["AllSubjects"]</option>@foreach (var s in Model.Select(x => x.SubjectName).Distinct().OrderBy(s => s)) { <option value="@s">@s</option> }</select></div>
+        <div class="col-md-2"><select id="filterTeacher" class="form-select"><option value="">@Localizer["AllTeachers"]</option>@foreach (var t in Model.Select(x => x.TeacherName).Where(t => t != null).Distinct().OrderBy(t => t)) { <option value="@t">@t</option> }</select></div>
         <div class="col-md-2"><select id="filterBranch" class="form-select"><option value="">@Localizer["AllBranches"]</option>@foreach (var b in Model.Select(x => x.BranchName).Where(b => b != null).Distinct().OrderBy(b => b)) { <option value="@b">@b</option> }</select></div>
         <div class="col-md-1"><button class="btn btn-filter w-100" onclick="applyFilters()"><i class="fas fa-search"></i></button></div>
         <div class="col-md-1"><button class="btn btn-reset w-100" onclick="resetFilters()"><i class="fas fa-redo"></i></button></div>
@@ -77,9 +78,9 @@
                     <td>@Model[i].StartTime.ToString(@"hh\:mm") - @Model[i].EndTime.ToString(@"hh\:mm")</td>
                     @if (isSuperAdmin) { <td>@Model[i].SchoolName</td> }
                     <td class="no-print">
-                        <div class="d-flex gap-1">
-                            <a href="@Url.Action("Edit", new { id = Model[i].Id })" class="btn btn-sm btn-primary" data-bs-toggle="tooltip" title="@Localizer["Edit"]"><i class="fas fa-edit"></i></a>
-                            <button class="btn btn-sm btn-danger" onclick="del(@Model[i].Id)" data-bs-toggle="tooltip" title="@Localizer["Delete"]"><i class="fas fa-trash"></i></button>
+                        <div class="action-group">
+                            <a href="@Url.Action("Edit", new { id = Model[i].Id })" class="btn-act btn-act-edit" data-bs-toggle="tooltip" title="@Localizer["Edit"]"><i class="fas fa-edit"></i></a>
+                            <button class="btn-act btn-act-delete" onclick="del(@Model[i].Id)" data-bs-toggle="tooltip" title="@Localizer["Delete"]"><i class="fas fa-trash"></i></button>
                         </div>
                     </td>
                 </tr>
@@ -96,7 +97,7 @@
 </style>
 <script>
     var isSuperAdmin = @(isSuperAdmin ? "true" : "false");
-    var dayColIdx = 1, subjectColIdx = 2, branchColIdx = 6;
+    var dayColIdx = 1, subjectColIdx = 2, teacherColIdx = 3, branchColIdx = 6;
     var schoolColIdx = isSuperAdmin ? 8 : -1;
     var dt;
     $(function () { dt = $('#dataTable').DataTable({ responsive: true, pageLength: 25, dom: 'rtip' }); $('#searchInput').on('keyup', function () { dt.search(this.value).draw(); }); });
@@ -104,12 +105,13 @@
         dt.search($('#searchInput').val());
         dt.column(dayColIdx).search($('#filterDay').val());
         dt.column(subjectColIdx).search($('#filterSubject').val());
+        dt.column(teacherColIdx).search($('#filterTeacher').val());
         dt.column(branchColIdx).search($('#filterBranch').val());
         if (isSuperAdmin) { dt.column(schoolColIdx).search($('#filterSchool').val()); }
         dt.draw();
     }
     function resetFilters() {
-        $('#searchInput, #filterDay, #filterSubject, #filterBranch').val('');
+        $('#searchInput, #filterDay, #filterSubject, #filterTeacher, #filterBranch').val('');
         if (isSuperAdmin) { $('#filterSchool').val(''); }
         dt.search('').columns().search('').draw();
     }

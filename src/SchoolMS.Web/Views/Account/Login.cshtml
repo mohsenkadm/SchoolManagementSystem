@@ -2,6 +2,11 @@
 @{
     ViewData["Title"] = Localizer["SignIn"].Value;
     Layout = "~/Views/Shared/_Layout.cshtml";
+    var schoolSlug = ViewData["SchoolSlug"] as string;
+    var schoolName = ViewData["SchoolName"] as string;
+    var schoolLogo = ViewData["SchoolLogo"] as string;
+    var schoolError = ViewData["SchoolError"] as string;
+    var isSchoolLogin = !string.IsNullOrEmpty(schoolSlug);
 }
 
 <div class="login-page">
@@ -27,19 +32,41 @@
         </div>
 
         <div class="login-header">
-            <i class="fas fa-graduation-cap"></i>
-            <h2>@Localizer["SchoolMS"]</h2>
+            @if (isSchoolLogin && !string.IsNullOrEmpty(schoolLogo))
+            {
+                <img src="@schoolLogo" alt="@schoolName" style="max-height:64px;margin-bottom:12px;border-radius:12px;" />
+            }
+            else
+            {
+                <i class="fas fa-graduation-cap"></i>
+            }
+
+            @if (isSchoolLogin && !string.IsNullOrEmpty(schoolName))
+            {
+                <h2>@schoolName</h2>
+            }
+            else
+            {
+                <h2>@Localizer["SchoolMS"]</h2>
+            }
             <p style="color:rgba(255,255,255,0.5);">@Localizer["SignInToAccount"]</p>
         </div>
+
+        @if (!string.IsNullOrEmpty(schoolError))
+        {
+            <div class="alert alert-danger" style="background:rgba(239,68,68,0.15);border-color:rgba(239,68,68,0.3);color:#fca5a5;border-radius:var(--border-radius-md);">
+                @schoolError
+            </div>
+        }
 
         <form asp-action="Login" method="post">
             <div asp-validation-summary="All" class="alert alert-danger" style="display:@(ViewData.ModelState.ErrorCount > 0 ? "block" : "none");background:rgba(239,68,68,0.15);border-color:rgba(239,68,68,0.3);color:#fca5a5;border-radius:var(--border-radius-md);"></div>
 
-            <div class="mb-3">
-                <label asp-for="SchoolSlug" class="form-label"><i class="fas fa-school me-1"></i> @Localizer["SchoolSlug"]</label>
-                <input asp-for="SchoolSlug" class="form-control" placeholder="e.g. demo-school" value="@ViewData["SchoolSlug"]" />
-                <small style="color:rgba(255,255,255,0.4);">@Localizer["SchoolSlugHint"]</small>
-            </div>
+            @if (isSchoolLogin)
+            {
+                <input type="hidden" asp-for="SchoolSlug" value="@schoolSlug" />
+            }
+
             <div class="mb-3">
                 <label asp-for="Email" class="form-label"><i class="fas fa-envelope me-1"></i> @Localizer["Email"]</label>
                 <input asp-for="Email" class="form-control" placeholder="admin@demo-school.com" autofocus />

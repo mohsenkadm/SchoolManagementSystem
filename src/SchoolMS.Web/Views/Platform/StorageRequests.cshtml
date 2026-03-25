@@ -1,0 +1,238 @@
+@using SchoolMS.Application.DTOs
+@model List<StorageRequestDto>
+@{
+    var pendingRequests = ViewBag.PendingRequests as List<StorageRequestDto> ?? new();
+    var processedRequests = Model.Where(r => r.IsProcessed).ToList();
+    var storagePlans = ViewBag.StoragePlans as List<StoragePlanDto> ?? new();
+}
+
+@Html.AntiForgeryToken()
+
+<div class="page-header" data-aos="fade-down">
+    <div>
+        <h4 class="page-title"><i class="fas fa-hdd text-primary"></i> @Localizer["StorageRequestsManagement"]</h4>
+        <p class="text-muted mb-0">@Localizer["ManageStorageRequestsDesc"]</p>
+    </div>
+    <a href="@Url.Action("StoragePlans", "Platform")" class="btn btn-primary">
+        <i class="fas fa-tags me-1"></i>@Localizer["ManageStoragePlans"]
+    </a>
+</div>
+
+<!-- Summary Cards -->
+<div class="row mb-4">
+    <div class="col-md-3" data-aos="fade-up" data-aos-delay="100">
+        <div class="dashboard-card card p-3 text-center">
+            <i class="fas fa-list fa-2x text-primary mb-2"></i>
+            <h4 class="mb-0">@Model.Count</h4>
+            <small class="text-muted">@Localizer["TotalRequests"]</small>
+        </div>
+    </div>
+    <div class="col-md-3" data-aos="fade-up" data-aos-delay="200">
+        <div class="dashboard-card card p-3 text-center">
+            <i class="fas fa-clock fa-2x text-warning mb-2"></i>
+            <h4 class="mb-0">@pendingRequests.Count</h4>
+            <small class="text-muted">@Localizer["PendingRequests"]</small>
+        </div>
+    </div>
+    <div class="col-md-3" data-aos="fade-up" data-aos-delay="300">
+        <div class="dashboard-card card p-3 text-center">
+            <i class="fas fa-check-circle fa-2x text-success mb-2"></i>
+            <h4 class="mb-0">@processedRequests.Count(r => r.IsApproved)</h4>
+            <small class="text-muted">@Localizer["Approved"]</small>
+        </div>
+    </div>
+    <div class="col-md-3" data-aos="fade-up" data-aos-delay="400">
+        <div class="dashboard-card card p-3 text-center">
+            <i class="fas fa-times-circle fa-2x text-danger mb-2"></i>
+            <h4 class="mb-0">@processedRequests.Count(r => !r.IsApproved)</h4>
+            <small class="text-muted">@Localizer["Rejected"]</small>
+        </div>
+    </div>
+</div>
+
+<!-- Pending Requests -->
+<div class="dashboard-card card p-4 mb-4" data-aos="fade-up">
+    <h6 class="mb-3">
+        <i class="fas fa-exclamation-circle me-2 text-warning"></i>@Localizer["PendingStorageRequests"]
+        <span class="badge bg-warning ms-2">@pendingRequests.Count</span>
+    </h6>
+    @if (pendingRequests.Count > 0)
+    {
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>@Localizer["School"]</th>
+                        <th>@Localizer["StoragePlan"]</th>
+                        <th>@Localizer["RequestedGB"]</th>
+                        <th>@Localizer["TotalPrice"]</th>
+                        <th>@Localizer["Notes"]</th>
+                        <th>@Localizer["RequestDate"]</th>
+                        <th>@Localizer["Actions"]</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var r in pendingRequests)
+                    {
+                        <tr>
+                            <td>@r.Id</td>
+                            <td><strong>@r.SchoolName</strong></td>
+                            <td><span class="badge bg-primary">@r.StoragePlanName</span></td>
+                            <td><strong>@r.RequestedGB GB</strong></td>
+                            <td><strong class="text-success">$@r.TotalPrice</strong></td>
+                            <td>@(r.Notes ?? "—")</td>
+                            <td>@r.CreatedAt.ToString("yyyy-MM-dd HH:mm")</td>
+                            <td>
+                                <div class="action-group">
+                                    <button class="btn-act btn-act-success" onclick="approveRequest(@r.Id)">
+                                        <i class="fas fa-check me-1"></i>@Localizer["Approve"]
+                                    </button>
+                                    <button class="btn-act btn-act-delete" onclick="rejectRequest(@r.Id)">
+                                        <i class="fas fa-times me-1"></i>@Localizer["Reject"]
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-success mb-0">
+            <i class="fas fa-check-circle me-1"></i> @Localizer["NoPendingStorageRequests"]
+        </div>
+    }
+</div>
+
+<!-- All Requests History -->
+<div class="dashboard-card card p-4" data-aos="fade-up">
+    <h6 class="mb-3">
+        <i class="fas fa-history me-2 text-info"></i>@Localizer["AllStorageRequests"]
+        <span class="badge bg-secondary ms-2">@Model.Count</span>
+    </h6>
+    @if (Model.Count > 0)
+    {
+        <div class="mb-3">
+            <div class="row g-2 align-items-end">
+                <div class="col-md-3">
+                    <input type="text" id="filterSchool" class="form-control" placeholder="@Localizer["FilterBySchool"]" oninput="filterTable()" />
+                </div>
+                <div class="col-md-2">
+                    <select id="filterStatus" class="form-select" onchange="filterTable()">
+                        <option value="">@Localizer["AllStatuses"]</option>
+                        <option value="Pending">@Localizer["Pending"]</option>
+                        <option value="Approved">@Localizer["Approved"]</option>
+                        <option value="Rejected">@Localizer["Rejected"]</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <select id="filterPlan" class="form-select" onchange="filterTable()">
+                        <option value="">@Localizer["AllPlans"]</option>
+                        @foreach (var p in storagePlans)
+                        {
+                            <option value="@p.PlanName">@p.PlanName (@p.StorageGB GB)</option>
+                        }
+                    </select>
+                </div>
+            </div>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle" id="allRequestsTable">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>@Localizer["School"]</th>
+                        <th>@Localizer["StoragePlan"]</th>
+                        <th>@Localizer["RequestedGB"]</th>
+                        <th>@Localizer["TotalPrice"]</th>
+                        <th>@Localizer["Notes"]</th>
+                        <th>@Localizer["Status"]</th>
+                        <th>@Localizer["RequestDate"]</th>
+                        <th>@Localizer["ProcessedDate"]</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var r in Model)
+                    {
+                        var status = !r.IsProcessed ? "Pending" : r.IsApproved ? "Approved" : "Rejected";
+                        var badgeClass = !r.IsProcessed ? "bg-warning" : r.IsApproved ? "bg-success" : "bg-danger";
+                        var icon = !r.IsProcessed ? "fas fa-clock" : r.IsApproved ? "fas fa-check" : "fas fa-times";
+                        <tr data-school="@r.SchoolName?.ToLower()" data-status="@status" data-plan="@r.StoragePlanName">
+                            <td>@r.Id</td>
+                            <td><strong>@r.SchoolName</strong></td>
+                            <td><span class="badge bg-primary">@r.StoragePlanName</span></td>
+                            <td><strong>@r.RequestedGB GB</strong></td>
+                            <td><strong>$@r.TotalPrice</strong></td>
+                            <td>@(r.Notes ?? "—")</td>
+                            <td><span class="badge @badgeClass"><i class="@icon me-1"></i>@Localizer[status]</span></td>
+                            <td>@r.CreatedAt.ToString("yyyy-MM-dd HH:mm")</td>
+                            <td>@(r.ProcessedAt?.ToString("yyyy-MM-dd HH:mm") ?? "—")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-info mb-0"><i class="fas fa-info-circle me-1"></i>@Localizer["NoStorageRequests"]</div>
+    }
+</div>
+
+@section Scripts {
+<script>
+    const token = $('input[name="__RequestVerificationToken"]').val();
+    function getHeaders() { return { 'Content-Type': 'application/json', 'RequestVerificationToken': token }; }
+
+    function approveRequest(id) {
+        Swal.fire({
+            title: '@Localizer["ApproveStorageRequest"]?',
+            text: '@Localizer["ApproveStorageDesc"]',
+            icon: 'question', showCancelButton: true, confirmButtonColor: '#22c55e',
+            confirmButtonText: '@Localizer["Approve"]', cancelButtonText: '@Localizer["Cancel"]'
+        }).then(result => {
+            if (result.isConfirmed) {
+                $.ajax({
+                    url: '@Url.Action("ApproveStorageRequest", "Platform")?id=' + id,
+                    method: 'POST', headers: getHeaders(),
+                    success: () => { toastr.success('@Localizer["StorageRequestApproved"]'); setTimeout(() => location.reload(), 800); },
+                    error: () => toastr.error('@Localizer["Error"]')
+                });
+            }
+        });
+    }
+
+    function rejectRequest(id) {
+        Swal.fire({
+            title: '@Localizer["RejectStorageRequest"]?',
+            text: '@Localizer["RejectStorageDesc"]',
+            icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33',
+            confirmButtonText: '@Localizer["Reject"]', cancelButtonText: '@Localizer["Cancel"]'
+        }).then(result => {
+            if (result.isConfirmed) {
+                $.ajax({
+                    url: '@Url.Action("RejectStorageRequest", "Platform")?id=' + id,
+                    method: 'POST', headers: getHeaders(),
+                    success: () => { toastr.success('@Localizer["StorageRequestRejected"]'); setTimeout(() => location.reload(), 800); },
+                    error: () => toastr.error('@Localizer["Error"]')
+                });
+            }
+        });
+    }
+
+    function filterTable() {
+        var school = $('#filterSchool').val().toLowerCase();
+        var status = $('#filterStatus').val();
+        var plan = $('#filterPlan').val();
+        $('#allRequestsTable tbody tr').each(function () {
+            var matchSchool = !school || ($(this).data('school') || '').includes(school);
+            var matchStatus = !status || $(this).data('status') === status;
+            var matchPlan = !plan || $(this).data('plan') === plan;
+            $(this).toggle(matchSchool && matchStatus && matchPlan);
+        });
+    }
+</script>
+}

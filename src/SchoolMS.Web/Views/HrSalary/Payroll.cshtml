@@ -35,15 +35,15 @@
                     <td>@p.TotalGrossSalary.ToString("N0")</td><td>@p.TotalDeductions.ToString("N0")</td><td class="fw-bold text-success">@p.TotalNetSalary.ToString("N0")</td>
                     <td><span class="badge @cls">@p.Status</span></td>
                     <td>
-                        <div class="d-flex gap-1">
-                            <a href="@Url.Action("PayrollDetails", new { month = p.Month, year = p.Year, branchId = p.BranchId })" class="btn btn-sm btn-info"><i class="fas fa-eye"></i></a>
+                        <div class="action-group">
+                            <a href="@Url.Action("PayrollDetails", new { month = p.Month, year = p.Year, branchId = p.BranchId })" class="btn-act btn-act-view"><i class="fas fa-eye"></i></a>
                             @if (p.Status == PayrollStatus.Calculated)
                             {
-                                <form asp-action="ApprovePayroll" method="post" class="d-inline"><input type="hidden" name="payrollId" value="@p.Id" /><button class="btn btn-sm btn-primary"><i class="fas fa-check"></i></button></form>
+                                <form asp-action="ApprovePayroll" method="post" class="d-inline"><input type="hidden" name="payrollId" value="@p.Id" /><button class="btn-act btn-act-edit"><i class="fas fa-check"></i></button></form>
                             }
                             @if (p.Status == PayrollStatus.Approved)
                             {
-                                <form asp-action="MarkPayrollPaid" method="post" class="d-inline"><input type="hidden" name="payrollId" value="@p.Id" /><button class="btn btn-sm btn-success"><i class="fas fa-dollar-sign"></i></button></form>
+                                <form asp-action="MarkPayrollPaid" method="post" class="d-inline"><input type="hidden" name="payrollId" value="@p.Id" /><button class="btn-act btn-act-success"><i class="fas fa-dollar-sign"></i></button></form>
                             }
                         </div>
                     </td>

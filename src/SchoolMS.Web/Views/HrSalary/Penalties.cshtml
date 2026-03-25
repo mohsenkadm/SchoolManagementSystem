@@ -19,10 +19,12 @@
                     <td>@(i + 1)</td><td>@p.EmployeeName</td><td>@p.PenaltyType</td><td class="text-danger fw-bold">@p.Amount.ToString("N0")</td>
                     <td>@p.Reason</td><td><span class="badge @cls">@p.Status</span></td>
                     <td>
+                        <div class="action-group">
                         @if (p.Status == PenaltyStatus.Pending)
                         {
-                            <form asp-action="ApprovePenalty" method="post" class="d-inline"><input type="hidden" name="id" value="@p.Id" /><button class="btn btn-sm btn-success"><i class="fas fa-check"></i></button></form>
+                            <form asp-action="ApprovePenalty" method="post" class="d-inline"><input type="hidden" name="id" value="@p.Id" /><button class="btn-act btn-act-success"><i class="fas fa-check"></i></button></form>
                         }
+                        </div>
                     </td>
                 </tr>
             }

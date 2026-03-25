@@ -1,0 +1,84 @@
+@using SchoolMS.Application.DTOs
+@model List<VideoQuizAnswerDto>
+@{
+    var video = ViewBag.Video as CourseVideoDto;
+    var course = ViewBag.Course as CourseDto;
+    var grouped = Model.GroupBy(a => new { a.StudentId, a.StudentName }).ToList();
+}
+
+<div class="page-header" data-aos="fade-down">
+    <div>
+        <h4 class="page-title"><i class="fas fa-poll text-primary"></i> @Localizer["QuizAnswers"] - @video?.Title</h4>
+        <a href="@Url.Action("QuizQuestions", new { courseVideoId = video?.Id })" class="text-muted small"><i class="fas fa-arrow-left me-1"></i>@Localizer["BackToQuiz"]</a>
+    </div>
+</div>
+
+<div class="stat-ribbon mb-3" data-aos="fade-up">
+    <div class="stat-item stagger-item"><div class="stat-icon bg-primary-soft"><i class="fas fa-users"></i></div><div class="stat-info"><h6>@Localizer["Students"]</h6><div class="stat-value">@grouped.Count</div></div></div>
+    <div class="stat-item stagger-item"><div class="stat-icon bg-success-soft"><i class="fas fa-check"></i></div><div class="stat-info"><h6>@Localizer["Correct"]</h6><div class="stat-value">@Model.Count(a => a.IsCorrect)</div></div></div>
+    <div class="stat-item stagger-item"><div class="stat-icon bg-danger-soft"><i class="fas fa-times"></i></div><div class="stat-info"><h6>@Localizer["Wrong"]</h6><div class="stat-value">@Model.Count(a => !a.IsCorrect)</div></div></div>
+    <div class="stat-item stagger-item"><div class="stat-icon bg-info-soft"><i class="fas fa-clipboard-list"></i></div><div class="stat-info"><h6>@Localizer["Total"]</h6><div class="stat-value">@Model.Count</div></div></div>
+</div>
+
+@if (grouped.Count == 0)
+{
+    <div class="empty-state text-center" data-aos="fade-up">
+        <div class="empty-icon"><i class="fas fa-inbox"></i></div>
+        <h5>@Localizer["NoAnswersYet"]</h5>
+    </div>
+}
+else
+{
+    <div class="accordion" id="answersAccordion" data-aos="fade-up">
+        @{ int idx = 0; }
+        @foreach (var g in grouped)
+        {
+            var correct = g.Count(a => a.IsCorrect);
+            var total = g.Count();
+            var pct = total > 0 ? Math.Round((double)correct / total * 100) : 0;
+            var barColor = pct >= 80 ? "bg-success" : pct >= 50 ? "bg-warning" : "bg-danger";
+            <div class="accordion-item mb-2" style="border:none;border-radius:var(--border-radius-md);overflow:hidden;box-shadow:var(--shadow-sm);">
+                <h2 class="accordion-header">
+                    <button class="accordion-button @(idx > 0 ? "collapsed" : "")" type="button" data-bs-toggle="collapse" data-bs-target="#student-@g.Key.StudentId">
+                        <div class="d-flex align-items-center gap-3 w-100">
+                            <div class="d-flex align-items-center justify-content-center" style="width:36px;height:36px;border-radius:50%;background:var(--primary-100);color:var(--primary-600);font-weight:700;">
+                                @g.Key.StudentName?.Substring(0, 1)
+                            </div>
+                            <div class="flex-grow-1">
+                                <strong>@g.Key.StudentName</strong>
+                                <div class="progress mt-1" style="height:5px;border-radius:3px;">
+                                    <div class="progress-bar @barColor" style="width:@(pct)%"></div>
+                                </div>
+                            </div>
+                            <span class="badge @barColor rounded-pill">@correct/@total (@pct%)</span>
+                        </div>
+                    </button>
+                </h2>
+                <div id="student-@g.Key.StudentId" class="accordion-collapse collapse @(idx == 0 ? "show" : "")" data-bs-parent="#answersAccordion">
+                    <div class="accordion-body p-0">
+                        <table class="table table-sm mb-0">
+                            <thead><tr><th>@Localizer["Question"]</th><th>@Localizer["Answer"]</th><th>@Localizer["Result"]</th><th>@Localizer["Date"]</th></tr></thead>
+                            <tbody>
+                                @foreach (var a in g)
+                                {
+                                    <tr>
+                                        <td>@a.QuestionText</td>
+                                        <td>@a.SelectedAnswer</td>
+                                        <td>
+                                            @if (a.IsCorrect)
+                                            { <span class="badge bg-success"><i class="fas fa-check me-1"></i>@Localizer["Correct"]</span> }
+                                            else
+                                            { <span class="badge bg-danger"><i class="fas fa-times me-1"></i>@Localizer["Wrong"]</span> }
+                                        </td>
+                                        <td><small class="text-muted">@a.AnsweredAt.ToString("yyyy-MM-dd HH:mm")</small></td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            idx++;
+        }
+    </div>
+}

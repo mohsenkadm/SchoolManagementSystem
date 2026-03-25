@@ -12,7 +12,9 @@ public interface IAttendanceService
     Task<DataTableResponse<AttendanceDto>> GetDataTableAsync(DataTableRequest request);
     Task<byte[]> ExportToExcelAsync(AttendanceFilterDto? filter = null);
     Task<int> MarkAbsenteesAsync(int branchId, DateTime date);
-    Task<List<AttendanceDto>> GetByPersonAsync(int personId, PersonType personType, int schoolId);
-    Task<List<AttendanceDto>> GetByParentChildrenAsync(int parentId, int schoolId);
+    Task<List<AttendanceDto>> GetByPersonAsync(int personId, PersonType personType, int schoolId,
+        DateTime? dateFrom = null, DateTime? dateTo = null, AttendanceType? type = null, int? academicYearId = null);
+    Task<List<AttendanceDto>> GetByParentChildrenAsync(int parentId, int schoolId,
+        DateTime? dateFrom = null, DateTime? dateTo = null, AttendanceType? type = null, int? academicYearId = null);
 }
 

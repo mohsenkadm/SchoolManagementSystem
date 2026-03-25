@@ -19,33 +19,8 @@ public class HrPromotionsApiController : ControllerBase
     public HrPromotionsApiController(IHrPromotionService service, IOneSignalNotificationService pushService) { _service = service; _pushService = pushService; }
 
     [HttpGet]
-    public async Task<ActionResult<List<HrPromotionDto>>> GetAll([FromQuery] HrPromotionStatus? status)
-        => Ok(await _service.GetAllAsync(status));
-
-    [HttpGet("{id}")]
-    public async Task<ActionResult<HrPromotionDto>> Get(int id)
-    {
-        var item = await _service.GetByIdAsync(id);
-        return item == null ? NotFound() : Ok(item);
-    }
-
-    [HttpPost]
-    public async Task<ActionResult<HrPromotionDto>> Create(int schoolId, [FromBody] HrPromotionDto dto)
-    { var r = await _service.CreateAsync(dto); await _pushService.SendToPersonTypesAsync("HR Promotion", "A new promotion has been created", new[] { "Staff" }, schoolId); return Ok(r); }
-
-    [HttpPost("{id}/approve")]
-    public async Task<IActionResult> Approve(int id, [FromQuery] string approvedBy)
-    {
-        await _service.ApproveAsync(id, approvedBy);
-        return Ok();
-    }
-
-    [HttpPost("{id}/reject")]
-    public async Task<IActionResult> Reject(int id, [FromQuery] string rejectedBy, [FromQuery] string reason)
-    {
-        await _service.RejectAsync(id, rejectedBy, reason);
-        return Ok();
-    }
+    public async Task<ActionResult<List<HrPromotionDto>>> GetAll(int schoolId, [FromQuery] HrPromotionStatus? status)
+        => Ok(await _service.GetBySchoolIdAsync(schoolId, status));
 
     [HttpGet("career-history/{employeeId}")]
     public async Task<ActionResult<List<HrCareerHistoryDto>>> GetCareerHistory(int employeeId)

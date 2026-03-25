@@ -47,7 +47,7 @@
             <h6><i class="fas fa-shield-alt me-1"></i>@Localizer["AssignPermissions"]</h6>
             <div class="mb-2">
                 <button type="button" class="btn btn-sm btn-outline-success me-1" onclick="selectAllPerms()"><i class="fas fa-check-double me-1"></i>Select All</button>
-                <button type="button" class="btn btn-sm btn-outline-danger" onclick="deselectAllPerms()"><i class="fas fa-times me-1"></i>Deselect All</button>
+                <button type="button" class="btn-act btn-act-delete" onclick="deselectAllPerms()"><i class="fas fa-times me-1"></i>Deselect All</button>
             </div>
             <div class="table-responsive" style="max-height:350px;overflow-y:auto;">
                 <table class="table table-sm table-bordered">
@@ -99,7 +99,7 @@
                 { data: 'fullName' }, { data: 'email' }, { data: 'userType' }, { data: 'roles' },
                 { data: 'isActive', render: function(d) { return d ? '<span class="badge bg-success">@Localizer["Active"]</span>' : '<span class="badge bg-secondary">@Localizer["Inactive"]</span>'; } },
                 { data: 'id', render: function(d) {
-                    return '<button class="btn btn-sm btn-primary" onclick="edit(\''+d+'\')"><i class="fas fa-edit"></i></button> <button class="btn btn-sm btn-danger" onclick="del(\''+d+'\')"><i class="fas fa-trash"></i></button>';
+                    return '<div class="action-group"><button class="btn-act btn-act-edit" onclick="edit(\''+d+'\')"><i class="fas fa-edit"></i></button><button class="btn-act btn-act-delete" onclick="del(\''+d+'\')"><i class="fas fa-trash"></i></button></div>';
                 }}
             ],
             order: [[1, 'asc']], responsive: true,

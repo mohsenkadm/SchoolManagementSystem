@@ -21,6 +21,7 @@ public class Student : BaseEntity
     public int AcademicYearId { get; set; }
     public string? Notes { get; set; }
     public int? ParentId { get; set; }
+    public string? ActiveDeviceId { get; set; }
 
     public virtual Parent? Parent { get; set; }
     public virtual Branch Branch { get; set; } = null!;

@@ -11,14 +11,32 @@ namespace SchoolMS.Web.Controllers;
 public class HrFingerprintController : Controller
 {
     private readonly IHrFingerprintService _service;
+    private readonly IBranchService _branchService;
+    private readonly IPlatformService _platformService;
     private readonly IOneSignalNotificationService _pushService;
-    public HrFingerprintController(IHrFingerprintService service, IOneSignalNotificationService pushService) { _service = service; _pushService = pushService; }
+    public HrFingerprintController(IHrFingerprintService service, IBranchService branchService, IPlatformService platformService, IOneSignalNotificationService pushService) { _service = service; _branchService = branchService; _platformService = platformService; _pushService = pushService; }
 
+    private bool IsSuperAdmin => User.IsInRole("SuperAdmin");
     private int? CurrentSchoolId { get { var c = User.FindFirst("SchoolId"); return c != null && int.TryParse(c.Value, out var id) ? id : null; } }
 
     [HasPermission("HrFingerprint", "View")]
     public async Task<IActionResult> Index(DateTime? fromDate, DateTime? toDate, int? employeeId)
-        => View(await _service.GetRecordsAsync(fromDate ?? DateTime.UtcNow.Date, toDate ?? DateTime.UtcNow.Date, employeeId));
+    {
+        ViewBag.IsSuperAdmin = IsSuperAdmin;
+        if (IsSuperAdmin)
+        {
+            ViewBag.Schools = await _platformService.GetAllSchoolsAsync();
+            ViewBag.Branches = await _branchService.GetAllAsync();
+        }
+        else
+        {
+            ViewBag.Schools = new List<SchoolDto>();
+            ViewBag.Branches = CurrentSchoolId.HasValue
+                ? await _branchService.GetBySchoolIdAsync(CurrentSchoolId.Value)
+                : new List<BranchDto>();
+        }
+        return View(await _service.GetRecordsAsync(fromDate ?? DateTime.UtcNow.Date, toDate ?? DateTime.UtcNow.Date, employeeId));
+    }
 
     [HttpPost, HasPermission("HrFingerprint", "Add")]
     public async Task<IActionResult> Scan([FromBody] HrFingerprintScanDto dto)

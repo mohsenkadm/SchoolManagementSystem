@@ -18,23 +18,6 @@ public class HrDepartmentsApiController : ControllerBase
     public HrDepartmentsApiController(IHrDepartmentService service, IOneSignalNotificationService pushService) { _service = service; _pushService = pushService; }
 
     [HttpGet]
-    public async Task<ActionResult<List<HrDepartmentDto>>> GetAll(int schoolId) => Ok(await _service.GetAllAsync());
-
-    [HttpGet("{id}")]
-    public async Task<ActionResult<HrDepartmentDto>> Get(int schoolId, int id)
-    {
-        var item = await _service.GetByIdAsync(id);
-        return item == null ? NotFound() : Ok(item);
-    }
-
-    [HttpPost]
-    public async Task<ActionResult<HrDepartmentDto>> Create(int schoolId, [FromBody] HrDepartmentDto dto)
-    { var result = await _service.CreateAsync(dto); await _pushService.SendToPersonTypesAsync("New Department", $"{dto.DepartmentName} has been created", new[] { "Staff" }, schoolId); return Ok(result); }
-
-    [HttpPut]
-    public async Task<ActionResult<HrDepartmentDto>> Update(int schoolId, [FromBody] HrDepartmentDto dto)
-    { var result = await _service.UpdateAsync(dto); await _pushService.SendToPersonTypesAsync("Department Updated", $"{dto.DepartmentName} has been updated", new[] { "Staff" }, schoolId); return Ok(result); }
-
-    [HttpDelete("{id}")]
-    public async Task<IActionResult> Delete(int schoolId, int id) { await _service.DeleteAsync(id); return Ok(); }
+    public async Task<ActionResult<List<HrDepartmentDto>>> GetAll(int schoolId) => Ok(await _service.GetBySchoolIdAsync(schoolId));
+                                           
 }

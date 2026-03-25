@@ -1,0 +1,190 @@
+@using SchoolMS.Application.DTOs
+@model List<SchoolSubscriptionDto>
+@{
+    var school = ViewBag.School as SchoolDto;
+    var activeSub = Model.FirstOrDefault(s => s.IsActive);
+    var expiredSubs = Model.Where(s => !s.IsActive).ToList();
+}
+
+<div class="page-header" data-aos="fade-down">
+    <div>
+        <h4 class="page-title"><i class="fas fa-crown text-warning"></i> @ViewData["Title"]</h4>
+        @if (school != null)
+        {
+            <p class="text-muted mb-0"><i class="fas fa-school me-1"></i>@school.Name</p>
+        }
+        <a href="@Url.Action("Index", "Home")" class="text-muted small"><i class="fas fa-arrow-left me-1"></i>Back to Dashboard</a>
+    </div>
+</div>
+
+<!-- Active Plan Card -->
+@if (activeSub != null)
+{
+    var daysLeft = (int)(activeSub.ExpiryDate - DateTime.UtcNow).TotalDays;
+    var isExpiringSoon = daysLeft <= 10 && daysLeft >= 0;
+    var isExpired = daysLeft < 0;
+    var progressPct = 100;
+    if (activeSub.ActivatedAt < activeSub.ExpiryDate)
+    {
+        var totalDays = (activeSub.ExpiryDate - activeSub.ActivatedAt).TotalDays;
+        var usedDays = (DateTime.UtcNow - activeSub.ActivatedAt).TotalDays;
+        progressPct = (int)Math.Min(100, Math.Round(usedDays / totalDays * 100));
+    }
+    var barColor = isExpired ? "bg-danger" : isExpiringSoon ? "bg-warning" : "bg-success";
+
+    <div class="dashboard-card card mb-4" data-aos="fade-up">
+        <div class="card-body">
+            <div class="d-flex align-items-center justify-content-between mb-3">
+                <div>
+                    <h5 class="mb-1">
+                        <i class="fas fa-gem me-2 text-primary"></i>
+                        <strong>@activeSub.PlanName</strong>
+                        <span class="badge bg-success ms-2">Active</span>
+                    </h5>
+                    <p class="text-muted mb-0" style="font-size:0.9rem;">Current active subscription plan</p>
+                </div>
+                @if (isExpired)
+                {
+                    <span class="badge bg-danger p-2" style="font-size:0.85rem;"><i class="fas fa-times-circle me-1"></i>Expired</span>
+                }
+                else if (isExpiringSoon)
+                {
+                    <span class="badge bg-warning text-dark p-2" style="font-size:0.85rem;"><i class="fas fa-clock me-1"></i>@daysLeft day(s) left</span>
+                }
+                else
+                {
+                    <span class="badge bg-success p-2" style="font-size:0.85rem;"><i class="fas fa-check-circle me-1"></i>@daysLeft day(s) left</span>
+                }
+            </div>
+
+            <div class="row g-3 mb-3">
+                <div class="col-md-3">
+                    <div class="border rounded p-3 text-center">
+                        <i class="fas fa-calendar-check text-primary mb-2" style="font-size:1.5rem;"></i>
+                        <div class="text-muted small">Activated</div>
+                        <strong>@activeSub.ActivatedAt.ToString("yyyy-MM-dd")</strong>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="border rounded p-3 text-center">
+                        <i class="fas fa-calendar-times text-danger mb-2" style="font-size:1.5rem;"></i>
+                        <div class="text-muted small">Expires</div>
+                        <strong>@activeSub.ExpiryDate.ToString("yyyy-MM-dd")</strong>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="border rounded p-3 text-center">
+                        <i class="fas fa-hdd text-info mb-2" style="font-size:1.5rem;"></i>
+                        <div class="text-muted small">Storage</div>
+                        <strong>@activeSub.TotalStorageGB.ToString("F1") GB</strong>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="border rounded p-3 text-center">
+                        <i class="fas fa-plus-circle text-success mb-2" style="font-size:1.5rem;"></i>
+                        <div class="text-muted small">Extra Storage</div>
+                        <strong>@activeSub.ExtraStorageGB.ToString("F1") GB</strong>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mb-2 d-flex justify-content-between">
+                <small class="text-muted">Subscription Progress</small>
+                <small class="text-muted">@progressPct%</small>
+            </div>
+            <div class="progress" style="height:8px;border-radius:4px;">
+                <div class="progress-bar @barColor" style="width:@(progressPct)%;border-radius:4px;"></div>
+            </div>
+        </div>
+    </div>
+}
+else
+{
+    <div class="dashboard-card card mb-4" data-aos="fade-up">
+        <div class="card-body text-center py-5">
+            <i class="fas fa-exclamation-triangle fa-3x text-warning mb-3"></i>
+            <h5>No Active Subscription</h5>
+            <p class="text-muted">This school does not have an active subscription plan. Please contact the administrator.</p>
+        </div>
+    </div>
+}
+
+<!-- Subscription History -->
+<div class="dashboard-card card" data-aos="fade-up">
+    <div class="card-header bg-transparent">
+        <h5 class="mb-0"><i class="fas fa-history me-2 text-primary"></i>Subscription History</h5>
+    </div>
+    <div class="card-body p-0">
+        @if (Model.Count == 0)
+        {
+            <div class="text-center text-muted py-5">
+                <i class="fas fa-inbox fa-3x mb-3 opacity-50"></i>
+                <p>No subscription records found.</p>
+            </div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Plan</th>
+                            <th>Activated</th>
+                            <th>Expires</th>
+                            <th>Storage</th>
+                            <th>Extra Storage</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @for (int i = 0; i < Model.Count; i++)
+                        {
+                            var sub = Model[i];
+                            var isActive = sub.IsActive;
+                            var isExp = sub.ExpiryDate < DateTime.UtcNow;
+                            <tr class="@(isActive ? "table-success" : "")">
+                                <td>@(i + 1)</td>
+                                <td>
+                                    <strong>@sub.PlanName</strong>
+                                    @if (isActive)
+                                    {
+                                        <span class="badge bg-success ms-1">Current</span>
+                                    }
+                                </td>
+                                <td>@sub.ActivatedAt.ToString("yyyy-MM-dd")</td>
+                                <td>@sub.ExpiryDate.ToString("yyyy-MM-dd")</td>
+                                <td>@sub.StorageLimitGB.ToString("F1") GB</td>
+                                <td>
+                                    @if (sub.ExtraStorageGB > 0)
+                                    {
+                                        <span class="text-success">+@sub.ExtraStorageGB.ToString("F1") GB</span>
+                                        <small class="text-muted">($@sub.ExtraStoragePrice.ToString("N2"))</small>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">—</span>
+                                    }
+                                </td>
+                                <td>
+                                    @if (isActive && !isExp)
+                                    {
+                                        <span class="status-badge status-active"><span class="status-dot"></span>Active</span>
+                                    }
+                                    else if (isActive && isExp)
+                                    {
+                                        <span class="badge bg-danger">Expired</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary">Inactive</span>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</div>

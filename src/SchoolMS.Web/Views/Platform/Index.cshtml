@@ -1,3 +1,5 @@
+@using System.Linq
+@using System.Text.Json
 @model SchoolMS.Application.DTOs.PlatformDashboardDto
 
 <div class="page-header" data-aos="fade-down">
@@ -113,8 +115,65 @@
         </div>
     </div>
 
-    <div class="row mt-4">
-        <div class="col-md-6">
+    <!-- Charts Row -->
+    <div class="row g-4 mt-2 mb-4">
+        <div class="col-xl-6 col-lg-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0"><i class="fas fa-chart-bar me-2 text-primary"></i>Students &amp; Teachers per School</h6>
+                </div>
+                <div class="card-body">
+                    <canvas id="schoolUsageChart" height="260"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-lg-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white">
+                    <h6 class="mb-0"><i class="fas fa-chart-pie me-2 text-success"></i>School Status</h6>
+                </div>
+                <div class="card-body d-flex align-items-center justify-content-center">
+                    <canvas id="statusChart" height="220"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-lg-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white">
+                    <h6 class="mb-0"><i class="fas fa-chart-doughnut me-2 text-info"></i>Subscription Overview</h6>
+                </div>
+                <div class="card-body d-flex align-items-center justify-content-center">
+                    <canvas id="subChart" height="220"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-4">
+        <div class="col-xl-6 col-lg-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white">
+                    <h6 class="mb-0"><i class="fas fa-code-branch me-2 text-warning"></i>Branches per School</h6>
+                </div>
+                <div class="card-body">
+                    <canvas id="branchChart" height="260"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-6 col-lg-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white">
+                    <h6 class="mb-0"><i class="fas fa-sort-amount-down me-2 text-danger"></i>Top Schools by Students</h6>
+                </div>
+                <div class="card-body">
+                    <canvas id="topSchoolsChart" height="260"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-2">
+        <div class="col-md-4">
             <a href="@Url.Action("Schools", "Platform")" class="card border-0 shadow-sm text-decoration-none mb-3">
                 <div class="card-body d-flex align-items-center">
                     <div class="bg-primary bg-opacity-10 rounded-circle p-3 me-3">
@@ -128,7 +187,7 @@
                 </div>
             </a>
         </div>
-        <div class="col-md-6">
+        <div class="col-md-4">
             <a href="@Url.Action("Plans", "Platform")" class="card border-0 shadow-sm text-decoration-none mb-3">
                 <div class="card-body d-flex align-items-center">
                     <div class="bg-success bg-opacity-10 rounded-circle p-3 me-3">
@@ -142,5 +201,93 @@
                 </div>
             </a>
         </div>
+        <div class="col-md-4">
+            <a href="@Url.Action("StorageRequests", "Platform")" class="card border-0 shadow-sm text-decoration-none mb-3">
+                <div class="card-body d-flex align-items-center">
+                    <div class="bg-warning bg-opacity-10 rounded-circle p-3 me-3">
+                        <i class="fas fa-hdd fa-2x text-warning"></i>
+                    </div>
+                    <div>
+                        <h5 class="mb-1 text-dark">Storage Requests</h5>
+                        <small class="text-muted">Review and manage storage upgrade requests</small>
+                    </div>
+                    <i class="fas fa-chevron-right ms-auto text-muted"></i>
+                </div>
+            </a>
+        </div>
     </div>
 </div>
+
+@section Scripts {
+<script>
+    (function () {
+        var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        var textColor = isDark ? '#e2e8f0' : '#64748b';
+        var gridColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
+        Chart.defaults.color = textColor;
+        Chart.defaults.borderColor = gridColor;
+
+        // School names and data from model
+        var schools = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.RecentSchools.Select(s => new { s.Name, s.StudentCount, s.TeacherCount, s.BranchCount, s.IsActive, Plan = s.CurrentPlan ?? "None" })));
+
+        // 1. Students & Teachers per School - Bar Chart
+        new Chart(document.getElementById('schoolUsageChart'), {
+            type: 'bar',
+            data: {
+                labels: schools.map(s => s.name.length > 15 ? s.name.substring(0, 15) + '...' : s.name),
+                datasets: [
+                    { label: 'Students', data: schools.map(s => s.studentCount), backgroundColor: 'rgba(99, 102, 241, 0.7)', borderColor: 'rgba(99, 102, 241, 1)', borderWidth: 1, borderRadius: 4 },
+                    { label: 'Teachers', data: schools.map(s => s.teacherCount), backgroundColor: 'rgba(16, 185, 129, 0.7)', borderColor: 'rgba(16, 185, 129, 1)', borderWidth: 1, borderRadius: 4 }
+                ]
+            },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' } }, scales: { y: { beginAtZero: true, grid: { color: gridColor } }, x: { grid: { display: false } } } }
+        });
+
+        // 2. School Status - Doughnut
+        var activeCount = @Model.ActiveSchools;
+        var inactiveCount = @Model.TotalSchools - @Model.ActiveSchools;
+        new Chart(document.getElementById('statusChart'), {
+            type: 'doughnut',
+            data: {
+                labels: ['Active', 'Inactive'],
+                datasets: [{ data: [activeCount, inactiveCount], backgroundColor: ['rgba(16, 185, 129, 0.8)', 'rgba(239, 68, 68, 0.8)'], borderWidth: 0 }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } }, cutout: '65%' }
+        });
+
+        // 3. Subscription Overview - Doughnut
+        var activeSubs = @Model.ActiveSubscriptions;
+        var expiringSubs = @Model.ExpiringSoon;
+        var otherSubs = Math.max(0, @Model.TotalSchools - activeSubs - expiringSubs);
+        new Chart(document.getElementById('subChart'), {
+            type: 'doughnut',
+            data: {
+                labels: ['Active Subscriptions', 'Expiring Soon', 'No Subscription'],
+                datasets: [{ data: [activeSubs, expiringSubs, otherSubs], backgroundColor: ['rgba(99, 102, 241, 0.8)', 'rgba(245, 158, 11, 0.8)', 'rgba(148, 163, 184, 0.5)'], borderWidth: 0 }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } }, cutout: '65%' }
+        });
+
+        // 4. Branches per School - Horizontal Bar
+        new Chart(document.getElementById('branchChart'), {
+            type: 'bar',
+            data: {
+                labels: schools.map(s => s.name.length > 15 ? s.name.substring(0, 15) + '...' : s.name),
+                datasets: [{ label: 'Branches', data: schools.map(s => s.branchCount), backgroundColor: 'rgba(245, 158, 11, 0.7)', borderColor: 'rgba(245, 158, 11, 1)', borderWidth: 1, borderRadius: 4 }]
+            },
+            options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { beginAtZero: true, grid: { color: gridColor } }, y: { grid: { display: false } } } }
+        });
+
+        // 5. Top Schools by Students - Horizontal Bar (sorted)
+        var sorted = [...schools].sort((a, b) => b.studentCount - a.studentCount).slice(0, 10);
+        new Chart(document.getElementById('topSchoolsChart'), {
+            type: 'bar',
+            data: {
+                labels: sorted.map(s => s.name.length > 15 ? s.name.substring(0, 15) + '...' : s.name),
+                datasets: [{ label: 'Students', data: sorted.map(s => s.studentCount), backgroundColor: 'rgba(239, 68, 68, 0.7)', borderColor: 'rgba(239, 68, 68, 1)', borderWidth: 1, borderRadius: 4 }]
+            },
+            options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { beginAtZero: true, grid: { color: gridColor } }, y: { grid: { display: false } } } }
+        });
+    })();
+</script>
+}

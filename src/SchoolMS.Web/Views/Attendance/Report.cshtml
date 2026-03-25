@@ -5,6 +5,7 @@
     var isSuperAdmin = (bool)(ViewBag.IsSuperAdmin ?? false);
     var schools = ViewBag.Schools as List<SchoolDto> ?? new();
     var branches = ViewBag.Branches as List<BranchDto> ?? new();
+    var academicYears = ViewBag.AcademicYears as List<AcademicYearDto> ?? new();
 }
 
 @Html.AntiForgeryToken()
@@ -79,6 +80,23 @@
             </select>
         </div>
         <div class="col-md-2">
+            <label class="form-label small">@Localizer["AcademicYear"]</label>
+            <select id="filterAcademicYear" class="form-select">
+                <option value="">@Localizer["All"]</option>
+                @foreach (var y in academicYears)
+                {
+                    if (y.IsCurrent)
+                    {
+                        <option value="@y.Id" selected="selected">@y.YearName</option>
+                    }
+                    else
+                    {
+                        <option value="@y.Id">@y.YearName</option>
+                    }
+                }
+            </select>
+        </div>
+        <div class="col-md-2">
             <label class="form-label small">@Localizer["DateFrom"]</label>
             <input type="date" id="filterDateFrom" class="form-control" value="@DateTime.Today.ToString("yyyy-MM-dd")" />
         </div>
@@ -128,6 +146,7 @@
                 <th>@Localizer["Date"]</th>
                 <th>@Localizer["Time"]</th>
                 <th>@Localizer["Branch"]</th>
+                <th>@Localizer["AcademicYear"]</th>
                 @if (isSuperAdmin) { <th>@Localizer["School"]</th> }
             </tr>
         </thead>
@@ -165,7 +184,8 @@
             personType: $('#filterPersonType').val() !== '' ? +$('#filterPersonType').val() : null,
             branchId: $('#filterBranch').val() ? +$('#filterBranch').val() : null,
             schoolId: isSuperAdmin && $('#filterSchool').val() ? +$('#filterSchool').val() : null,
-            searchValue: $('#filterSearch').val() || null
+            searchValue: $('#filterSearch').val() || null,
+            academicYearId: $('#filterAcademicYear').val() ? +$('#filterAcademicYear').val() : null
         };
     }
 
@@ -226,7 +246,7 @@
         var personBadges = ['bg-info','bg-primary','bg-secondary'];
 
         if (!records || records.length === 0) {
-            var cols = isSuperAdmin ? 9 : 8;
+            var cols = isSuperAdmin ? 10 : 9;
             body.append('<tr><td colspan="' + cols + '" class="text-center text-muted py-4"><i class="fas fa-inbox fa-2x mb-2 d-block"></i>@Localizer["NoRecordsFound"]</td></tr>');
             if ($.fn.DataTable.isDataTable('#reportTable')) { $('#reportTable').DataTable().destroy(); }
             return;
@@ -243,7 +263,8 @@
                 '<td><span class="badge ' + typeBadges[r.type] + '">' + typeNames[r.type] + '</span></td>' +
                 '<td>' + date + '</td>' +
                 '<td>' + time + '</td>' +
-                '<td>' + (r.branchName || '—') + '</td>';
+                '<td>' + (r.branchName || '—') + '</td>' +
+                '<td>' + (r.academicYearName || '—') + '</td>';
             if (isSuperAdmin) row += '<td>' + (r.schoolName || '—') + '</td>';
             row += '</tr>';
             body.append(row);
@@ -258,6 +279,7 @@
         $('#filterDateTo').val('@DateTime.Today.ToString("yyyy-MM-dd")');
         $('#filterType, #filterPersonType, #filterSearch').val('');
         $('#filterBranch').val('');
+        $('#filterAcademicYear').val('');
         if (isSuperAdmin) $('#filterSchool').val('');
         loadReport();
     }
@@ -272,6 +294,7 @@
         if (f.branchId) params.push('branchId=' + f.branchId);
         if (f.schoolId) params.push('schoolId=' + f.schoolId);
         if (f.searchValue) params.push('search=' + encodeURIComponent(f.searchValue));
+        if (f.academicYearId) params.push('academicYearId=' + f.academicYearId);
         window.location.href = '@Url.Action("ExportExcel")?' + params.join('&');
     });
 

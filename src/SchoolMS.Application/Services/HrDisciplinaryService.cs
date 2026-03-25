@@ -26,6 +26,22 @@ public class HrDisciplinaryService : IHrDisciplinaryService
         var query = _actionRepo.Query().Include(a => a.Employee).Include(a => a.ViolationType).AsQueryable();
         if (employeeId.HasValue) query = query.Where(a => a.EmployeeId == employeeId.Value);
         var items = await query.OrderByDescending(a => a.IssuedDate).ToListAsync();
+        return MapDisciplinaryActions(items);
+    }
+
+    public async Task<List<HrDisciplinaryActionDto>> GetBySchoolIdAsync(int schoolId, int? employeeId = null)
+    {
+        var query = _actionRepo.Query().Where(a => a.SchoolId == schoolId).Include(a => a.Employee).Include(a => a.ViolationType).AsQueryable();
+        if (employeeId.HasValue) query = query.Where(a => a.EmployeeId == employeeId.Value);
+        var items = await query.OrderByDescending(a => a.IssuedDate).ToListAsync();
+        return MapDisciplinaryActions(items);
+    }
+
+    public async Task<List<HrViolationTypeDto>> GetViolationTypesBySchoolIdAsync(int schoolId)
+        => _mapper.Map<List<HrViolationTypeDto>>(await _typeRepo.Query().Where(v => v.SchoolId == schoolId).ToListAsync());
+
+    private static List<HrDisciplinaryActionDto> MapDisciplinaryActions(List<HrDisciplinaryAction> items)
+    {
         return items.Select(a => new HrDisciplinaryActionDto
         {
             Id = a.Id, EmployeeId = a.EmployeeId, EmployeeName = a.Employee?.FullName,

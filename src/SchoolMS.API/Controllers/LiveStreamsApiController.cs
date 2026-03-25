@@ -1,7 +1,9 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
+using SchoolMS.API.Hubs;
 using SchoolMS.Application.DTOs;
 using SchoolMS.Application.Interfaces;
 using SchoolMS.Domain.Entities;
@@ -26,6 +28,7 @@ public class LiveStreamsApiController : ControllerBase
     private readonly IRepository<Student> _studentRepo;
     private readonly IRepository<StudentSubscription> _subscriptionRepo;
     private readonly IOneSignalNotificationService _pushService;
+    private readonly IHubContext<ApiLiveStreamChatHub> _liveStreamHub;
 
     public LiveStreamsApiController(
         ILiveStreamService service,
@@ -33,7 +36,8 @@ public class LiveStreamsApiController : ControllerBase
         IRepository<Teacher> teacherRepo,
         IRepository<Student> studentRepo,
         IRepository<StudentSubscription> subscriptionRepo,
-        IOneSignalNotificationService pushService)
+        IOneSignalNotificationService pushService,
+        IHubContext<ApiLiveStreamChatHub> liveStreamHub)
     {
         _service = service;
         _courseService = courseService;
@@ -41,30 +45,41 @@ public class LiveStreamsApiController : ControllerBase
         _studentRepo = studentRepo;
         _subscriptionRepo = subscriptionRepo;
         _pushService = pushService;
+        _liveStreamHub = liveStreamHub;
     }
 
     private string UserTypeClaim => User.FindFirst("UserType")?.Value ?? "";
     private string UserName => User.FindFirst(ClaimTypes.Name)?.Value ?? "";
 
     [HttpGet]
-    public async Task<ActionResult<List<LiveStreamDto>>> GetAll()
+    public async Task<ActionResult<List<LiveStreamDto>>> GetAll(
+        [FromQuery] int? subjectId = null, [FromQuery] int? courseId = null,
+        [FromQuery] int? teacherId = null)
     {
+        List<LiveStreamDto> items;
+
         if (UserTypeClaim == nameof(UserType.Teacher))
         {
             var teacher = await _teacherRepo.Query().FirstOrDefaultAsync(t => t.Username == UserName);
             if (teacher == null) return Ok(new List<LiveStreamDto>());
-            return Ok(await _service.GetByTeacherIdAsync(teacher.Id));
+            items = await _service.GetByTeacherIdAsync(teacher.Id);
         }
-
-        if (UserTypeClaim == nameof(UserType.Student))
+        else if (UserTypeClaim == nameof(UserType.Student))
         {
             var student = await _studentRepo.Query().FirstOrDefaultAsync(s => s.Username == UserName);
             if (student == null) return Ok(new List<LiveStreamDto>());
             var subjectIds = await GetApprovedSubjectIdsAsync(student.Id);
-            return Ok(await _service.GetBySubjectIdsAsync(subjectIds));
+            items = await _service.GetBySubjectIdsAsync(subjectIds);
+        }
+        else
+        {
+            items = await _service.GetAllAsync();
         }
 
-        return Ok(await _service.GetAllAsync());
+        if (subjectId.HasValue) items = items.Where(l => l.SubjectId == subjectId.Value).ToList();
+        if (courseId.HasValue) items = items.Where(l => l.CourseId == courseId.Value).ToList();
+        if (teacherId.HasValue) items = items.Where(l => l.TeacherId == teacherId.Value).ToList();
+        return Ok(items);
     }
 
     [HttpGet("course/{courseId}")]
@@ -172,6 +187,47 @@ public class LiveStreamsApiController : ControllerBase
     {
         await _service.MarkSeenAsync(id, studentId);
         return Ok(new { success = true });
+    }
+
+    // جلب تعليقات البث المباشر
+    [HttpGet("{liveStreamId}/comments")]
+    public async Task<ActionResult<List<LiveStreamCommentDto>>> GetComments(int schoolId, int liveStreamId)
+        => Ok(await _service.GetCommentsByLiveStreamIdAsync(liveStreamId));
+
+    // إضافة تعليق على البث المباشر مع إشعار SignalR
+    [HttpPost("{liveStreamId}/comments")]
+    public async Task<ActionResult<LiveStreamCommentDto>> AddComment(int schoolId, int liveStreamId, [FromBody] CreateLiveStreamCommentDto dto)
+    {
+        dto.LiveStreamId = liveStreamId;
+
+        if (UserTypeClaim == nameof(UserType.Student))
+        {
+            var student = await _studentRepo.Query().FirstOrDefaultAsync(s => s.Username == UserName);
+            if (student == null) return Forbid();
+            dto.StudentId = student.Id;
+            dto.SenderName = student.FullName;
+            dto.SenderType = "Student";
+        }
+        else if (UserTypeClaim == nameof(UserType.Teacher))
+        {
+            var teacher = await _teacherRepo.Query().FirstOrDefaultAsync(t => t.Username == UserName);
+            if (teacher == null) return Forbid();
+            dto.TeacherId = teacher.Id;
+            dto.SenderName = teacher.FullName;
+            dto.SenderType = "Teacher";
+        }
+        else
+        {
+            return Forbid();
+        }
+
+        var result = await _service.AddCommentAsync(dto);
+
+        // إرسال التعليق لجميع المشتركين عبر SignalR
+        await _liveStreamHub.Clients.Group($"livestream-{liveStreamId}")
+            .SendAsync("ReceiveLiveComment", result.SenderName, result.SenderType, dto.Comment, result.SentAt);
+
+        return Ok(result);
     }
 
     private async Task<List<int>> GetApprovedSubjectIdsAsync(int studentId)

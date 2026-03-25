@@ -122,9 +122,9 @@
                             <td>@r.Notes</td>
                             <td>@r.CreatedAt.ToString("MMM dd, yyyy")</td>
                             <td>
-                                <div class="d-flex gap-1">
-                                    <button class="btn btn-sm btn-success" onclick="approveRequest(@r.Id)"><i class="fas fa-check me-1"></i>@Localizer["Approve"]</button>
-                                    <button class="btn btn-sm btn-danger" onclick="rejectRequest(@r.Id)"><i class="fas fa-times me-1"></i>@Localizer["Reject"]</button>
+                                <div class="action-group">
+                                    <button class="btn-act btn-act-success" onclick="approveRequest(@r.Id)"><i class="fas fa-check me-1"></i>@Localizer["Approve"]</button>
+                                    <button class="btn-act btn-act-delete" onclick="rejectRequest(@r.Id)"><i class="fas fa-times me-1"></i>@Localizer["Reject"]</button>
                                 </div>
                             </td>
                         </tr>
@@ -221,14 +221,15 @@
                     + '<td><strong>' + totalGB.toFixed(2) + ' GB</strong></td>'
                     + '<td>' + (s.isActive ? '<span class="badge bg-success">Active</span>' : '<span class="badge bg-secondary">Inactive</span>') + '</td>'
                     + '<td>'
-                        + '<div class="d-flex gap-1 flex-wrap">';
+                        + '<div class="action-group">';
 
                 if (s.isActive) {
-                    html += '<button class="btn btn-sm btn-outline-info" onclick="openExtraStorage(' + s.id + ')" title="Add Extra Storage"><i class="fas fa-hdd me-1"></i>+Storage</button>'
-                        + '<button class="btn btn-sm btn-outline-success" onclick="renewSub(' + s.id + ')" title="Renew"><i class="fas fa-redo me-1"></i>Renew</button>'
-                        + '<button class="btn btn-sm btn-outline-danger" onclick="cancelSub(' + s.id + ')" title="Cancel"><i class="fas fa-times"></i></button>';
+                    html += '<button class="btn-act btn-act-view" onclick="openExtraStorage(' + s.id + ')" title="Add Extra Storage"><i class="fas fa-hdd"></i></button>'
+                        + '<button class="btn-act btn-act-success" onclick="renewSub(' + s.id + ')" title="Renew"><i class="fas fa-redo"></i></button>'
+                        + '<span class="action-divider"></span>'
+                        + '<button class="btn-act btn-act-delete" onclick="cancelSub(' + s.id + ')" title="Cancel"><i class="fas fa-times"></i></button>';
                 } else {
-                    html += '<button class="btn btn-sm btn-outline-success" onclick="renewSub(' + s.id + ')" title="Reactivate"><i class="fas fa-redo me-1"></i>Reactivate</button>';
+                    html += '<button class="btn-act btn-act-success" onclick="renewSub(' + s.id + ')" title="Reactivate"><i class="fas fa-redo"></i></button>';
                 }
 
                 html += '</div></td></tr>';

@@ -6,6 +6,7 @@ namespace SchoolMS.Application.Interfaces;
 public interface IHrEmployeeService
 {
     Task<List<HrEmployeeListDto>> GetAllAsync();
+    Task<List<HrEmployeeListDto>> GetBySchoolIdAsync(int schoolId);
     Task<HrEmployeeDto?> GetByIdAsync(int id);
     Task<HrEmployeeDto> CreateAsync(HrEmployeeDto dto);
     Task<HrEmployeeDto> UpdateAsync(HrEmployeeDto dto);
@@ -18,6 +19,7 @@ public interface IHrEmployeeService
 public interface IHrDepartmentService
 {
     Task<List<HrDepartmentDto>> GetAllAsync();
+    Task<List<HrDepartmentDto>> GetBySchoolIdAsync(int schoolId);
     Task<HrDepartmentDto?> GetByIdAsync(int id);
     Task<HrDepartmentDto> CreateAsync(HrDepartmentDto dto);
     Task<HrDepartmentDto> UpdateAsync(HrDepartmentDto dto);
@@ -27,6 +29,7 @@ public interface IHrDepartmentService
 public interface IHrJobTitleService
 {
     Task<List<HrJobTitleDto>> GetAllAsync();
+    Task<List<HrJobTitleDto>> GetBySchoolIdAsync(int schoolId);
     Task<HrJobTitleDto?> GetByIdAsync(int id);
     Task<HrJobTitleDto> CreateAsync(HrJobTitleDto dto);
     Task<HrJobTitleDto> UpdateAsync(HrJobTitleDto dto);
@@ -36,6 +39,7 @@ public interface IHrJobTitleService
 public interface IHrJobGradeService
 {
     Task<List<HrJobGradeDto>> GetAllAsync();
+    Task<List<HrJobGradeDto>> GetBySchoolIdAsync(int schoolId);
     Task<HrJobGradeDto?> GetByIdAsync(int id);
     Task<HrJobGradeDto> CreateAsync(HrJobGradeDto dto);
     Task<HrJobGradeDto> UpdateAsync(HrJobGradeDto dto);
@@ -48,6 +52,7 @@ public interface IHrJobGradeService
 public interface IHrContractService
 {
     Task<List<HrEmployeeContractDto>> GetAllAsync();
+    Task<List<HrEmployeeContractDto>> GetBySchoolIdAsync(int schoolId);
     Task<List<HrEmployeeContractDto>> GetByEmployeeAsync(int employeeId);
     Task<HrEmployeeContractDto?> GetByIdAsync(int id);
     Task<HrEmployeeContractDto> CreateAsync(HrEmployeeContractDto dto);
@@ -58,6 +63,7 @@ public interface IHrContractService
 public interface IHrWorkShiftService
 {
     Task<List<HrWorkShiftDto>> GetAllAsync();
+    Task<List<HrWorkShiftDto>> GetBySchoolIdAsync(int schoolId);
     Task<HrWorkShiftDto?> GetByIdAsync(int id);
     Task<HrWorkShiftDto> CreateAsync(HrWorkShiftDto dto);
     Task<HrWorkShiftDto> UpdateAsync(HrWorkShiftDto dto);
@@ -88,6 +94,7 @@ public interface IHrAttendanceService
 public interface IHrOvertimeService
 {
     Task<List<HrOvertimeRequestDto>> GetAllAsync(OvertimeStatus? status = null);
+    Task<List<HrOvertimeRequestDto>> GetBySchoolIdAsync(int schoolId, OvertimeStatus? status = null);
     Task<HrOvertimeRequestDto> CreateAsync(HrOvertimeRequestDto dto);
     Task ApproveAsync(int id, string approvedBy);
     Task RejectAsync(int id, string rejectedBy, string reason);
@@ -120,21 +127,25 @@ public interface IHrSalaryService
 
     // Advances
     Task<List<HrSalaryAdvanceDto>> GetAdvancesAsync(AdvanceStatus? status = null);
+    Task<List<HrSalaryAdvanceDto>> GetAdvancesBySchoolIdAsync(int schoolId, AdvanceStatus? status = null);
     Task<HrSalaryAdvanceDto> CreateAdvanceAsync(HrSalaryAdvanceDto dto);
     Task ApproveAdvanceAsync(int id, string approvedBy, decimal approvedAmount, int deductionMonths);
     Task RejectAdvanceAsync(int id, string rejectedBy, string reason);
 
     // Loans
     Task<List<HrEmployeeLoanDto>> GetLoansAsync(int? employeeId = null);
+    Task<List<HrEmployeeLoanDto>> GetLoansBySchoolIdAsync(int schoolId, int? employeeId = null);
     Task<HrEmployeeLoanDto> CreateLoanAsync(HrEmployeeLoanDto dto);
 
     // Bonuses
     Task<List<HrBonusDto>> GetBonusesAsync(int? month = null, int? year = null);
+    Task<List<HrBonusDto>> GetBonusesBySchoolIdAsync(int schoolId, int? month = null, int? year = null);
     Task<HrBonusDto> CreateBonusAsync(HrBonusDto dto);
     Task ApproveBonusAsync(int id, string approvedBy);
 
     // Penalties
     Task<List<HrPenaltyDto>> GetPenaltiesAsync(int? month = null, int? year = null);
+    Task<List<HrPenaltyDto>> GetPenaltiesBySchoolIdAsync(int schoolId, int? month = null, int? year = null);
     Task<HrPenaltyDto> CreatePenaltyAsync(HrPenaltyDto dto);
     Task ApprovePenaltyAsync(int id, string approvedBy);
 }
@@ -142,6 +153,7 @@ public interface IHrSalaryService
 public interface IHrPromotionService
 {
     Task<List<HrPromotionDto>> GetAllAsync(HrPromotionStatus? status = null);
+    Task<List<HrPromotionDto>> GetBySchoolIdAsync(int schoolId, HrPromotionStatus? status = null);
     Task<HrPromotionDto?> GetByIdAsync(int id);
     Task<HrPromotionDto> CreateAsync(HrPromotionDto dto);
     Task ApproveAsync(int id, string approvedBy);
@@ -152,6 +164,7 @@ public interface IHrPromotionService
 public interface IHrLeaveService
 {
     Task<List<HrLeaveRequestDto>> GetAllRequestsAsync(HrLeaveStatus? status = null);
+    Task<List<HrLeaveRequestDto>> GetRequestsBySchoolIdAsync(int schoolId, HrLeaveStatus? status = null);
     Task<HrLeaveRequestDto> CreateRequestAsync(HrLeaveRequestDto dto);
     Task ApproveByManagerAsync(int id, string approvedBy);
     Task ApproveByHrAsync(int id, string approvedBy);
@@ -171,6 +184,7 @@ public interface IHrLeaveService
 
     // Holidays
     Task<List<HrHolidayDto>> GetHolidaysAsync(int? year = null);
+    Task<List<HrHolidayDto>> GetHolidaysBySchoolIdAsync(int schoolId, int? year = null);
     Task<HrHolidayDto> CreateHolidayAsync(HrHolidayDto dto);
     Task<HrHolidayDto> UpdateHolidayAsync(HrHolidayDto dto);
     Task DeleteHolidayAsync(int id);
@@ -180,6 +194,7 @@ public interface IHrPerformanceService
 {
     // Cycles
     Task<List<HrPerformanceCycleDto>> GetCyclesAsync();
+    Task<List<HrPerformanceCycleDto>> GetCyclesBySchoolIdAsync(int schoolId);
     Task<HrPerformanceCycleDto> CreateCycleAsync(HrPerformanceCycleDto dto);
     Task<HrPerformanceCycleDto> UpdateCycleAsync(HrPerformanceCycleDto dto);
 
@@ -191,6 +206,7 @@ public interface IHrPerformanceService
 
     // Reviews
     Task<List<HrPerformanceReviewDto>> GetReviewsAsync(int? cycleId = null, int? employeeId = null);
+    Task<List<HrPerformanceReviewDto>> GetReviewsBySchoolIdAsync(int schoolId, int? cycleId = null, int? employeeId = null);
     Task<HrPerformanceReviewDto?> GetReviewByIdAsync(int id);
     Task<HrPerformanceReviewDto> CreateReviewAsync(HrPerformanceReviewDto dto);
     Task<HrPerformanceReviewDto> UpdateReviewAsync(HrPerformanceReviewDto dto);
@@ -198,6 +214,7 @@ public interface IHrPerformanceService
 
     // KPIs
     Task<List<HrKpiDto>> GetKpisAsync(int? employeeId = null);
+    Task<List<HrKpiDto>> GetKpisBySchoolIdAsync(int schoolId, int? employeeId = null);
     Task<HrKpiDto> CreateKpiAsync(HrKpiDto dto);
     Task<HrKpiDto> UpdateKpiAsync(HrKpiDto dto);
     Task DeleteKpiAsync(int id);
@@ -206,12 +223,14 @@ public interface IHrPerformanceService
 public interface IHrTrainingService
 {
     Task<List<HrTrainingProgramDto>> GetProgramsAsync();
+    Task<List<HrTrainingProgramDto>> GetProgramsBySchoolIdAsync(int schoolId);
     Task<HrTrainingProgramDto?> GetProgramByIdAsync(int id);
     Task<HrTrainingProgramDto> CreateProgramAsync(HrTrainingProgramDto dto);
     Task<HrTrainingProgramDto> UpdateProgramAsync(HrTrainingProgramDto dto);
     Task DeleteProgramAsync(int id);
 
     Task<List<HrTrainingRecordDto>> GetRecordsAsync(int? programId = null, int? employeeId = null);
+    Task<List<HrTrainingRecordDto>> GetRecordsBySchoolIdAsync(int schoolId, int? programId = null, int? employeeId = null);
     Task<HrTrainingRecordDto> EnrollEmployeeAsync(HrTrainingRecordDto dto);
     Task<HrTrainingRecordDto> UpdateRecordAsync(HrTrainingRecordDto dto);
 
@@ -228,11 +247,13 @@ public interface IHrTrainingService
 public interface IHrDisciplinaryService
 {
     Task<List<HrDisciplinaryActionDto>> GetAllAsync(int? employeeId = null);
+    Task<List<HrDisciplinaryActionDto>> GetBySchoolIdAsync(int schoolId, int? employeeId = null);
     Task<HrDisciplinaryActionDto?> GetByIdAsync(int id);
     Task<HrDisciplinaryActionDto> CreateAsync(HrDisciplinaryActionDto dto);
     Task<HrDisciplinaryActionDto> UpdateAsync(HrDisciplinaryActionDto dto);
 
     Task<List<HrViolationTypeDto>> GetViolationTypesAsync();
+    Task<List<HrViolationTypeDto>> GetViolationTypesBySchoolIdAsync(int schoolId);
     Task<HrViolationTypeDto> CreateViolationTypeAsync(HrViolationTypeDto dto);
     Task<HrViolationTypeDto> UpdateViolationTypeAsync(HrViolationTypeDto dto);
     Task DeleteViolationTypeAsync(int id);

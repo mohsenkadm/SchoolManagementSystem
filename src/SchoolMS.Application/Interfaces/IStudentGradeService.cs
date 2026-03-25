@@ -6,8 +6,8 @@ namespace SchoolMS.Application.Interfaces;
 public interface IStudentGradeService
 {
     Task<List<StudentGradeDto>> GetAllAsync();
-    Task<List<StudentGradeDto>> GetBySchoolIdAsync(int schoolId);
-    Task<List<StudentGradeDto>> GetByClassRoomIdsAsync(List<int> classRoomIds, int schoolId);
+    Task<List<StudentGradeDto>> GetBySchoolIdAsync(int schoolId, int? subjectId = null, int? examTypeId = null, int? academicYearId = null);
+    Task<List<StudentGradeDto>> GetByClassRoomIdsAsync(List<int> classRoomIds, int schoolId, int? subjectId = null, int? examTypeId = null, int? academicYearId = null);
     Task<StudentGradeDto?> GetByIdAsync(int id);
     Task<StudentGradeDto> CreateAsync(StudentGradeDto dto);
     Task<StudentGradeDto> UpdateAsync(StudentGradeDto dto);

@@ -169,4 +169,84 @@ public class CourseVideosController : Controller
 
     [HttpDelete("{id}"), HasPermission("Courses", "Delete")]
     public async Task<IActionResult> Delete(int id) { await _service.DeleteAsync(id); return Ok(); }
+
+    // عرض تعليقات فيديو كورس
+    [HasPermission("Courses", "View")]
+    public async Task<IActionResult> Comments(int courseVideoId)
+    {
+        var video = await _service.GetByIdAsync(courseVideoId);
+        if (video == null) return NotFound();
+
+        var course = await _courseService.GetByIdAsync(video.CourseId);
+        ViewData["Title"] = $"Comments - {video.Title}";
+        ViewBag.Video = video;
+        ViewBag.Course = course;
+
+        var comments = await _service.GetCommentsByVideoIdAsync(courseVideoId);
+        return View(comments);
+    }
+
+    // جلب تعليقات فيديو كورس (AJAX)
+    [HttpGet]
+    public async Task<IActionResult> GetComments(int courseVideoId)
+        => Json(await _service.GetCommentsByVideoIdAsync(courseVideoId));
+
+    // ===== Video Quiz Questions Management =====
+
+    [HasPermission("Courses", "View")]
+    public async Task<IActionResult> QuizQuestions(int courseVideoId)
+    {
+        var video = await _service.GetByIdAsync(courseVideoId);
+        if (video == null) return NotFound();
+
+        var course = await _courseService.GetByIdAsync(video.CourseId);
+        ViewData["Title"] = $"Quiz - {video.Title}";
+        ViewBag.Video = video;
+        ViewBag.Course = course;
+
+        var questions = await _service.GetQuizQuestionsByVideoAsync(courseVideoId);
+        return View(questions);
+    }
+
+    [HttpPost, HasPermission("Courses", "Add"), ValidateAntiForgeryToken]
+    public async Task<IActionResult> CreateQuizQuestion([FromBody] CreateVideoQuizQuestionDto dto)
+    {
+        var result = await _service.CreateQuizQuestionAsync(dto);
+        return Json(result);
+    }
+
+    [HttpPost, HasPermission("Courses", "Edit"), ValidateAntiForgeryToken]
+    public async Task<IActionResult> UpdateQuizQuestion([FromBody] VideoQuizQuestionDto dto)
+    {
+        var result = await _service.UpdateQuizQuestionAsync(dto);
+        return Json(result);
+    }
+
+    [HttpPost, HasPermission("Courses", "Delete"), ValidateAntiForgeryToken]
+    public async Task<IActionResult> DeleteQuizQuestion(int id)
+    {
+        await _service.DeleteQuizQuestionAsync(id);
+        return Ok();
+    }
+
+    // ===== Video Quiz Answers (Teacher View) =====
+
+    [HasPermission("Courses", "View")]
+    public async Task<IActionResult> QuizAnswers(int courseVideoId)
+    {
+        var video = await _service.GetByIdAsync(courseVideoId);
+        if (video == null) return NotFound();
+
+        var course = await _courseService.GetByIdAsync(video.CourseId);
+        ViewData["Title"] = $"Quiz Answers - {video.Title}";
+        ViewBag.Video = video;
+        ViewBag.Course = course;
+
+        var answers = await _service.GetAllAnswersByVideoAsync(courseVideoId);
+        return View(answers);
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> GetQuizQuestions(int courseVideoId)
+        => Json(await _service.GetQuizQuestionsByVideoAsync(courseVideoId));
 }

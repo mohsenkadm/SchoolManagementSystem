@@ -29,7 +29,7 @@ builder.Services.Configure<SchoolMS.Application.Settings.OneSignalSettings>(
     builder.Configuration.GetSection("OneSignal"));
 
 // Localization
-builder.Services.AddLocalization(options => options.ResourcesPath = "Resources");
+builder.Services.AddLocalization();
 
 builder.Services.AddControllersWithViews()
     .AddViewLocalization()
@@ -100,6 +100,7 @@ app.UseMiddleware<SubscriptionValidationMiddleware>();
 
 app.MapHub<ChatHub>("/hubs/chat");
 app.MapHub<NotificationHub>("/hubs/notifications");
+app.MapHub<LiveStreamChatHub>("/hubs/livestream-chat");
 
 app.MapControllerRoute(
     name: "school-login",
@@ -107,7 +108,12 @@ app.MapControllerRoute(
     defaults: new { controller = "Account", action = "Login" });
 
 app.MapControllerRoute(
+    name: "root-login",
+    pattern: "",
+    defaults: new { controller = "Account", action = "Login" });
+
+app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}");
+    pattern: "{controller}/{action=Index}/{id?}");
 
 app.Run();

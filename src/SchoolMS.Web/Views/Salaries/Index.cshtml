@@ -68,9 +68,9 @@
                     <td>@(i + 1)</td><td>@Model[i].PersonName</td><td><span class="badge bg-secondary">@Model[i].PersonType</span></td><td>@Model[i].BaseSalary.ToString("N0")</td><td class="text-success">+@Model[i].Allowances.ToString("N0")</td><td class="text-danger">-@Model[i].Deductions.ToString("N0")</td><td class="fw-bold">@Model[i].NetSalary.ToString("N0")</td>
                     @if (isSuperAdmin) { <td>@Model[i].SchoolName</td> }
                     <td class="no-print">
-                        <div class="d-flex gap-1">
-                            <a href="@Url.Action("Edit", new { id = Model[i].Id })" class="btn btn-sm btn-primary" data-bs-toggle="tooltip" title="@Localizer["Edit"]"><i class="fas fa-edit"></i></a>
-                            <button class="btn btn-sm btn-danger" onclick="del(@Model[i].Id)" data-bs-toggle="tooltip" title="@Localizer["Delete"]"><i class="fas fa-trash"></i></button>
+                        <div class="action-group">
+                            <a href="@Url.Action("Edit", new { id = Model[i].Id })" class="btn-act btn-act-edit" data-bs-toggle="tooltip" title="@Localizer["Edit"]"><i class="fas fa-edit"></i></a>
+                            <button class="btn-act btn-act-delete" onclick="del(@Model[i].Id)" data-bs-toggle="tooltip" title="@Localizer["Delete"]"><i class="fas fa-trash"></i></button>
                         </div>
                     </td>
                 </tr>

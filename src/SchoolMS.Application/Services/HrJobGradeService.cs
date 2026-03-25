@@ -26,6 +26,9 @@ public class HrJobGradeService : IHrJobGradeService
     public async Task<List<HrJobGradeDto>> GetAllAsync()
         => _mapper.Map<List<HrJobGradeDto>>(await _gradeRepo.GetAllAsync());
 
+    public async Task<List<HrJobGradeDto>> GetBySchoolIdAsync(int schoolId)
+        => _mapper.Map<List<HrJobGradeDto>>(await _gradeRepo.Query().Where(g => g.SchoolId == schoolId).ToListAsync());
+
     public async Task<HrJobGradeDto?> GetByIdAsync(int id)
     {
         var entity = await _gradeRepo.GetByIdAsync(id);

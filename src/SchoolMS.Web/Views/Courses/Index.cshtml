@@ -119,14 +119,14 @@
                         }
                     </td>
                     <td>
-                        <div class="d-flex gap-1">
-                            <a href="@Url.Action("Index", "CourseVideos", new { courseId = Model[i].Id })" class="btn btn-sm btn-info" data-bs-toggle="tooltip" title="@Localizer["Videos"]">
+                        <div class="action-group">
+                            <a href="@Url.Action("Index", "CourseVideos", new { courseId = Model[i].Id })" class="btn-act btn-act-view" data-bs-toggle="tooltip" title="@Localizer["Videos"]">
                                 <i class="fas fa-video"></i>
                             </a>
-                            <a href="@Url.Action("Edit", new { id = Model[i].Id })" class="btn btn-sm btn-primary" data-bs-toggle="tooltip" title="@Localizer["Edit"]">
+                            <a href="@Url.Action("Edit", new { id = Model[i].Id })" class="btn-act btn-act-edit" data-bs-toggle="tooltip" title="@Localizer["Edit"]">
                                 <i class="fas fa-edit"></i>
                             </a>
-                            <button class="btn btn-sm btn-danger" onclick="del(@Model[i].Id)" data-bs-toggle="tooltip" title="@Localizer["Delete"]">
+                            <button class="btn-act btn-act-delete" onclick="del(@Model[i].Id)" data-bs-toggle="tooltip" title="@Localizer["Delete"]">
                                 <i class="fas fa-trash"></i>
                             </button>
                         </div>

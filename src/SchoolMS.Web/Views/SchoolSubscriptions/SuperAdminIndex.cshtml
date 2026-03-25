@@ -1,0 +1,171 @@
+@using SchoolMS.Application.DTOs
+@model List<SchoolDto>
+@{
+    var plans = ViewBag.Plans as List<SubscriptionPlanDto> ?? new();
+}
+
+<div class="page-header" data-aos="fade-down">
+    <div>
+        <h4 class="page-title"><i class="fas fa-crown text-warning"></i> All School Subscriptions</h4>
+        <span class="record-count"><i class="fas fa-layer-group"></i> @Model.Count Schools</span>
+    </div>
+</div>
+
+<div class="stat-ribbon" data-aos="fade-up">
+    <div class="stat-item stagger-item">
+        <div class="stat-icon bg-primary-soft"><i class="fas fa-school"></i></div>
+        <div class="stat-info"><h6>Total Schools</h6><div class="stat-value">@Model.Count</div></div>
+    </div>
+    <div class="stat-item stagger-item">
+        <div class="stat-icon bg-success-soft"><i class="fas fa-check-circle"></i></div>
+        <div class="stat-info"><h6>Active</h6><div class="stat-value">@Model.Count(s => s.IsActive)</div></div>
+    </div>
+    <div class="stat-item stagger-item">
+        <div class="stat-icon bg-danger-soft"><i class="fas fa-times-circle"></i></div>
+        <div class="stat-info"><h6>Inactive</h6><div class="stat-value">@Model.Count(s => !s.IsActive)</div></div>
+    </div>
+    <div class="stat-item stagger-item">
+        <div class="stat-icon bg-warning-soft"><i class="fas fa-exclamation-triangle"></i></div>
+        <div class="stat-info"><h6>Expiring Soon</h6><div class="stat-value">@Model.Count(s => s.ExpiryDate.HasValue && s.ExpiryDate.Value > DateTime.UtcNow && (s.ExpiryDate.Value - DateTime.UtcNow).TotalDays <= 10)</div></div>
+    </div>
+</div>
+
+<div class="filter-panel" data-aos="fade-up">
+    <div class="filter-title"><i class="fas fa-filter"></i> Filter</div>
+    <div class="row g-2 align-items-end">
+        <div class="col-md-4"><input type="text" id="searchInput" class="form-control" placeholder="🔍 Search school..." /></div>
+        <div class="col-md-3">
+            <select id="filterStatus" class="form-select">
+                <option value="">All Status</option>
+                <option value="Active">Active</option>
+                <option value="Inactive">Inactive</option>
+                <option value="Expiring">Expiring Soon</option>
+                <option value="Expired">Expired</option>
+            </select>
+        </div>
+        <div class="col-md-2"><button class="btn btn-filter w-100" onclick="applyFilters()"><i class="fas fa-search me-1"></i>Filter</button></div>
+        <div class="col-md-2"><button class="btn btn-reset w-100" onclick="resetFilters()"><i class="fas fa-redo me-1"></i>Reset</button></div>
+    </div>
+</div>
+
+<div class="table-card hover-lift" data-aos="fade-up">
+    <table id="dataTable" class="table table-hover" style="width:100%">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>School</th>
+                <th>Students</th>
+                <th>Teachers</th>
+                <th>Current Plan</th>
+                <th>Expiry Date</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @for (int i = 0; i < Model.Count; i++)
+            {
+                var s = Model[i];
+                var daysLeft = s.ExpiryDate.HasValue ? (int)(s.ExpiryDate.Value - DateTime.UtcNow).TotalDays : -1;
+                var isExpired = s.ExpiryDate.HasValue && s.ExpiryDate.Value < DateTime.UtcNow;
+                var isExpiring = !isExpired && daysLeft >= 0 && daysLeft <= 10;
+                var statusText = !s.IsActive ? "Inactive" : isExpired ? "Expired" : isExpiring ? "Expiring" : "Active";
+
+                <tr class="table-row-animated" data-status="@statusText">
+                    <td>@(i + 1)</td>
+                    <td>
+                        <strong>@s.Name</strong>
+                        @if (!string.IsNullOrEmpty(s.Address))
+                        {
+                            <br /><small class="text-muted">@s.Address</small>
+                        }
+                    </td>
+                    <td><span class="badge bg-primary">@s.StudentCount</span></td>
+                    <td><span class="badge bg-info">@s.TeacherCount</span></td>
+                    <td>
+                        @if (!string.IsNullOrEmpty(s.CurrentPlan))
+                        {
+                            <span class="badge bg-primary-soft text-primary">@s.CurrentPlan</span>
+                        }
+                        else
+                        {
+                            <span class="text-muted">—</span>
+                        }
+                    </td>
+                    <td>
+                        @if (s.ExpiryDate.HasValue)
+                        {
+                            <span>@s.ExpiryDate.Value.ToString("yyyy-MM-dd")</span>
+                            @if (isExpiring)
+                            {
+                                <br /><small class="text-warning"><i class="fas fa-clock me-1"></i>@daysLeft day(s) left</small>
+                            }
+                            else if (isExpired)
+                            {
+                                <br /><small class="text-danger"><i class="fas fa-times-circle me-1"></i>Expired</small>
+                            }
+                        }
+                        else
+                        {
+                            <span class="text-muted">—</span>
+                        }
+                    </td>
+                    <td>
+                        @if (!s.IsActive)
+                        {
+                            <span class="badge bg-secondary">Inactive</span>
+                        }
+                        else if (isExpired)
+                        {
+                            <span class="badge bg-danger">Expired</span>
+                        }
+                        else if (isExpiring)
+                        {
+                            <span class="badge bg-warning text-dark">Expiring</span>
+                        }
+                        else
+                        {
+                            <span class="status-badge status-active"><span class="status-dot"></span>Active</span>
+                        }
+                    </td>
+                    <td>
+                        <div class="action-group">
+                            <a href="@Url.Action("SchoolDetail", new { schoolId = s.Id })" class="btn-act btn-act-view" data-bs-toggle="tooltip" title="View History">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@section Scripts {
+<script>
+    var dt;
+    $(function () {
+        dt = $('#dataTable').DataTable({ responsive: true, pageLength: 25, dom: 'rtip', order: [[0, 'asc']] });
+        $('#searchInput').on('keyup', function () { dt.search(this.value).draw(); });
+    });
+
+    function applyFilters() {
+        var status = $('#filterStatus').val();
+        dt.search($('#searchInput').val());
+        if (status) {
+            $.fn.dataTable.ext.search.push(function (settings, data, idx) {
+                var row = dt.row(idx).node();
+                return $(row).data('status') === status;
+            });
+        }
+        dt.draw();
+        $.fn.dataTable.ext.search.pop();
+    }
+
+    function resetFilters() {
+        $('#searchInput, #filterStatus').val('');
+        $.fn.dataTable.ext.search = [];
+        dt.search('').draw();
+    }
+</script>
+}

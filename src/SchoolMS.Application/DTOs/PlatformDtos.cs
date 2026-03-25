@@ -17,6 +17,24 @@ public class SchoolDto
     public bool IsActive { get; set; }
     public DateTime? ExpiryDate { get; set; }
     public bool OnlinePlatformEnabled { get; set; }
+    public decimal DefaultTeacherCommissionRate { get; set; }
+    public bool IsHrModuleEnabled { get; set; }
+    public bool HrRequireApprovalForLeaves { get; set; }
+    public bool HrAutoCalculateOvertime { get; set; }
+    public bool HrAutoDeductAbsence { get; set; }
+    public bool HrEnableFingerprintIntegration { get; set; }
+    public bool HrEnableSelfService { get; set; }
+    public int HrMaxOvertimeHoursPerMonth { get; set; }
+    public decimal HrOvertimeRateMultiplier { get; set; }
+    public int HrLateGracePeriodMinutes { get; set; }
+    public TimeSpan HrWorkDayStart { get; set; }
+    public TimeSpan HrWorkDayEnd { get; set; }
+    public int HrWorkingDaysPerMonth { get; set; }
+    public decimal HrAbsenceDeductionPerDay { get; set; }
+    public string? HrAbsenceDeductionType { get; set; }
+    public decimal HrLateDeductionPerMinute { get; set; }
+    public decimal HrEarlyLeaveDeductionPerMinute { get; set; }
+    public string? HrSalaryCalculationMethod { get; set; }
     public int BranchCount { get; set; }
     public int StudentCount { get; set; }
     public int TeacherCount { get; set; }
@@ -31,7 +49,24 @@ public class SchoolCreateDto
     public string Slug { get; set; } = string.Empty;
     public bool IsActive { get; set; } = true;
     public DateTime? ExpiryDate { get; set; }
-    public bool OnlinePlatformEnabled { get; set; }
+    public decimal DefaultTeacherCommissionRate { get; set; }
+    public bool IsHrModuleEnabled { get; set; }
+    public bool HrRequireApprovalForLeaves { get; set; }
+    public bool HrAutoCalculateOvertime { get; set; }
+    public bool HrAutoDeductAbsence { get; set; }
+    public bool HrEnableFingerprintIntegration { get; set; }
+    public bool HrEnableSelfService { get; set; }
+    public int HrMaxOvertimeHoursPerMonth { get; set; }
+    public decimal HrOvertimeRateMultiplier { get; set; }
+    public int HrLateGracePeriodMinutes { get; set; }
+    public TimeSpan HrWorkDayStart { get; set; }
+    public TimeSpan HrWorkDayEnd { get; set; }
+    public int HrWorkingDaysPerMonth { get; set; }
+    public decimal HrAbsenceDeductionPerDay { get; set; }
+    public string? HrAbsenceDeductionType { get; set; }
+    public decimal HrLateDeductionPerMinute { get; set; }
+    public decimal HrEarlyLeaveDeductionPerMinute { get; set; }
+    public string? HrSalaryCalculationMethod { get; set; }
     public string AdminEmail { get; set; } = string.Empty;
     public string AdminPassword { get; set; } = string.Empty;
     public string AdminFullName { get; set; } = string.Empty;
@@ -46,7 +81,24 @@ public class SchoolUpdateDto
     public string Slug { get; set; } = string.Empty;
     public bool IsActive { get; set; }
     public DateTime? ExpiryDate { get; set; }
-    public bool OnlinePlatformEnabled { get; set; }
+    public decimal DefaultTeacherCommissionRate { get; set; }
+    public bool IsHrModuleEnabled { get; set; }
+    public bool HrRequireApprovalForLeaves { get; set; }
+    public bool HrAutoCalculateOvertime { get; set; }
+    public bool HrAutoDeductAbsence { get; set; }
+    public bool HrEnableFingerprintIntegration { get; set; }
+    public bool HrEnableSelfService { get; set; }
+    public int HrMaxOvertimeHoursPerMonth { get; set; }
+    public decimal HrOvertimeRateMultiplier { get; set; }
+    public int HrLateGracePeriodMinutes { get; set; }
+    public TimeSpan HrWorkDayStart { get; set; }
+    public TimeSpan HrWorkDayEnd { get; set; }
+    public int HrWorkingDaysPerMonth { get; set; }
+    public decimal HrAbsenceDeductionPerDay { get; set; }
+    public string? HrAbsenceDeductionType { get; set; }
+    public decimal HrLateDeductionPerMinute { get; set; }
+    public decimal HrEarlyLeaveDeductionPerMinute { get; set; }
+    public string? HrSalaryCalculationMethod { get; set; }
 }
 
 public class SubscriptionPlanDto
@@ -85,9 +137,11 @@ public class StorageRequestDto
 {
     public int Id { get; set; }
     public int SchoolSubscriptionId { get; set; }
+    public int? StoragePlanId { get; set; }
     public int SchoolId { get; set; }
     public string? SchoolName { get; set; }
     public string? PlanName { get; set; }
+    public string? StoragePlanName { get; set; }
     public decimal RequestedGB { get; set; }
     public decimal PricePerGB { get; set; }
     public decimal TotalPrice { get; set; }
@@ -96,6 +150,17 @@ public class StorageRequestDto
     public bool IsProcessed { get; set; }
     public DateTime? ProcessedAt { get; set; }
     public DateTime CreatedAt { get; set; }
+}
+
+public class StoragePlanDto
+{
+    public int Id { get; set; }
+    public string PlanName { get; set; } = string.Empty;
+    public decimal StorageGB { get; set; }
+    public decimal Price { get; set; }
+    public string? Description { get; set; }
+    public bool IsActive { get; set; }
+    public int RequestCount { get; set; }
 }
 
 public class StorageQuotaDto

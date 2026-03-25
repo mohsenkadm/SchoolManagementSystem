@@ -18,16 +18,18 @@ public class HealthRecordsApiController : ControllerBase
 
     // جلب جميع السجلات الصحية للمدرسة
     [HttpGet]
-    public async Task<ActionResult<List<HealthRecordDto>>> GetAll(int schoolId, [FromQuery] int? studentId = null)
-        => Ok(await _service.GetBySchoolIdAsync(schoolId, studentId));
+    public async Task<ActionResult<List<HealthRecordDto>>> GetAll(int schoolId,
+        [FromQuery] int? studentId = null, [FromQuery] int? academicYearId = null)
+        => Ok(await _service.GetBySchoolIdAsync(schoolId, studentId, academicYearId));
 
     // جلب السجلات الصحية لأبناء ولي الأمر
     [HttpGet("parent/children")]
-    public async Task<ActionResult<List<HealthRecordDto>>> GetParentChildrenRecords(int schoolId)
+    public async Task<ActionResult<List<HealthRecordDto>>> GetParentChildrenRecords(int schoolId,
+        [FromQuery] int? academicYearId = null)
     {
         var userType = User.FindFirst("UserType")?.Value;
         if (userType != "Parent") return Forbid();
         var parentId = int.Parse(User.FindFirst("PersonId")?.Value ?? throw new UnauthorizedAccessException());
-        return Ok(await _service.GetByParentChildrenAsync(parentId, schoolId));
+        return Ok(await _service.GetByParentChildrenAsync(parentId, schoolId, academicYearId));
     }
 }

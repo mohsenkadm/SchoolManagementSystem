@@ -89,6 +89,24 @@ public class PlatformService : IPlatformService
         {
             Id = s.Id, Name = s.Name, Logo = s.Logo, Address = s.Address, Slug = s.Slug,
             IsActive = s.IsActive, ExpiryDate = s.ExpiryDate, OnlinePlatformEnabled = s.OnlinePlatformEnabled,
+            DefaultTeacherCommissionRate = s.DefaultTeacherCommissionRate,
+            IsHrModuleEnabled = s.IsHrModuleEnabled,
+            HrRequireApprovalForLeaves = s.HrRequireApprovalForLeaves,
+            HrAutoCalculateOvertime = s.HrAutoCalculateOvertime,
+            HrAutoDeductAbsence = s.HrAutoDeductAbsence,
+            HrEnableFingerprintIntegration = s.HrEnableFingerprintIntegration,
+            HrEnableSelfService = s.HrEnableSelfService,
+            HrMaxOvertimeHoursPerMonth = s.HrMaxOvertimeHoursPerMonth,
+            HrOvertimeRateMultiplier = s.HrOvertimeRateMultiplier,
+            HrLateGracePeriodMinutes = s.HrLateGracePeriodMinutes,
+            HrWorkDayStart = s.HrWorkDayStart,
+            HrWorkDayEnd = s.HrWorkDayEnd,
+            HrWorkingDaysPerMonth = s.HrWorkingDaysPerMonth,
+            HrAbsenceDeductionPerDay = s.HrAbsenceDeductionPerDay,
+            HrAbsenceDeductionType = s.HrAbsenceDeductionType,
+            HrLateDeductionPerMinute = s.HrLateDeductionPerMinute,
+            HrEarlyLeaveDeductionPerMinute = s.HrEarlyLeaveDeductionPerMinute,
+            HrSalaryCalculationMethod = s.HrSalaryCalculationMethod,
             BranchCount = s.Branches.Count(b => !b.IsDeleted),
             CurrentPlan = s.SchoolSubscriptions.Where(ss => ss.IsActive && !ss.IsDeleted)
                 .OrderByDescending(ss => ss.ActivatedAt).FirstOrDefault()?.SystemSubscriptionPlan?.PlanName,
@@ -105,7 +123,24 @@ public class PlatformService : IPlatformService
         {
             Name = dto.Name, Address = dto.Address, Slug = dto.Slug,
             IsActive = dto.IsActive, ExpiryDate = dto.ExpiryDate,
-            OnlinePlatformEnabled = dto.OnlinePlatformEnabled,
+            DefaultTeacherCommissionRate = dto.DefaultTeacherCommissionRate,
+            IsHrModuleEnabled = dto.IsHrModuleEnabled,
+            HrRequireApprovalForLeaves = dto.HrRequireApprovalForLeaves,
+            HrAutoCalculateOvertime = dto.HrAutoCalculateOvertime,
+            HrAutoDeductAbsence = dto.HrAutoDeductAbsence,
+            HrEnableFingerprintIntegration = dto.HrEnableFingerprintIntegration,
+            HrEnableSelfService = dto.HrEnableSelfService,
+            HrMaxOvertimeHoursPerMonth = dto.HrMaxOvertimeHoursPerMonth,
+            HrOvertimeRateMultiplier = dto.HrOvertimeRateMultiplier,
+            HrLateGracePeriodMinutes = dto.HrLateGracePeriodMinutes,
+            HrWorkDayStart = dto.HrWorkDayStart,
+            HrWorkDayEnd = dto.HrWorkDayEnd,
+            HrWorkingDaysPerMonth = dto.HrWorkingDaysPerMonth,
+            HrAbsenceDeductionPerDay = dto.HrAbsenceDeductionPerDay,
+            HrAbsenceDeductionType = dto.HrAbsenceDeductionType,
+            HrLateDeductionPerMinute = dto.HrLateDeductionPerMinute,
+            HrEarlyLeaveDeductionPerMinute = dto.HrEarlyLeaveDeductionPerMinute,
+            HrSalaryCalculationMethod = dto.HrSalaryCalculationMethod,
             SchoolId = 0, CreatedAt = DateTime.UtcNow, CreatedBy = "Platform"
         };
         _context.Schools.Add(school);
@@ -179,7 +214,24 @@ public class PlatformService : IPlatformService
             ?? throw new KeyNotFoundException("School not found.");
         school.Name = dto.Name; school.Address = dto.Address; school.Slug = dto.Slug;
         school.IsActive = dto.IsActive; school.ExpiryDate = dto.ExpiryDate;
-        school.OnlinePlatformEnabled = dto.OnlinePlatformEnabled;
+        school.DefaultTeacherCommissionRate = dto.DefaultTeacherCommissionRate;
+        school.IsHrModuleEnabled = dto.IsHrModuleEnabled;
+        school.HrRequireApprovalForLeaves = dto.HrRequireApprovalForLeaves;
+        school.HrAutoCalculateOvertime = dto.HrAutoCalculateOvertime;
+        school.HrAutoDeductAbsence = dto.HrAutoDeductAbsence;
+        school.HrEnableFingerprintIntegration = dto.HrEnableFingerprintIntegration;
+        school.HrEnableSelfService = dto.HrEnableSelfService;
+        school.HrMaxOvertimeHoursPerMonth = dto.HrMaxOvertimeHoursPerMonth;
+        school.HrOvertimeRateMultiplier = dto.HrOvertimeRateMultiplier;
+        school.HrLateGracePeriodMinutes = dto.HrLateGracePeriodMinutes;
+        school.HrWorkDayStart = dto.HrWorkDayStart;
+        school.HrWorkDayEnd = dto.HrWorkDayEnd;
+        school.HrWorkingDaysPerMonth = dto.HrWorkingDaysPerMonth;
+        school.HrAbsenceDeductionPerDay = dto.HrAbsenceDeductionPerDay;
+        school.HrAbsenceDeductionType = dto.HrAbsenceDeductionType;
+        school.HrLateDeductionPerMinute = dto.HrLateDeductionPerMinute;
+        school.HrEarlyLeaveDeductionPerMinute = dto.HrEarlyLeaveDeductionPerMinute;
+        school.HrSalaryCalculationMethod = dto.HrSalaryCalculationMethod;
         school.UpdatedAt = DateTime.UtcNow; school.UpdatedBy = "Platform";
         await _context.SaveChangesAsync();
         return new SchoolDto { Id = school.Id, Name = school.Name, Slug = school.Slug, IsActive = school.IsActive, CreatedAt = school.CreatedAt };
@@ -354,11 +406,43 @@ public class PlatformService : IPlatformService
             .Where(r => !r.IsProcessed && !r.IsDeleted)
             .Include(r => r.SchoolSubscription).ThenInclude(s => s.School)
             .Include(r => r.SchoolSubscription).ThenInclude(s => s.SystemSubscriptionPlan)
+            .Include(r => r.StoragePlan)
             .OrderByDescending(r => r.CreatedAt)
             .Select(r => new StorageRequestDto
             {
                 Id = r.Id,
                 SchoolSubscriptionId = r.SchoolSubscriptionId,
+                StoragePlanId = r.StoragePlanId,
+                StoragePlanName = r.StoragePlan != null ? r.StoragePlan.PlanName : null,
+                SchoolId = r.SchoolSubscription.SchoolId,
+                SchoolName = r.SchoolSubscription.School.Name,
+                PlanName = r.SchoolSubscription.SystemSubscriptionPlan.PlanName,
+                RequestedGB = r.RequestedGB,
+                PricePerGB = r.PricePerGB,
+                TotalPrice = r.TotalPrice,
+                Notes = r.Notes,
+                IsApproved = r.IsApproved,
+                IsProcessed = r.IsProcessed,
+                ProcessedAt = r.ProcessedAt,
+                CreatedAt = r.CreatedAt
+            })
+            .ToListAsync();
+    }
+
+    public async Task<List<StorageRequestDto>> GetAllStorageRequestsAsync()
+    {
+        return await _context.StorageRequests.IgnoreQueryFilters()
+            .Where(r => !r.IsDeleted)
+            .Include(r => r.SchoolSubscription).ThenInclude(s => s.School)
+            .Include(r => r.SchoolSubscription).ThenInclude(s => s.SystemSubscriptionPlan)
+            .Include(r => r.StoragePlan)
+            .OrderByDescending(r => r.CreatedAt)
+            .Select(r => new StorageRequestDto
+            {
+                Id = r.Id,
+                SchoolSubscriptionId = r.SchoolSubscriptionId,
+                StoragePlanId = r.StoragePlanId,
+                StoragePlanName = r.StoragePlan != null ? r.StoragePlan.PlanName : null,
                 SchoolId = r.SchoolSubscription.SchoolId,
                 SchoolName = r.SchoolSubscription.School.Name,
                 PlanName = r.SchoolSubscription.SystemSubscriptionPlan.PlanName,

@@ -40,12 +40,14 @@ public class HomeworkApiController : ControllerBase
     [HttpGet]
     public async Task<ActionResult<List<HomeworkDto>>> GetAll(int schoolId,
         [FromQuery] int? branchId = null, [FromQuery] int? classRoomId = null,
-        [FromQuery] int? subjectId = null, [FromQuery] int? teacherId = null)
-        => Ok(await _service.GetBySchoolIdAsync(schoolId, branchId, classRoomId, subjectId, teacherId));
+        [FromQuery] int? subjectId = null, [FromQuery] int? teacherId = null,
+        [FromQuery] int? academicYearId = null)
+        => Ok(await _service.GetBySchoolIdAsync(schoolId, branchId, classRoomId, subjectId, teacherId, academicYearId));
 
     // واجبات الطالب - حسب فصل الطالب
     [HttpGet("student")]
-    public async Task<ActionResult<List<HomeworkDto>>> GetStudentHomework(int schoolId)
+    public async Task<ActionResult<List<HomeworkDto>>> GetStudentHomework(int schoolId,
+        [FromQuery] int? subjectId = null, [FromQuery] int? academicYearId = null)
     {
         var userType = GetUserTypeFromToken();
         if (userType != "Student") return Forbid();
@@ -54,12 +56,14 @@ public class HomeworkApiController : ControllerBase
         var student = await _studentRepo.Query().FirstOrDefaultAsync(s => s.Id == studentId && s.SchoolId == schoolId);
         if (student == null) return NotFound();
 
-        return Ok(await _service.GetByClassRoomIdsAsync(new List<int> { student.ClassRoomId }, schoolId));
+        return Ok(await _service.GetByClassRoomIdsAsync(new List<int> { student.ClassRoomId }, schoolId, subjectId, academicYearId));
     }
 
-    // واجبات المعلم - حسب الفصول المعينة للمعلم
+    // واجبات المعلم - حسب الفصول المعينة للمعلم مع فلاتر
     [HttpGet("teacher")]
-    public async Task<ActionResult<List<HomeworkDto>>> GetTeacherHomework(int schoolId)
+    public async Task<ActionResult<List<HomeworkDto>>> GetTeacherHomework(int schoolId,
+        [FromQuery] int? classRoomId = null, [FromQuery] int? subjectId = null,
+        [FromQuery] int? academicYearId = null)
     {
         var userType = GetUserTypeFromToken();
         if (userType != "Teacher") return Forbid();
@@ -71,12 +75,16 @@ public class HomeworkApiController : ControllerBase
             .Distinct()
             .ToListAsync();
 
-        return Ok(await _service.GetByClassRoomIdsAsync(classRoomIds, schoolId));
+        if (classRoomId.HasValue)
+            classRoomIds = classRoomIds.Where(id => id == classRoomId.Value).ToList();
+
+        return Ok(await _service.GetByClassRoomIdsAsync(classRoomIds, schoolId, subjectId, academicYearId));
     }
 
     // واجبات أبناء ولي الأمر - حسب فصول الأبناء
     [HttpGet("parent/children")]
-    public async Task<ActionResult<List<HomeworkDto>>> GetParentChildrenHomework(int schoolId)
+    public async Task<ActionResult<List<HomeworkDto>>> GetParentChildrenHomework(int schoolId,
+        [FromQuery] int? subjectId = null, [FromQuery] int? academicYearId = null)
     {
         var userType = GetUserTypeFromToken();
         if (userType != "Parent") return Forbid();
@@ -88,6 +96,6 @@ public class HomeworkApiController : ControllerBase
             .Distinct()
             .ToListAsync();
 
-        return Ok(await _service.GetByClassRoomIdsAsync(classRoomIds, schoolId));
+        return Ok(await _service.GetByClassRoomIdsAsync(classRoomIds, schoolId, subjectId, academicYearId));
     }
 }

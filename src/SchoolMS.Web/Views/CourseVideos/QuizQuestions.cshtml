@@ -1,0 +1,205 @@
+@using SchoolMS.Application.DTOs
+@model List<VideoQuizQuestionDto>
+@{
+    var video = ViewBag.Video as CourseVideoDto;
+    var course = ViewBag.Course as CourseDto;
+}
+
+<div class="page-header" data-aos="fade-down">
+    <div>
+        <h4 class="page-title"><i class="fas fa-question-circle text-primary"></i> @Localizer["QuizQuestions"] - @video?.Title</h4>
+        <a href="@Url.Action("Index", new { courseId = course?.Id })" class="text-muted small"><i class="fas fa-arrow-left me-1"></i>@Localizer["BackToVideos"]</a>
+    </div>
+    <div class="page-actions d-flex gap-2">
+        <a href="@Url.Action("QuizAnswers", new { courseVideoId = video?.Id })" class="btn btn-outline-info"><i class="fas fa-poll me-1"></i>@Localizer["ViewAnswers"]</a>
+        <button class="btn btn-accent" onclick="showAddModal()"><i class="fas fa-plus me-1"></i>@Localizer["AddQuestion"]</button>
+    </div>
+</div>
+
+@Html.AntiForgeryToken()
+
+<div class="stat-ribbon mb-3" data-aos="fade-up">
+    <div class="stat-item stagger-item"><div class="stat-icon bg-primary-soft"><i class="fas fa-question-circle"></i></div><div class="stat-info"><h6>@Localizer["Total"]</h6><div class="stat-value">@Model.Count</div></div></div>
+    <div class="stat-item stagger-item"><div class="stat-icon bg-success-soft"><i class="fas fa-user-check"></i></div><div class="stat-info"><h6>@Localizer["Answers"]</h6><div class="stat-value">@Model.Sum(q => q.AnswerCount)</div></div></div>
+</div>
+
+@if (Model.Count == 0)
+{
+    <div class="empty-state text-center" data-aos="fade-up">
+        <div class="empty-icon"><i class="fas fa-clipboard-list"></i></div>
+        <h5>@Localizer["NoQuizQuestions"]</h5>
+        <p>@Localizer["AddQuizQuestionsForStudents"]</p>
+    </div>
+}
+else
+{
+    <div class="row g-3" data-aos="fade-up">
+        @foreach (var q in Model)
+        {
+            <div class="col-lg-6" id="question-@q.Id">
+                <div class="dashboard-card card p-4">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <h6 class="mb-0"><i class="fas fa-question me-2 text-primary"></i>@q.QuestionText</h6>
+                        <div class="action-group">
+                            <button class="btn-act btn-act-edit" onclick="showEditModal(@q.Id)"><i class="fas fa-edit"></i></button>
+                            <button class="btn-act btn-act-delete" onclick="deleteQuestion(@q.Id)"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </div>
+                    <ul class="list-group list-group-flush mb-2">
+                        @for (int i = 0; i < q.Options.Count; i++)
+                        {
+                            var isCorrect = q.Options[i] == q.CorrectAnswer;
+                            <li class="list-group-item d-flex align-items-center gap-2 @(isCorrect ? "bg-success bg-opacity-10" : "")">
+                                <i class="fas @(isCorrect ? "fa-check-circle text-success" : "fa-circle text-muted")" style="font-size:0.85rem;"></i>
+                                <span>@q.Options[i]</span>
+                                @if (isCorrect) { <span class="badge bg-success ms-auto">@Localizer["Correct"]</span> }
+                            </li>
+                        }
+                    </ul>
+                    <div class="d-flex gap-2 mt-2">
+                        <span class="badge bg-info"><i class="fas fa-sort me-1"></i>#@q.SortOrder</span>
+                        <span class="badge bg-primary"><i class="fas fa-user-check me-1"></i>@q.AnswerCount @Localizer["Answers"]</span>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+<!-- Add/Edit Modal -->
+<div class="modal fade" id="quizModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="quizModalTitle"><i class="fas fa-question-circle me-2 text-primary"></i>@Localizer["AddQuestion"]</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="editQuestionId" />
+                <div class="mb-3">
+                    <label class="form-label">@Localizer["QuestionText"] *</label>
+                    <textarea id="questionText" class="form-control" rows="2" required></textarea>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">@Localizer["Options"]</label>
+                    <div id="optionsContainer">
+                        <div class="input-group mb-2 option-row">
+                            <span class="input-group-text">A</span>
+                            <input type="text" class="form-control option-input" placeholder="Option A" />
+                            <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeOption(this)"><i class="fas fa-times"></i></button>
+                        </div>
+                        <div class="input-group mb-2 option-row">
+                            <span class="input-group-text">B</span>
+                            <input type="text" class="form-control option-input" placeholder="Option B" />
+                            <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeOption(this)"><i class="fas fa-times"></i></button>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-act btn-act-edit" onclick="addOption()"><i class="fas fa-plus me-1"></i>@Localizer["AddOption"]</button>
+                </div>
+                <div class="row g-3">
+                    <div class="col-md-8">
+                        <label class="form-label">@Localizer["CorrectAnswer"] *</label>
+                        <select id="correctAnswer" class="form-select"></select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">@Localizer["SortOrder"]</label>
+                        <input type="number" id="sortOrder" class="form-control" value="0" />
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-bs-dismiss="modal">@Localizer["Cancel"]</button>
+                <button class="btn btn-accent" onclick="saveQuestion()"><i class="fas fa-save me-1"></i>@Localizer["Save"]</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    var videoId = @video?.Id;
+    var antiForgeryToken = $('input[name="__RequestVerificationToken"]').val();
+    var questionsData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model));
+    var labels = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+
+    function addOption() {
+        var container = $('#optionsContainer');
+        var idx = container.find('.option-row').length;
+        var lbl = labels[idx] || (idx + 1);
+        container.append(`<div class="input-group mb-2 option-row"><span class="input-group-text">${lbl}</span><input type="text" class="form-control option-input" placeholder="Option ${lbl}" /><button type="button" class="btn btn-outline-danger btn-sm" onclick="removeOption(this)"><i class="fas fa-times"></i></button></div>`);
+        refreshCorrectDropdown();
+    }
+    function removeOption(btn) { $(btn).closest('.option-row').remove(); relabelOptions(); refreshCorrectDropdown(); }
+    function relabelOptions() { $('#optionsContainer .option-row').each(function(i){ $(this).find('.input-group-text').text(labels[i]||i+1); }); }
+    function refreshCorrectDropdown() {
+        var sel = $('#correctAnswer');
+        var prev = sel.val();
+        sel.empty();
+        $('#optionsContainer .option-input').each(function(){ var v = $(this).val(); if(v) sel.append(`<option value="${v}">${v}</option>`); });
+        if (prev) sel.val(prev);
+    }
+    $(document).on('input', '.option-input', function(){ refreshCorrectDropdown(); });
+
+    function showAddModal() {
+        $('#editQuestionId').val('');
+        $('#quizModalTitle').html('<i class="fas fa-question-circle me-2 text-primary"></i>@Localizer["AddQuestion"]');
+        $('#questionText').val('');
+        $('#optionsContainer').html('');
+        for (var i = 0; i < 4; i++) addOption();
+        $('#sortOrder').val(questionsData.length);
+        $('#quizModal').modal('show');
+    }
+
+    function showEditModal(id) {
+        var q = questionsData.find(x => x.id === id);
+        if (!q) return;
+        $('#editQuestionId').val(id);
+        $('#quizModalTitle').html('<i class="fas fa-edit me-2 text-primary"></i>@Localizer["EditQuestion"]');
+        $('#questionText').val(q.questionText);
+        $('#optionsContainer').html('');
+        q.options.forEach(function(o, i) {
+            var lbl = labels[i] || (i+1);
+            $('#optionsContainer').append(`<div class="input-group mb-2 option-row"><span class="input-group-text">${lbl}</span><input type="text" class="form-control option-input" value="${o}" /><button type="button" class="btn btn-outline-danger btn-sm" onclick="removeOption(this)"><i class="fas fa-times"></i></button></div>`);
+        });
+        refreshCorrectDropdown();
+        $('#correctAnswer').val(q.correctAnswer);
+        $('#sortOrder').val(q.sortOrder);
+        $('#quizModal').modal('show');
+    }
+
+    function saveQuestion() {
+        var opts = [];
+        $('#optionsContainer .option-input').each(function(){ var v = $.trim($(this).val()); if(v) opts.push(v); });
+        if (!$('#questionText').val() || opts.length < 2 || !$('#correctAnswer').val()) { toastr.warning('Please fill question, at least 2 options, and select correct answer.'); return; }
+        var editId = $('#editQuestionId').val();
+        var payload = {
+            courseVideoId: videoId,
+            questionText: $('#questionText').val(),
+            options: opts,
+            correctAnswer: $('#correctAnswer').val(),
+            sortOrder: parseInt($('#sortOrder').val()) || 0
+        };
+        var url = editId ? '@Url.Action("UpdateQuizQuestion")' : '@Url.Action("CreateQuizQuestion")';
+        if (editId) payload.id = parseInt(editId);
+        $.ajax({
+            url: url, type: 'POST', contentType: 'application/json',
+            headers: { 'RequestVerificationToken': antiForgeryToken },
+            data: JSON.stringify(payload),
+            success: function() { location.reload(); },
+            error: function() { toastr.error('Error saving question.'); }
+        });
+    }
+
+    function deleteQuestion(id) {
+        Swal.fire({ title: '@Localizer["AreYouSure"]', icon: 'warning', showCancelButton: true, confirmButtonText: '@Localizer["Delete"]' }).then(function(r){
+            if (!r.isConfirmed) return;
+            $.ajax({
+                url: '@Url.Action("DeleteQuizQuestion")?id=' + id, type: 'POST',
+                headers: { 'RequestVerificationToken': antiForgeryToken },
+                success: function() { $('#question-' + id).fadeOut(); toastr.success('Deleted'); },
+                error: function() { toastr.error('Error'); }
+            });
+        });
+    }
+</script>
+}

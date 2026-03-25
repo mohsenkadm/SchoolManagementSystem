@@ -3,6 +3,7 @@ namespace SchoolMS.Domain.Entities;
 public class StorageRequest : BaseEntity
 {
     public int SchoolSubscriptionId { get; set; }
+    public int? StoragePlanId { get; set; }
     public decimal RequestedGB { get; set; }
     public decimal PricePerGB { get; set; }
     public decimal TotalPrice { get; set; }
@@ -13,4 +14,5 @@ public class StorageRequest : BaseEntity
     public string? ProcessedBy { get; set; }
 
     public virtual SchoolSubscription SchoolSubscription { get; set; } = null!;
+    public virtual StoragePlan? StoragePlan { get; set; }
 }

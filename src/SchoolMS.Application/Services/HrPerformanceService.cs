@@ -29,6 +29,9 @@ public class HrPerformanceService : IHrPerformanceService
     public async Task<List<HrPerformanceCycleDto>> GetCyclesAsync()
         => _mapper.Map<List<HrPerformanceCycleDto>>(await _cycleRepo.GetAllAsync());
 
+    public async Task<List<HrPerformanceCycleDto>> GetCyclesBySchoolIdAsync(int schoolId)
+        => _mapper.Map<List<HrPerformanceCycleDto>>(await _cycleRepo.Query().Where(c => c.SchoolId == schoolId).ToListAsync());
+
     public async Task<HrPerformanceCycleDto> CreateCycleAsync(HrPerformanceCycleDto dto)
     {
         var entity = _mapper.Map<HrPerformanceCycle>(dto); entity.Id = 0;
@@ -80,6 +83,20 @@ public class HrPerformanceService : IHrPerformanceService
         if (cycleId.HasValue) query = query.Where(r => r.PerformanceCycleId == cycleId.Value);
         if (employeeId.HasValue) query = query.Where(r => r.EmployeeId == employeeId.Value);
         var items = await query.OrderByDescending(r => r.CreatedAt).ToListAsync();
+        return MapReviews(items);
+    }
+
+    public async Task<List<HrPerformanceReviewDto>> GetReviewsBySchoolIdAsync(int schoolId, int? cycleId = null, int? employeeId = null)
+    {
+        var query = _reviewRepo.Query().Where(r => r.SchoolId == schoolId).Include(r => r.Employee).Include(r => r.PerformanceCycle).AsQueryable();
+        if (cycleId.HasValue) query = query.Where(r => r.PerformanceCycleId == cycleId.Value);
+        if (employeeId.HasValue) query = query.Where(r => r.EmployeeId == employeeId.Value);
+        var items = await query.OrderByDescending(r => r.CreatedAt).ToListAsync();
+        return MapReviews(items);
+    }
+
+    private static List<HrPerformanceReviewDto> MapReviews(List<HrPerformanceReview> items)
+    {
         return items.Select(r => new HrPerformanceReviewDto
         {
             Id = r.Id, EmployeeId = r.EmployeeId, EmployeeName = r.Employee?.FullName,
@@ -153,6 +170,14 @@ public class HrPerformanceService : IHrPerformanceService
     public async Task<List<HrKpiDto>> GetKpisAsync(int? employeeId = null)
     {
         var query = _kpiRepo.Query().Include(k => k.Employee).AsQueryable();
+        if (employeeId.HasValue) query = query.Where(k => k.EmployeeId == employeeId.Value);
+        var items = await query.OrderByDescending(k => k.DueDate).ToListAsync();
+        return _mapper.Map<List<HrKpiDto>>(items);
+    }
+
+    public async Task<List<HrKpiDto>> GetKpisBySchoolIdAsync(int schoolId, int? employeeId = null)
+    {
+        var query = _kpiRepo.Query().Where(k => k.SchoolId == schoolId).Include(k => k.Employee).AsQueryable();
         if (employeeId.HasValue) query = query.Where(k => k.EmployeeId == employeeId.Value);
         var items = await query.OrderByDescending(k => k.DueDate).ToListAsync();
         return _mapper.Map<List<HrKpiDto>>(items);

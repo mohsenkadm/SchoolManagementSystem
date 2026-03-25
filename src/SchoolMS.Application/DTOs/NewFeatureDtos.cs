@@ -102,6 +102,8 @@ public class StudentBehaviorDto
     public bool NotifyParent { get; set; }
     public int SchoolId { get; set; }
     public string? SchoolName { get; set; }
+    public int? AcademicYearId { get; set; }
+    public string? AcademicYearName { get; set; }
 }
 
 // ===== Health Record =====
@@ -120,6 +122,8 @@ public class HealthRecordDto
     public bool NotifyParent { get; set; }
     public int SchoolId { get; set; }
     public string? SchoolName { get; set; }
+    public int? AcademicYearId { get; set; }
+    public string? AcademicYearName { get; set; }
 }
 
 // ===== Complaint =====

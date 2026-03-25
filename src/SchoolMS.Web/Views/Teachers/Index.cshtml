@@ -100,7 +100,7 @@
         if (isSuperAdmin) { columns.push({ data: 'schoolName' }); }
         columns.push({
             data: 'id', orderable: false,
-            render: function (data) { return '<div class="d-flex gap-1"><a class="btn btn-sm btn-primary" href="@Url.Action("Edit")/' + data + '"><i class="fas fa-edit"></i></a><button class="btn btn-sm btn-danger" onclick="deleteTeacher(' + data + ')"><i class="fas fa-trash"></i></button></div>'; }
+            render: function (data) { return '<div class="action-group"><a class="btn-act btn-act-edit" href="@Url.Action("Edit")/' + data + '"><i class="fas fa-edit"></i></a><button class="btn-act btn-act-delete" onclick="deleteTeacher(' + data + ')"><i class="fas fa-trash"></i></button></div>'; }
         });
 
         table = $('#teachersTable').DataTable({

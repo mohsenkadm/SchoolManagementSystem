@@ -125,7 +125,7 @@
     function renderTable() {
         var html = '';
         rows.forEach(function (r, i) {
-            html += '<tr><td>' + (i + 1) + '</td><td>' + r.examTypeName + '</td><td>' + r.classRoomName + '</td><td>' + r.subjectName + '</td><td>' + r.teacherName + '</td><td>' + r.examDate + '</td><td>' + r.startTime + '</td><td>' + r.endTime + '</td><td><button class="btn btn-sm btn-danger" onclick="removeRow(' + i + ')"><i class="fas fa-times"></i></button></td></tr>';
+            html += '<tr><td>' + (i + 1) + '</td><td>' + r.examTypeName + '</td><td>' + r.classRoomName + '</td><td>' + r.subjectName + '</td><td>' + r.teacherName + '</td><td>' + r.examDate + '</td><td>' + r.startTime + '</td><td>' + r.endTime + '</td><td><button class="btn-act btn-act-delete" onclick="removeRow(' + i + ')"><i class="fas fa-times"></i></button></td></tr>';
         });
         $('#bulkBody').html(html);
         $('#rowCount').text(rows.length);

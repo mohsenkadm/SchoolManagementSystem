@@ -11,7 +11,7 @@ public class AnalyticsService : IAnalyticsService
 {
     private readonly IRepository<Student> _studentRepo;
     private readonly IRepository<Teacher> _teacherRepo;
-    private readonly IRepository<Staff> _staffRepo;
+    private readonly IRepository<HrEmployee> _staffRepo;
     private readonly IRepository<Parent> _parentRepo;
     private readonly IRepository<FeeInstallment> _feeRepo;
     private readonly IRepository<InstallmentPayment> _payRepo;
@@ -35,7 +35,7 @@ public class AnalyticsService : IAnalyticsService
 
     public AnalyticsService(
         IRepository<Student> studentRepo, IRepository<Teacher> teacherRepo,
-        IRepository<Staff> staffRepo, IRepository<Parent> parentRepo,
+        IRepository<HrEmployee> staffRepo, IRepository<Parent> parentRepo,
         IRepository<FeeInstallment> feeRepo, IRepository<InstallmentPayment> payRepo,
         IRepository<Expense> expenseRepo, IRepository<SalarySetup> salaryRepo,
         IRepository<Attendance> attendanceRepo, IRepository<Course> courseRepo,

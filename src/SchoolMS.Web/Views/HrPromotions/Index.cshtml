@@ -1,5 +1,11 @@
-@model List<SchoolMS.Application.DTOs.HrPromotionDto>
-@{ ViewData["Title"] = Localizer["HrPromotions"].Value; }
+@using SchoolMS.Application.DTOs
+@model List<HrPromotionDto>
+@{
+    ViewData["Title"] = Localizer["HrPromotions"].Value;
+    var isSuperAdmin = (bool)(ViewBag.IsSuperAdmin ?? false);
+    var schools = ViewBag.Schools as List<SchoolDto> ?? new();
+    var branches = ViewBag.Branches as List<BranchDto> ?? new();
+}
 @Html.AntiForgeryToken()
 
 <div class="page-header" data-aos="fade-down">
@@ -12,9 +18,39 @@
     <div class="stat-item stagger-item"><div class="stat-icon bg-success-soft"><i class="fas fa-check"></i></div><div class="stat-info"><h6>@Localizer["Effective"]</h6><div class="stat-value">@Model.Count(p => p.Status == HrPromotionStatus.Effective)</div></div></div>
 </div>
 
+<div class="filter-panel" data-aos="fade-up">
+    <div class="filter-title"><i class="fas fa-filter"></i> @Localizer["Filter"]</div>
+    <div class="row g-2 align-items-end">
+        @if (isSuperAdmin)
+        {
+            <div class="col-md-2">
+                <select id="filterSchool" class="form-select select2">
+                    <option value="">@Localizer["AllSchools"]</option>
+                    @foreach (var s in schools) { <option value="@s.Name">@s.Name</option> }
+                </select>
+            </div>
+        }
+        <div class="col-md-2">
+            <select id="filterBranch" class="form-select">
+                <option value="">@Localizer["AllBranches"]</option>
+                @foreach (var b in branches) { <option value="@b.Name">@b.Name</option> }
+            </select>
+        </div>
+        <div class="col-md-2"><input type="text" id="searchInput" class="form-control" placeholder="🔍 @Localizer["Search"]..." /></div>
+        <div class="col-md-2">
+            <select id="filterStatus" class="form-select">
+                <option value="">@Localizer["AllStatuses"]</option>
+                @foreach (var s in Enum.GetValues<HrPromotionStatus>()) { <option value="@s">@s</option> }
+            </select>
+        </div>
+        <div class="col-md-1"><button class="btn btn-filter w-100" onclick="applyFilters()"><i class="fas fa-search"></i></button></div>
+        <div class="col-md-1"><button class="btn btn-reset w-100" onclick="resetFilters()"><i class="fas fa-redo"></i></button></div>
+    </div>
+</div>
+
 <div class="table-card hover-lift" data-aos="fade-up">
     <table id="dataTable" class="table table-hover" style="width:100%">
-        <thead><tr><th>#</th><th>@Localizer["Employee"]</th><th>@Localizer["Type"]</th><th>@Localizer["From"]</th><th>@Localizer["To"]</th><th>@Localizer["SalaryIncrease"]</th><th>@Localizer["EffectiveDate"]</th><th>@Localizer["Status"]</th><th>@Localizer["Actions"]</th></tr></thead>
+        <thead><tr><th>#</th><th>@Localizer["Employee"]</th><th>@Localizer["Type"]</th><th>@Localizer["From"]</th><th>@Localizer["To"]</th><th>@Localizer["SalaryIncrease"]</th><th>@Localizer["EffectiveDate"]</th><th>@Localizer["Status"]</th>@if (isSuperAdmin) { <th>@Localizer["School"]</th> }<th>@Localizer["Actions"]</th></tr></thead>
         <tbody>
             @for (int i = 0; i < Model.Count; i++)
             {
@@ -24,12 +60,15 @@
                     <td>@(i + 1)</td><td>@p.EmployeeName</td><td><span class="badge bg-info">@p.Type</span></td>
                     <td>@p.FromJobTitle</td><td>@p.ToJobTitle</td><td class="text-success fw-bold">+@(p.SalaryIncrease?.ToString("N0"))</td>
                     <td>@p.EffectiveDate.ToString("dd/MM/yyyy")</td><td><span class="badge @cls">@p.Status</span></td>
+                    @if (isSuperAdmin) { <td>@p.SchoolName</td> }
                     <td>
+                        <div class="action-group">
                         @if (p.Status == HrPromotionStatus.Pending)
                         {
-                            <form asp-action="Approve" method="post" class="d-inline"><input type="hidden" name="id" value="@p.Id" /><button class="btn btn-sm btn-success"><i class="fas fa-check"></i></button></form>
-                            <form asp-action="Reject" method="post" class="d-inline"><input type="hidden" name="id" value="@p.Id" /><input type="hidden" name="reason" value="Rejected" /><button class="btn btn-sm btn-danger"><i class="fas fa-times"></i></button></form>
+                            <form asp-action="Approve" method="post" class="d-inline"><input type="hidden" name="id" value="@p.Id" /><button class="btn-act btn-act-success"><i class="fas fa-check"></i></button></form>
+                            <form asp-action="Reject" method="post" class="d-inline"><input type="hidden" name="id" value="@p.Id" /><input type="hidden" name="reason" value="Rejected" /><button class="btn-act btn-act-delete"><i class="fas fa-times"></i></button></form>
                         }
+                        </div>
                     </td>
                 </tr>
             }
@@ -38,5 +77,24 @@
 </div>
 
 @section Scripts {
-<script>$(function () { $('#dataTable').DataTable({ responsive: true, pageLength: 25, dom: 'rtip' }); });</script>
+<script>
+    var isSuperAdmin = @(isSuperAdmin ? "true" : "false");
+    var dt;
+    var schoolCol = isSuperAdmin ? 8 : -1;
+    $(function () {
+        dt = $('#dataTable').DataTable({ responsive: true, pageLength: 25, dom: 'rtip' });
+        $('#searchInput').on('keyup', function () { dt.search(this.value).draw(); });
+    });
+    function applyFilters() {
+        dt.search($('#searchInput').val());
+        dt.column(7).search($('#filterStatus').val());
+        if (isSuperAdmin) { dt.column(schoolCol).search($('#filterSchool').val()); }
+        dt.draw();
+    }
+    function resetFilters() {
+        $('#searchInput, #filterBranch, #filterStatus').val('');
+        if (isSuperAdmin) { $('#filterSchool').val(''); }
+        dt.search('').columns().search('').draw();
+    }
+</script>
 }

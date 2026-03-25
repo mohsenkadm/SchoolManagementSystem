@@ -6,10 +6,9 @@ namespace SchoolMS.Web.Hubs;
 [Authorize]
 public class ChatHub : Hub
 {
-    public async Task SendMessage(string roomId, string message)
+    public async Task SendMessage(string roomId, string senderName, string message, string? fileUrl, string? fileType)
     {
-        var userName = Context.User?.Identity?.Name ?? "Unknown";
-        await Clients.Group(roomId).SendAsync("ReceiveMessage", userName, message, DateTime.UtcNow);
+        await Clients.Group(roomId).SendAsync("ReceiveMessage", senderName, message, fileUrl, fileType, DateTime.UtcNow);
     }
 
     public async Task JoinRoom(string roomId)
@@ -39,5 +38,29 @@ public class NotificationHub : Hub
     public async Task BroadcastNotification(string title, string message)
     {
         await Clients.All.SendAsync("ReceiveNotification", title, message, DateTime.UtcNow);
+    }
+}
+
+[Authorize]
+public class LiveStreamChatHub : Hub
+{
+    public async Task JoinLiveStream(string liveStreamId)
+    {
+        await Groups.AddToGroupAsync(Context.ConnectionId, $"livestream-{liveStreamId}");
+        var userName = Context.User?.Identity?.Name ?? "Unknown";
+        await Clients.Group($"livestream-{liveStreamId}").SendAsync("UserJoinedStream", userName);
+    }
+
+    public async Task LeaveLiveStream(string liveStreamId)
+    {
+        await Groups.RemoveFromGroupAsync(Context.ConnectionId, $"livestream-{liveStreamId}");
+        var userName = Context.User?.Identity?.Name ?? "Unknown";
+        await Clients.Group($"livestream-{liveStreamId}").SendAsync("UserLeftStream", userName);
+    }
+
+    public async Task SendLiveComment(string liveStreamId, string studentName, string senderType, string comment)
+    {
+        await Clients.Group($"livestream-{liveStreamId}")
+            .SendAsync("ReceiveLiveComment", studentName, senderType, comment, DateTime.UtcNow);
     }
 }

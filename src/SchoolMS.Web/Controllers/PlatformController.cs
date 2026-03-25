@@ -115,6 +115,44 @@ public class PlatformController : Controller
     }
 
     // ===== Storage Requests =====
+    public async Task<IActionResult> StorageRequests()
+    {
+        ViewData["Title"] = "Storage Requests Management";
+        var allRequests = await _service.GetAllStorageRequestsAsync();
+        ViewBag.PendingRequests = allRequests.Where(r => !r.IsProcessed).ToList();
+        ViewBag.StoragePlans = await _storageQuotaService.GetAllStoragePlansAsync();
+        return View(allRequests);
+    }
+
+    // ===== Storage Plans =====
+    public async Task<IActionResult> StoragePlans()
+    {
+        ViewData["Title"] = "Storage Plans";
+        var plans = await _storageQuotaService.GetAllStoragePlansAsync();
+        return View(plans);
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> CreateStoragePlan([FromBody] StoragePlanDto dto)
+    {
+        var result = await _storageQuotaService.CreateStoragePlanAsync(dto);
+        return Ok(result);
+    }
+
+    [HttpPut, ValidateAntiForgeryToken]
+    public async Task<IActionResult> UpdateStoragePlan([FromBody] StoragePlanDto dto)
+    {
+        var result = await _storageQuotaService.UpdateStoragePlanAsync(dto);
+        return Ok(result);
+    }
+
+    [HttpDelete, ValidateAntiForgeryToken]
+    public async Task<IActionResult> DeleteStoragePlan(int id)
+    {
+        await _storageQuotaService.DeleteStoragePlanAsync(id);
+        return Ok();
+    }
+
     [HttpGet]
     public async Task<IActionResult> GetStorageRequests()
         => Json(await _service.GetPendingStorageRequestsAsync());

@@ -39,8 +39,14 @@ public class UserManagementService : IUserManagementService
 
     public async Task<List<UserDto>> GetAllUsersAsync()
     {
-        var users = await _context.Users
-            .Where(u => !u.IsDeleted)
+        var schoolId = _tenantProvider.GetCurrentSchoolId();
+        var usersQuery = _context.Users
+            .Where(u => !u.IsDeleted);
+
+        if (schoolId.HasValue)
+            usersQuery = usersQuery.Where(u => u.SchoolId == schoolId.Value);
+
+        var users = await usersQuery
             .Include(u => u.Branch)
             .Include(u => u.UserPermissions)
             .Include(u => u.UserBranches)
@@ -198,10 +204,14 @@ public class UserManagementService : IUserManagementService
 
     public async Task<DataTableResponse<UserDataTableDto>> GetDataTableAsync(DataTableRequest request)
     {
+        var schoolId = _tenantProvider.GetCurrentSchoolId();
         var query = _context.Users
             .Where(u => !u.IsDeleted)
             .Include(u => u.Branch)
             .AsQueryable();
+
+        if (schoolId.HasValue)
+            query = query.Where(u => u.SchoolId == schoolId.Value);
 
         var totalRecords = await query.CountAsync();
 

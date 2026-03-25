@@ -20,6 +20,9 @@ public class AcademicYearService : IAcademicYearService
         _mapper = mapper;
     }
 
+    public async Task<List<AcademicYearDto>> GetAllAsync()
+        => _mapper.Map<List<AcademicYearDto>>(await _repository.Query().Include(a => a.School).ToListAsync());
+
     public async Task<List<AcademicYearDto>> GetAllAsync(int schoolId)
         => _mapper.Map<List<AcademicYearDto>>(await _repository.Query().Where(a => a.SchoolId == schoolId).ToListAsync());
 

@@ -41,7 +41,7 @@ public class HomeworkController : Controller
     }
 
     [HasPermission("Homework", "View")]
-    public async Task<IActionResult> Index()
+    public async Task<IActionResult> Index(int? academicYearId = null)
     {
         ViewData["Title"] = "Homework";
         ViewBag.IsSuperAdmin = IsSuperAdmin;
@@ -51,7 +51,17 @@ public class HomeworkController : Controller
             : CurrentSchoolId.HasValue
                 ? await _branchService.GetBySchoolIdAsync(CurrentSchoolId.Value)
                 : new List<BranchDto>();
-        return View(await _service.GetAllAsync());
+        ViewBag.AcademicYears = IsSuperAdmin
+            ? await _yearService.GetAllAsync()
+            : await _yearService.GetAllAsync(CurrentSchoolId ?? 0);
+        ViewBag.SelectedAcademicYearId = academicYearId;
+
+        var data = IsSuperAdmin
+            ? await _service.GetAllAsync()
+            : CurrentSchoolId.HasValue
+                ? await _service.GetBySchoolIdAsync(CurrentSchoolId.Value, academicYearId: academicYearId)
+                : new List<HomeworkDto>();
+        return View(data);
     }
 
     [HasPermission("Homework", "Add")]

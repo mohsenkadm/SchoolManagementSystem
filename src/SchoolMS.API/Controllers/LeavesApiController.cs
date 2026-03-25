@@ -24,24 +24,45 @@ public class LeavesApiController : ControllerBase
     private string GetUserTypeFromToken() =>
         User.FindFirst("UserType")?.Value ?? throw new UnauthorizedAccessException();
 
+    // جلب جميع طلبات الإجازات للمدرسة مع فلاتر
+    [HttpGet]
+    public async Task<ActionResult<List<LeaveRequestDto>>> GetAll(int schoolId,
+        [FromQuery] string? status = null, [FromQuery] string? personType = null)
+    {
+        var items = await _service.GetBySchoolIdAsync(schoolId);
+        if (!string.IsNullOrEmpty(status) && Enum.TryParse<LeaveStatus>(status, true, out var ls))
+            items = items.Where(l => l.Status == ls).ToList();
+        if (!string.IsNullOrEmpty(personType) && Enum.TryParse<PersonType>(personType, true, out var pt))
+            items = items.Where(l => l.PersonType == pt).ToList();
+        return Ok(items);
+    }
+
     // جلب إجازات الطالب
     [HttpGet("student")]
-    public async Task<ActionResult<List<LeaveRequestDto>>> GetStudentLeaves(int schoolId)
+    public async Task<ActionResult<List<LeaveRequestDto>>> GetStudentLeaves(int schoolId,
+        [FromQuery] string? status = null)
     {
         var userType = GetUserTypeFromToken();
         if (userType != "Student") return Forbid();
         var studentId = GetPersonIdFromToken();
-        return Ok(await _service.GetByPersonAsync(studentId, PersonType.Student, schoolId));
+        var items = await _service.GetByPersonAsync(studentId, PersonType.Student, schoolId);
+        if (!string.IsNullOrEmpty(status) && Enum.TryParse<LeaveStatus>(status, true, out var ls))
+            items = items.Where(l => l.Status == ls).ToList();
+        return Ok(items);
     }
 
     // جلب إجازات أبناء ولي الأمر
     [HttpGet("parent/children")]
-    public async Task<ActionResult<List<LeaveRequestDto>>> GetParentChildrenLeaves(int schoolId)
+    public async Task<ActionResult<List<LeaveRequestDto>>> GetParentChildrenLeaves(int schoolId,
+        [FromQuery] string? status = null)
     {
         var userType = GetUserTypeFromToken();
         if (userType != "Parent") return Forbid();
         var parentId = GetPersonIdFromToken();
-        return Ok(await _service.GetByParentChildrenAsync(parentId, schoolId));
+        var items = await _service.GetByParentChildrenAsync(parentId, schoolId);
+        if (!string.IsNullOrEmpty(status) && Enum.TryParse<LeaveStatus>(status, true, out var ls))
+            items = items.Where(l => l.Status == ls).ToList();
+        return Ok(items);
     }
 
     // إنشاء طلب إجازة جديد

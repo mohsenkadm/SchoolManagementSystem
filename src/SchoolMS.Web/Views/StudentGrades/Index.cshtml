@@ -50,6 +50,7 @@
         <div class="col-md-2"><input type="text" id="searchInput" class="form-control" placeholder="🔍 @Localizer["SearchStudent"]..." /></div>
         <div class="col-md-2"><select id="filterSubject" class="form-select"><option value="">@Localizer["AllSubjects"]</option>@foreach (var s in Model.Select(m => m.SubjectName).Distinct().OrderBy(s => s)) { <option value="@s">@s</option> }</select></div>
         <div class="col-md-2"><select id="filterExam" class="form-select"><option value="">@Localizer["AllExamTypes"]</option>@foreach (var e in Model.Select(m => m.ExamTypeName).Distinct().OrderBy(e => e)) { <option value="@e">@e</option> }</select></div>
+        <div class="col-md-2"><select id="filterGrade" class="form-select"><option value="">@Localizer["AllGrades"]</option>@foreach (var g in Model.Select(m => m.GradeLetter).Where(g => g != null).Distinct().OrderBy(g => g)) { <option value="@g">@g</option> }</select></div>
         <div class="col-md-1"><button class="btn btn-filter w-100" onclick="applyFilters()"><i class="fas fa-search"></i></button></div>
         <div class="col-md-1"><button class="btn btn-reset w-100" onclick="resetFilters()"><i class="fas fa-redo"></i></button></div>
     </div>
@@ -68,9 +69,9 @@
                     <td><span class="badge @badgeCls">@Model[i].GradeLetter</span></td>
                     @if (isSuperAdmin) { <td>@Model[i].SchoolName</td> }
                     <td class="no-print">
-                        <div class="d-flex gap-1">
-                            <a href="@Url.Action("Edit", new { id = Model[i].Id })" class="btn btn-sm btn-primary" data-bs-toggle="tooltip" title="@Localizer["Edit"]"><i class="fas fa-edit"></i></a>
-                            <button class="btn btn-sm btn-danger" onclick="del(@Model[i].Id)" data-bs-toggle="tooltip" title="@Localizer["Delete"]"><i class="fas fa-trash"></i></button>
+                        <div class="action-group">
+                            <a href="@Url.Action("Edit", new { id = Model[i].Id })" class="btn-act btn-act-edit" data-bs-toggle="tooltip" title="@Localizer["Edit"]"><i class="fas fa-edit"></i></a>
+                            <button class="btn-act btn-act-delete" onclick="del(@Model[i].Id)" data-bs-toggle="tooltip" title="@Localizer["Delete"]"><i class="fas fa-trash"></i></button>
                         </div>
                     </td>
                 </tr>
@@ -87,7 +88,7 @@
 </style>
 <script>
     var isSuperAdmin = @(isSuperAdmin ? "true" : "false");
-    var subjectColIdx = 2, examColIdx = 3, schoolColIdx = isSuperAdmin ? 7 : -1;
+    var subjectColIdx = 2, examColIdx = 3, gradeColIdx = 6, schoolColIdx = isSuperAdmin ? 7 : -1;
     var dt;
     $(function () {
         dt = $('#dataTable').DataTable({ responsive: true, pageLength: 25, dom: 'rtip' });
@@ -101,10 +102,11 @@
         dt.search($('#searchInput').val());
         dt.column(subjectColIdx).search($('#filterSubject').val());
         dt.column(examColIdx).search($('#filterExam').val());
+        dt.column(gradeColIdx).search($('#filterGrade').val());
         if (isSuperAdmin) { dt.column(schoolColIdx).search($('#filterSchool').val()); }
         dt.draw();
     }
-    function resetFilters() { $('#searchInput, #filterSubject, #filterExam').val(''); if (isSuperAdmin) { $('#filterSchool').val(''); } dt.search('').columns().search('').draw(); }
+    function resetFilters() { $('#searchInput, #filterSubject, #filterExam, #filterGrade').val(''); if (isSuperAdmin) { $('#filterSchool').val(''); } dt.search('').columns().search('').draw(); }
     function del(id) { confirmDelete('@Url.Action("Delete")', id, function () { location.reload(); }); }
     function printSchedule() { window.print(); }
 </script>

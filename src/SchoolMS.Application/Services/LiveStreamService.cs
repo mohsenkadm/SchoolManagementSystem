@@ -11,17 +11,20 @@ public class LiveStreamService : ILiveStreamService
 {
     private readonly IRepository<LiveStream> _repository;
     private readonly IRepository<LiveStreamSeen> _seenRepository;
+    private readonly IRepository<LiveStreamComment> _commentRepository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly ICloudFlareLiveService _cloudFlareLiveService;
 
     public LiveStreamService(
         IRepository<LiveStream> repository,
         IRepository<LiveStreamSeen> seenRepository,
+        IRepository<LiveStreamComment> commentRepository,
         IUnitOfWork unitOfWork,
         ICloudFlareLiveService cloudFlareLiveService)
     {
         _repository = repository;
         _seenRepository = seenRepository;
+        _commentRepository = commentRepository;
         _unitOfWork = unitOfWork;
         _cloudFlareLiveService = cloudFlareLiveService;
     }
@@ -287,5 +290,59 @@ public class LiveStreamService : ILiveStreamService
         }
 
         await _unitOfWork.SaveChangesAsync();
+    }
+
+    public async Task<List<LiveStreamCommentDto>> GetCommentsByLiveStreamIdAsync(int liveStreamId)
+    {
+        return await _commentRepository.Query()
+            .Where(c => c.LiveStreamId == liveStreamId)
+            .Include(c => c.Student)
+            .Include(c => c.Teacher)
+            .OrderBy(c => c.SentAt)
+            .Select(c => new LiveStreamCommentDto
+            {
+                Id = c.Id,
+                LiveStreamId = c.LiveStreamId,
+                StudentId = c.StudentId,
+                TeacherId = c.TeacherId,
+                SenderName = c.SenderName,
+                SenderType = c.SenderType,
+                Comment = c.Comment,
+                SentAt = c.SentAt
+            })
+            .ToListAsync();
+    }
+
+    public async Task<LiveStreamCommentDto> AddCommentAsync(CreateLiveStreamCommentDto dto)
+    {
+        var stream = await _repository.GetByIdAsync(dto.LiveStreamId)
+            ?? throw new InvalidOperationException("Live stream not found.");
+
+        var entity = new LiveStreamComment
+        {
+            LiveStreamId = dto.LiveStreamId,
+            StudentId = dto.StudentId,
+            TeacherId = dto.TeacherId,
+            SenderName = dto.SenderName,
+            SenderType = dto.SenderType,
+            Comment = dto.Comment,
+            SentAt = DateTime.UtcNow,
+            CreatedAt = DateTime.UtcNow,
+            SchoolId = stream.SchoolId
+        };
+        await _commentRepository.AddAsync(entity);
+        await _unitOfWork.SaveChangesAsync();
+
+        return new LiveStreamCommentDto
+        {
+            Id = entity.Id,
+            LiveStreamId = entity.LiveStreamId,
+            StudentId = entity.StudentId,
+            TeacherId = entity.TeacherId,
+            SenderName = entity.SenderName,
+            SenderType = entity.SenderType,
+            Comment = entity.Comment,
+            SentAt = entity.SentAt
+        };
     }
 }

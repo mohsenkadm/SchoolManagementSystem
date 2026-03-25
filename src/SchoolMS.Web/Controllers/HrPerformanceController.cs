@@ -20,7 +20,9 @@ public class HrPerformanceController : Controller
 
     // Cycles
     [HasPermission("HrPerformance", "View")]
-    public async Task<IActionResult> Cycles() => View(await _service.GetCyclesAsync());
+    public async Task<IActionResult> Cycles() => View(CurrentSchoolId.HasValue
+        ? await _service.GetCyclesBySchoolIdAsync(CurrentSchoolId.Value)
+        : await _service.GetCyclesAsync());
 
     [HttpPost, HasPermission("HrPerformance", "Add"), ValidateAntiForgeryToken]
     public async Task<IActionResult> CreateCycle(HrPerformanceCycleDto dto) { await _service.CreateCycleAsync(dto); return RedirectToAction(nameof(Cycles)); }
@@ -43,7 +45,9 @@ public class HrPerformanceController : Controller
 
     // Reviews
     [HasPermission("HrPerformance", "View")]
-    public async Task<IActionResult> Reviews(int? cycleId, int? employeeId) => View(await _service.GetReviewsAsync(cycleId, employeeId));
+    public async Task<IActionResult> Reviews(int? cycleId, int? employeeId) => View(CurrentSchoolId.HasValue
+        ? await _service.GetReviewsBySchoolIdAsync(CurrentSchoolId.Value, cycleId, employeeId)
+        : await _service.GetReviewsAsync(cycleId, employeeId));
 
     [HasPermission("HrPerformance", "View")]
     public async Task<IActionResult> ReviewDetails(int id) => View(await _service.GetReviewByIdAsync(id));
@@ -67,7 +71,9 @@ public class HrPerformanceController : Controller
 
     // KPIs
     [HasPermission("HrPerformance", "View")]
-    public async Task<IActionResult> Kpis(int? employeeId) => View(await _service.GetKpisAsync(employeeId));
+    public async Task<IActionResult> Kpis(int? employeeId) => View(CurrentSchoolId.HasValue
+        ? await _service.GetKpisBySchoolIdAsync(CurrentSchoolId.Value, employeeId)
+        : await _service.GetKpisAsync(employeeId));
 
     [HttpPost, HasPermission("HrPerformance", "Add"), ValidateAntiForgeryToken]
     public async Task<IActionResult> CreateKpi(HrKpiDto dto) { await _service.CreateKpiAsync(dto); return RedirectToAction(nameof(Kpis)); }

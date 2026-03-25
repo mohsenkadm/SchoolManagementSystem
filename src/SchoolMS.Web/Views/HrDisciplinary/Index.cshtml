@@ -1,5 +1,11 @@
-@model List<SchoolMS.Application.DTOs.HrDisciplinaryActionDto>
-@{ ViewData["Title"] = Localizer["HrDisciplinary"].Value; }
+@using SchoolMS.Application.DTOs
+@model List<HrDisciplinaryActionDto>
+@{
+    ViewData["Title"] = Localizer["HrDisciplinary"].Value;
+    var isSuperAdmin = (bool)(ViewBag.IsSuperAdmin ?? false);
+    var schools = ViewBag.Schools as List<SchoolDto> ?? new();
+    var branches = ViewBag.Branches as List<BranchDto> ?? new();
+}
 @Html.AntiForgeryToken()
 
 <div class="page-header" data-aos="fade-down">
@@ -16,9 +22,39 @@
     <div class="stat-item stagger-item"><div class="stat-icon bg-info-soft"><i class="fas fa-info-circle"></i></div><div class="stat-info"><h6>@Localizer["Appealed"]</h6><div class="stat-value">@Model.Count(d => d.Status == DisciplinaryStatus.Appealed)</div></div></div>
 </div>
 
+<div class="filter-panel" data-aos="fade-up">
+    <div class="filter-title"><i class="fas fa-filter"></i> @Localizer["Filter"]</div>
+    <div class="row g-2 align-items-end">
+        @if (isSuperAdmin)
+        {
+            <div class="col-md-2">
+                <select id="filterSchool" class="form-select select2">
+                    <option value="">@Localizer["AllSchools"]</option>
+                    @foreach (var s in schools) { <option value="@s.Name">@s.Name</option> }
+                </select>
+            </div>
+        }
+        <div class="col-md-2">
+            <select id="filterBranch" class="form-select">
+                <option value="">@Localizer["AllBranches"]</option>
+                @foreach (var b in branches) { <option value="@b.Name">@b.Name</option> }
+            </select>
+        </div>
+        <div class="col-md-2"><input type="text" id="searchInput" class="form-control" placeholder="🔍 @Localizer["Search"]..." /></div>
+        <div class="col-md-2">
+            <select id="filterStatus" class="form-select">
+                <option value="">@Localizer["AllStatuses"]</option>
+                @foreach (var s in Enum.GetValues<DisciplinaryStatus>()) { <option value="@s">@s</option> }
+            </select>
+        </div>
+        <div class="col-md-1"><button class="btn btn-filter w-100" onclick="applyFilters()"><i class="fas fa-search"></i></button></div>
+        <div class="col-md-1"><button class="btn btn-reset w-100" onclick="resetFilters()"><i class="fas fa-redo"></i></button></div>
+    </div>
+</div>
+
 <div class="table-card hover-lift" data-aos="fade-up">
     <table id="dataTable" class="table table-hover" style="width:100%">
-        <thead><tr><th>#</th><th>@Localizer["Employee"]</th><th>@Localizer["Violation"]</th><th>@Localizer["IncidentDate"]</th><th>@Localizer["ActionType"]</th><th>@Localizer["Penalty"]</th><th>@Localizer["Status"]</th><th>@Localizer["Actions"]</th></tr></thead>
+        <thead><tr><th>#</th><th>@Localizer["Employee"]</th><th>@Localizer["Violation"]</th><th>@Localizer["IncidentDate"]</th><th>@Localizer["ActionType"]</th><th>@Localizer["Penalty"]</th><th>@Localizer["Status"]</th>@if (isSuperAdmin) { <th>@Localizer["School"]</th> }<th>@Localizer["Actions"]</th></tr></thead>
         <tbody>
             @for (int i = 0; i < Model.Count; i++)
             {
@@ -31,7 +67,8 @@
                     <td><span class="badge @actCls">@d.ActionType</span></td>
                     <td>@(d.PenaltyAmount?.ToString("N0") ?? "—")</td>
                     <td><span class="badge @cls">@d.Status</span></td>
-                    <td><a href="@Url.Action("Details", new { id = d.Id })" class="btn btn-sm btn-info"><i class="fas fa-eye"></i></a></td>
+                    @if (isSuperAdmin) { <td>@d.SchoolName</td> }
+                    <td><div class="action-group"><a href="@Url.Action("Details", new { id = d.Id })" class="btn-act btn-act-view"><i class="fas fa-eye"></i></a></div></td>
                 </tr>
             }
         </tbody>
@@ -39,5 +76,24 @@
 </div>
 
 @section Scripts {
-<script>$(function () { $('#dataTable').DataTable({ responsive: true, pageLength: 25, dom: 'rtip' }); });</script>
+<script>
+    var isSuperAdmin = @(isSuperAdmin ? "true" : "false");
+    var dt;
+    var schoolCol = isSuperAdmin ? 7 : -1;
+    $(function () {
+        dt = $('#dataTable').DataTable({ responsive: true, pageLength: 25, dom: 'rtip' });
+        $('#searchInput').on('keyup', function () { dt.search(this.value).draw(); });
+    });
+    function applyFilters() {
+        dt.search($('#searchInput').val());
+        dt.column(6).search($('#filterStatus').val());
+        if (isSuperAdmin) { dt.column(schoolCol).search($('#filterSchool').val()); }
+        dt.draw();
+    }
+    function resetFilters() {
+        $('#searchInput, #filterBranch, #filterStatus').val('');
+        if (isSuperAdmin) { $('#filterSchool').val(''); }
+        dt.search('').columns().search('').draw();
+    }
+</script>
 }

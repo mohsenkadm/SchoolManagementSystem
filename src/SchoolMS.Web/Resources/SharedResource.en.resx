@@ -478,4 +478,99 @@
   <data name="SelectTeacher" xml:space="preserve"><value>Select Teacher</value></data>
   <data name="SelectSubject" xml:space="preserve"><value>Select Subject</value></data>
   <data name="SelectClassRoom" xml:space="preserve"><value>Select Class Room</value></data>
+
+  <!-- Layout - Missing Keys -->
+  <data name="ExamTypes" xml:space="preserve"><value>Exam Types</value></data>
+  <data name="PaymentsReport" xml:space="preserve"><value>Payments Report</value></data>
+  <data name="StudentFeeReport" xml:space="preserve"><value>Student Fee Report</value></data>
+  <data name="AttendanceReport" xml:space="preserve"><value>Attendance Report</value></data>
+  <data name="Courses" xml:space="preserve"><value>Courses</value></data>
+  <data name="LiveStreams" xml:space="preserve"><value>Live Streams</value></data>
+  <data name="OnlineSubscriptionPlans" xml:space="preserve"><value>Subscription Plans</value></data>
+  <data name="StudentSubscriptions" xml:space="preserve"><value>Student Subscriptions</value></data>
+  <data name="PromoCodes" xml:space="preserve"><value>Promo Codes</value></data>
+  <data name="SystemAnalytics" xml:space="preserve"><value>System Analytics</value></data>
+
+  <!-- HR Module -->
+  <data name="HrModule" xml:space="preserve"><value>HR Module</value></data>
+  <data name="HrDashboard" xml:space="preserve"><value>HR Dashboard</value></data>
+  <data name="Employees" xml:space="preserve"><value>Employees</value></data>
+  <data name="Departments" xml:space="preserve"><value>Departments</value></data>
+  <data name="JobTitles" xml:space="preserve"><value>Job Titles</value></data>
+  <data name="JobGrades" xml:space="preserve"><value>Job Grades</value></data>
+  <data name="Contracts" xml:space="preserve"><value>Contracts</value></data>
+  <data name="WorkShifts" xml:space="preserve"><value>Work Shifts</value></data>
+  <data name="HrAttendance" xml:space="preserve"><value>HR Attendance</value></data>
+  <data name="Fingerprint" xml:space="preserve"><value>Fingerprint</value></data>
+  <data name="HrLeaves" xml:space="preserve"><value>HR Leaves</value></data>
+  <data name="Overtime" xml:space="preserve"><value>Overtime</value></data>
+  <data name="HrSalary" xml:space="preserve"><value>HR Salary</value></data>
+  <data name="HrPromotions" xml:space="preserve"><value>Promotions</value></data>
+  <data name="Performance" xml:space="preserve"><value>Performance</value></data>
+  <data name="Training" xml:space="preserve"><value>Training</value></data>
+  <data name="Disciplinary" xml:space="preserve"><value>Disciplinary</value></data>
+  <data name="EndOfService" xml:space="preserve"><value>End of Service</value></data>
+  <data name="HrSettings" xml:space="preserve"><value>HR Settings</value></data>
+
+  <!-- HR Views & Filters -->
+  <data name="AllStatuses" xml:space="preserve"><value>All Statuses</value></data>
+  <data name="AllTypes" xml:space="preserve"><value>All Types</value></data>
+  <data name="AddEmployee" xml:space="preserve"><value>Add Employee</value></data>
+  <data name="EmployeeNo" xml:space="preserve"><value>Employee No</value></data>
+  <data name="OnProbation" xml:space="preserve"><value>On Probation</value></data>
+  <data name="OnLeave" xml:space="preserve"><value>On Leave</value></data>
+  <data name="Completed" xml:space="preserve"><value>Completed</value></data>
+  <data name="Employee" xml:space="preserve"><value>Employee</value></data>
+  <data name="Department" xml:space="preserve"><value>Department</value></data>
+  <data name="JobTitle" xml:space="preserve"><value>Job Title</value></data>
+  <data name="Hours" xml:space="preserve"><value>Hours</value></data>
+  <data name="HrTraining" xml:space="preserve"><value>Training Programs</value></data>
+  <data name="HrDisciplinary" xml:space="preserve"><value>Disciplinary Actions</value></data>
+  <data name="HrEndOfService" xml:space="preserve"><value>End of Service</value></data>
+  <data name="TotalSettlement" xml:space="preserve"><value>Total Settlement</value></data>
+  <data name="LeaveTypes" xml:space="preserve"><value>Leave Types</value></data>
+  <data name="Holidays" xml:space="preserve"><value>Holidays</value></data>
+  <data name="Days" xml:space="preserve"><value>Days</value></data>
+  <data name="Effective" xml:space="preserve"><value>Effective</value></data>
+  <data name="SalaryIncrease" xml:space="preserve"><value>Salary Increase</value></data>
+  <data name="EffectiveDate" xml:space="preserve"><value>Effective Date</value></data>
+  <data name="Settlement" xml:space="preserve"><value>Settlement</value></data>
+  <data name="Settled" xml:space="preserve"><value>Settled</value></data>
+  <data name="ServiceYears" xml:space="preserve"><value>Service Years</value></data>
+  <data name="ApproveManager" xml:space="preserve"><value>Approve (Manager)</value></data>
+  <data name="ApproveHR" xml:space="preserve"><value>Approve (HR)</value></data>
+  <data name="Mandatory" xml:space="preserve"><value>Mandatory</value></data>
+  <data name="Provider" xml:space="preserve"><value>Provider</value></data>
+  <data name="Participants" xml:space="preserve"><value>Participants</value></data>
+  <data name="ViolationTypes" xml:space="preserve"><value>Violation Types</value></data>
+  <data name="Violation" xml:space="preserve"><value>Violation</value></data>
+  <data name="IncidentDate" xml:space="preserve"><value>Incident Date</value></data>
+  <data name="ActionType" xml:space="preserve"><value>Action Type</value></data>
+  <data name="Penalty" xml:space="preserve"><value>Penalty</value></data>
+  <data name="Issued" xml:space="preserve"><value>Issued</value></data>
+  <data name="Resolved" xml:space="preserve"><value>Resolved</value></data>
+  <data name="Appealed" xml:space="preserve"><value>Appealed</value></data>
+  <data name="Expired" xml:space="preserve"><value>Expired</value></data>
+  <data name="Records" xml:space="preserve"><value>Records</value></data>
+  <data name="Requests" xml:space="preserve"><value>Requests</value></data>
+  <data name="Planned" xml:space="preserve"><value>Planned</value></data>
+  <data name="CheckOut" xml:space="preserve"><value>Check Out</value></data>
+  <data name="WorkedHours" xml:space="preserve"><value>Worked Hours</value></data>
+  <data name="LateMinutes" xml:space="preserve"><value>Late Minutes</value></data>
+  <data name="ProcessAttendance" xml:space="preserve"><value>Process Attendance</value></data>
+  <data name="Devices" xml:space="preserve"><value>Devices</value></data>
+  <data name="DateTime" xml:space="preserve"><value>Date/Time</value></data>
+  <data name="Source" xml:space="preserve"><value>Source</value></data>
+  <data name="ContractNo" xml:space="preserve"><value>Contract No</value></data>
+  <data name="PendingRenewal" xml:space="preserve"><value>Pending Renewal</value></data>
+  <data name="MinSalary" xml:space="preserve"><value>Min Salary</value></data>
+  <data name="MaxSalary" xml:space="preserve"><value>Max Salary</value></data>
+  <data name="LateGrace" xml:space="preserve"><value>Late Grace</value></data>
+  <data name="WorkingHours" xml:space="preserve"><value>Working Hours</value></data>
+  <data name="Parent" xml:space="preserve"><value>Parent</value></data>
+  <data name="TotalEmployees" xml:space="preserve"><value>Total Employees</value></data>
+  <data name="StorageUsage" xml:space="preserve"><value>Storage Usage</value></data>
+  <data name="SubscriptionHistory" xml:space="preserve"><value>Subscription History</value></data>
+  <data name="ViewDetails" xml:space="preserve"><value>View Details</value></data>
+  <data name="SchoolUsage" xml:space="preserve"><value>School Usage</value></data>
 </root>

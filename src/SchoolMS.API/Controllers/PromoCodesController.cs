@@ -21,6 +21,19 @@ public class PromoCodesController : ControllerBase
     public async Task<ActionResult<List<PromoCodeDto>>> GetAll(int schoolId)
         => Ok(await _service.GetBySchoolIdAsync(schoolId));
 
+    // جلب أكواد الخصم النشطة للطالب فقط
+    [HttpGet("student")]
+    public async Task<ActionResult<List<PromoCodeDto>>> GetForStudent(int schoolId)
+    {
+        var userType = User.FindFirst("UserType")?.Value;
+        if (userType != "Student") return Forbid();
+        var items = await _service.GetBySchoolIdAsync(schoolId);
+        var activeItems = items.Where(p => p.IsActive
+            && (!p.ExpiryDate.HasValue || p.ExpiryDate.Value >= DateTime.UtcNow)
+            && (p.IsUnlimited || p.CurrentUsage < p.MaxUsage)).ToList();
+        return Ok(activeItems);
+    }
+
     // جلب كود خصم بالنص
     [HttpGet("code/{code}")]
     public async Task<ActionResult<PromoCodeDto>> GetByCode(int schoolId, string code)
@@ -28,5 +41,5 @@ public class PromoCodesController : ControllerBase
         var item = await _service.GetByCodeAsync(code);
         return item == null ? NotFound() : Ok(item);
     }
-                            
+
 }

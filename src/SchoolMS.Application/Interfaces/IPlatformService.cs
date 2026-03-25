@@ -25,6 +25,7 @@ public interface IPlatformService
 
     // Storage request management
     Task<List<StorageRequestDto>> GetPendingStorageRequestsAsync();
+    Task<List<StorageRequestDto>> GetAllStorageRequestsAsync();
     Task ApproveStorageRequestAsync(int requestId, string approvedBy);
     Task RejectStorageRequestAsync(int requestId, string rejectedBy);
 }

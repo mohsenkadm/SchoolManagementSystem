@@ -1,5 +1,11 @@
-@model List<SchoolMS.Application.DTOs.HrEmployeeContractDto>
-@{ ViewData["Title"] = Localizer["Contracts"].Value; }
+@using SchoolMS.Application.DTOs
+@model List<HrEmployeeContractDto>
+@{
+    ViewData["Title"] = Localizer["Contracts"].Value;
+    var isSuperAdmin = (bool)(ViewBag.IsSuperAdmin ?? false);
+    var schools = ViewBag.Schools as List<SchoolDto> ?? new();
+    var branches = ViewBag.Branches as List<BranchDto> ?? new();
+}
 @Html.AntiForgeryToken()
 
 <div class="page-header" data-aos="fade-down">
@@ -14,9 +20,33 @@
     <div class="stat-item stagger-item"><div class="stat-icon bg-danger-soft"><i class="fas fa-times"></i></div><div class="stat-info"><h6>@Localizer["Expired"]</h6><div class="stat-value">@Model.Count(c => c.Status == ContractStatus.Expired)</div></div></div>
 </div>
 
+<div class="filter-panel" data-aos="fade-up">
+    <div class="filter-title"><i class="fas fa-filter"></i> @Localizer["Filter"]</div>
+    <div class="row g-2 align-items-end">
+        @if (isSuperAdmin)
+        {
+            <div class="col-md-2">
+                <select id="filterSchool" class="form-select select2">
+                    <option value="">@Localizer["AllSchools"]</option>
+                    @foreach (var s in schools) { <option value="@s.Name">@s.Name</option> }
+                </select>
+            </div>
+        }
+        <div class="col-md-2">
+            <select id="filterBranch" class="form-select">
+                <option value="">@Localizer["AllBranches"]</option>
+                @foreach (var b in branches) { <option value="@b.Name">@b.Name</option> }
+            </select>
+        </div>
+        <div class="col-md-3"><input type="text" id="searchInput" class="form-control" placeholder="🔍 @Localizer["Search"]..." /></div>
+        <div class="col-md-2"><button class="btn btn-filter w-100" onclick="applyFilters()"><i class="fas fa-search"></i> @Localizer["Search"]</button></div>
+        <div class="col-md-2"><button class="btn btn-reset w-100" onclick="resetFilters()"><i class="fas fa-redo"></i> @Localizer["Reset"]</button></div>
+    </div>
+</div>
+
 <div class="table-card hover-lift" data-aos="fade-up">
     <table id="dataTable" class="table table-hover" style="width:100%">
-        <thead><tr><th>#</th><th>@Localizer["Employee"]</th><th>@Localizer["ContractNo"]</th><th>@Localizer["Type"]</th><th>@Localizer["StartDate"]</th><th>@Localizer["EndDate"]</th><th>@Localizer["Salary"]</th><th>@Localizer["Status"]</th><th>@Localizer["Actions"]</th></tr></thead>
+        <thead><tr><th>#</th><th>@Localizer["Employee"]</th><th>@Localizer["ContractNo"]</th><th>@Localizer["Type"]</th><th>@Localizer["StartDate"]</th><th>@Localizer["EndDate"]</th><th>@Localizer["Salary"]</th><th>@Localizer["Status"]</th>@if (isSuperAdmin) { <th>@Localizer["School"]</th> }<th>@Localizer["Actions"]</th></tr></thead>
         <tbody>
             @for (int i = 0; i < Model.Count; i++)
             {
@@ -26,7 +56,8 @@
                     <td>@(i + 1)</td><td>@c.EmployeeName</td><td>@c.ContractNumber</td><td><span class="badge bg-info">@c.ContractType</span></td>
                     <td>@c.StartDate.ToString("dd/MM/yyyy")</td><td>@c.EndDate?.ToString("dd/MM/yyyy")</td><td>@c.AgreedSalary.ToString("N0")</td>
                     <td><span class="badge @cls">@c.Status</span></td>
-                    <td><div class="d-flex gap-1"><a href="@Url.Action("Edit", new { id = c.Id })" class="btn btn-sm btn-primary"><i class="fas fa-edit"></i></a><button class="btn btn-sm btn-danger" onclick="del(@c.Id)"><i class="fas fa-trash"></i></button></div></td>
+                    @if (isSuperAdmin) { <td>@c.SchoolName</td> }
+                    <td><div class="action-group"><a href="@Url.Action("Edit", new { id = c.Id })" class="btn-act btn-act-edit"><i class="fas fa-edit"></i></a><button class="btn-act btn-act-delete" onclick="del(@c.Id)"><i class="fas fa-trash"></i></button></div></td>
                 </tr>
             }
         </tbody>
@@ -35,7 +66,22 @@
 
 @section Scripts {
 <script>
-    $(function () { $('#dataTable').DataTable({ responsive: true, pageLength: 25, dom: 'rtip' }); });
+    var isSuperAdmin = @(isSuperAdmin ? "true" : "false");
+    var dt;
+    $(function () {
+        dt = $('#dataTable').DataTable({ responsive: true, pageLength: 25, dom: 'rtip' });
+        $('#searchInput').on('keyup', function () { dt.search(this.value).draw(); });
+    });
+    function applyFilters() {
+        dt.search($('#searchInput').val());
+        if (isSuperAdmin) { dt.column(8).search($('#filterSchool').val()); }
+        dt.draw();
+    }
+    function resetFilters() {
+        $('#searchInput, #filterBranch').val('');
+        if (isSuperAdmin) { $('#filterSchool').val(''); }
+        dt.search('').columns().search('').draw();
+    }
     function del(id) { confirmDelete('@Url.Action("Delete")', id, function () { location.reload(); }); }
 </script>
 }

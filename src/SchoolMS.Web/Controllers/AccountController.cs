@@ -25,13 +25,35 @@ public class AccountController : Controller
     }
 
     [HttpGet]
-    public IActionResult Login(string? slug, string? school, string? returnUrl = null)
+    public async Task<IActionResult> Login(string? slug, string? school, string? returnUrl = null)
     {
         if (User.Identity?.IsAuthenticated == true)
             return RedirectToAction("Index", "Home");
 
         ViewData["ReturnUrl"] = returnUrl;
-        ViewData["SchoolSlug"] = slug ?? school;
+
+        var schoolSlug = slug ?? school;
+        ViewData["SchoolSlug"] = schoolSlug;
+
+        if (!string.IsNullOrEmpty(schoolSlug))
+        {
+            var schoolEntity = await _context.Schools.IgnoreQueryFilters()
+                .FirstOrDefaultAsync(s => s.Slug == schoolSlug && !s.IsDeleted);
+            if (schoolEntity != null && schoolEntity.IsActive)
+            {
+                ViewData["SchoolName"] = schoolEntity.Name;
+                ViewData["SchoolLogo"] = schoolEntity.Logo;
+            }
+            else if (schoolEntity == null)
+            {
+                ViewData["SchoolError"] = "School not found.";
+            }
+            else
+            {
+                ViewData["SchoolError"] = "School is deactivated. Contact the administrator.";
+            }
+        }
+
         return View();
     }
 
@@ -40,16 +62,26 @@ public class AccountController : Controller
     public async Task<IActionResult> Login(LoginDto model, string? returnUrl = null)
     {
         ViewData["ReturnUrl"] = returnUrl;
+        ViewData["SchoolSlug"] = model.SchoolSlug;
 
-        if (!ModelState.IsValid)
-            return View(model);
-
-        // Find school by slug if provided
+        // Find school by slug if provided (populate view data for school branding)
         School? school = null;
         if (!string.IsNullOrEmpty(model.SchoolSlug))
         {
             school = await _context.Schools.IgnoreQueryFilters()
                 .FirstOrDefaultAsync(s => s.Slug == model.SchoolSlug && !s.IsDeleted);
+            if (school != null)
+            {
+                ViewData["SchoolName"] = school.Name;
+                ViewData["SchoolLogo"] = school.Logo;
+            }
+        }
+
+        if (!ModelState.IsValid)
+            return View(model);
+
+        if (!string.IsNullOrEmpty(model.SchoolSlug))
+        {
             if (school == null)
             {
                 ModelState.AddModelError("", "School not found.");
@@ -91,7 +123,7 @@ public class AccountController : Controller
         {
             // Remove old custom claims to avoid duplicates
             var existingClaims = await _userManager.GetClaimsAsync(user);
-            var oldCustom = existingClaims.Where(c => c.Type is "SchoolId" or "FullName" or "UserType" or "BranchId").ToList();
+            var oldCustom = existingClaims.Where(c => c.Type is "SchoolId" or "FullName" or "UserType" or "BranchId" or "SchoolSlug").ToList();
             if (oldCustom.Count > 0)
                 await _userManager.RemoveClaimsAsync(user, oldCustom);
 
@@ -116,6 +148,9 @@ public class AccountController : Controller
                 claims.Add(new Claim("SchoolId", user.SchoolId.ToString()));
             }
 
+            if (!string.IsNullOrEmpty(model.SchoolSlug))
+                claims.Add(new Claim("SchoolSlug", model.SchoolSlug));
+
             if (user.BranchId.HasValue)
                 claims.Add(new Claim("BranchId", user.BranchId.Value.ToString()));
 
@@ -136,7 +171,12 @@ public class AccountController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Logout()
     {
+        var schoolSlug = User.FindFirst("SchoolSlug")?.Value;
         await _signInManager.SignOutAsync();
+
+        if (!string.IsNullOrEmpty(schoolSlug))
+            return Redirect($"/school/{schoolSlug}");
+
         return RedirectToAction("Login");
     }
 

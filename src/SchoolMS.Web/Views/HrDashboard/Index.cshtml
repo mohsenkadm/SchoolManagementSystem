@@ -1,55 +1,122 @@
 @model SchoolMS.Application.DTOs.HrDashboardDto
 @{ ViewData["Title"] = Localizer["HrDashboard"].Value; }
 
-<div class="page-header" data-aos="fade-down">
-    <div><h4 class="page-title"><i class="fas fa-tachometer-alt text-primary"></i> @Localizer["HrDashboard"]</h4></div>
+<!-- HR Hero Banner -->
+<div class="hr-hero" data-aos="fade-down">
+    <div class="d-flex align-items-center justify-content-between flex-wrap">
+        <div>
+            <h4 class="mb-1"><i class="fas fa-tachometer-alt me-2"></i>@Localizer["HrDashboard"]</h4>
+            <p><i class="far fa-calendar-alt me-1"></i> @DateTime.Now.ToString("dddd, dd MMMM yyyy")</p>
+        </div>
+        <div class="d-flex gap-2 mt-2 mt-md-0">
+            <span class="quick-action-btn" style="font-size:0.85rem;padding:8px 16px;">
+                <i class="fas fa-users"></i>
+                <span>@Model.TotalActiveEmployees @Localizer["ActiveEmployees"]</span>
+            </span>
+        </div>
+    </div>
 </div>
 
-<div class="row g-3 mb-4" data-aos="fade-up">
-    <div class="col-md-3"><div class="stat-item stagger-item"><div class="stat-icon bg-primary-soft"><i class="fas fa-users"></i></div><div class="stat-info"><h6>@Localizer["ActiveEmployees"]</h6><div class="stat-value">@Model.TotalActiveEmployees</div></div></div></div>
-    <div class="col-md-3"><div class="stat-item stagger-item"><div class="stat-icon bg-danger-soft"><i class="fas fa-user-times"></i></div><div class="stat-info"><h6>@Localizer["AbsentToday"]</h6><div class="stat-value">@Model.AbsentToday</div></div></div></div>
-    <div class="col-md-3"><div class="stat-item stagger-item"><div class="stat-icon bg-warning-soft"><i class="fas fa-clock"></i></div><div class="stat-info"><h6>@Localizer["LateToday"]</h6><div class="stat-value">@Model.LateToday</div></div></div></div>
-    <div class="col-md-3"><div class="stat-item stagger-item"><div class="stat-icon bg-success-soft"><i class="fas fa-calendar-minus"></i></div><div class="stat-info"><h6>@Localizer["OnLeaveToday"]</h6><div class="stat-value">@Model.OnLeaveToday</div></div></div></div>
+<!-- Statistics Cards Row 1 -->
+<div class="stats-grid mb-4">
+    <div class="hr-stat-card hr-stat-employees" data-aos="fade-up" data-aos-delay="50">
+        <i class="fas fa-users hr-stat-icon"></i>
+        <div class="hr-stat-label">@Localizer["ActiveEmployees"]</div>
+        <div class="hr-stat-value">@Model.TotalActiveEmployees</div>
+    </div>
+    <div class="hr-stat-card hr-stat-absent" data-aos="fade-up" data-aos-delay="100">
+        <i class="fas fa-user-times hr-stat-icon"></i>
+        <div class="hr-stat-label">@Localizer["AbsentToday"]</div>
+        <div class="hr-stat-value">@Model.AbsentToday</div>
+    </div>
+    <div class="hr-stat-card hr-stat-late" data-aos="fade-up" data-aos-delay="150">
+        <i class="fas fa-clock hr-stat-icon"></i>
+        <div class="hr-stat-label">@Localizer["LateToday"]</div>
+        <div class="hr-stat-value">@Model.LateToday</div>
+    </div>
+    <div class="hr-stat-card hr-stat-leave" data-aos="fade-up" data-aos-delay="200">
+        <i class="fas fa-calendar-minus hr-stat-icon"></i>
+        <div class="hr-stat-label">@Localizer["OnLeaveToday"]</div>
+        <div class="hr-stat-value">@Model.OnLeaveToday</div>
+    </div>
 </div>
 
-<div class="row g-3 mb-4" data-aos="fade-up">
-    <div class="col-md-3"><div class="stat-item stagger-item"><div class="stat-icon bg-info-soft"><i class="fas fa-percentage"></i></div><div class="stat-info"><h6>@Localizer["AttendanceRate"]</h6><div class="stat-value">@Model.AverageAttendanceRate%</div></div></div></div>
-    <div class="col-md-3"><div class="stat-item stagger-item"><div class="stat-icon bg-success-soft"><i class="fas fa-money-bill-wave"></i></div><div class="stat-info"><h6>@Localizer["MonthlyPayroll"]</h6><div class="stat-value">@Model.TotalPayrollThisMonth.ToString("N0")</div></div></div></div>
-    <div class="col-md-3"><div class="stat-item stagger-item"><div class="stat-icon bg-warning-soft"><i class="fas fa-hourglass-half"></i></div><div class="stat-info"><h6>@Localizer["PendingRequests"]</h6><div class="stat-value">@Model.PendingRequests</div></div></div></div>
-    <div class="col-md-3"><div class="stat-item stagger-item"><div class="stat-icon bg-danger-soft"><i class="fas fa-exclamation-triangle"></i></div><div class="stat-info"><h6>@Localizer["ExpiringContracts"]</h6><div class="stat-value">@Model.ExpiringContracts</div></div></div></div>
+<!-- Statistics Cards Row 2 -->
+<div class="stats-grid mb-4">
+    <div class="hr-stat-card hr-stat-attendance" data-aos="fade-up" data-aos-delay="50">
+        <i class="fas fa-percentage hr-stat-icon"></i>
+        <div class="hr-stat-label">@Localizer["AttendanceRate"]</div>
+        <div class="hr-stat-value">@Model.AverageAttendanceRate%</div>
+    </div>
+    <div class="hr-stat-card hr-stat-payroll" data-aos="fade-up" data-aos-delay="100">
+        <i class="fas fa-money-bill-wave hr-stat-icon"></i>
+        <div class="hr-stat-label">@Localizer["MonthlyPayroll"]</div>
+        <div class="hr-stat-value">@Model.TotalPayrollThisMonth.ToString("N0")</div>
+    </div>
+    <div class="hr-stat-card hr-stat-pending" data-aos="fade-up" data-aos-delay="150">
+        <i class="fas fa-hourglass-half hr-stat-icon"></i>
+        <div class="hr-stat-label">@Localizer["PendingRequests"]</div>
+        <div class="hr-stat-value">@Model.PendingRequests</div>
+    </div>
+    <div class="hr-stat-card hr-stat-contracts" data-aos="fade-up" data-aos-delay="200">
+        <i class="fas fa-exclamation-triangle hr-stat-icon"></i>
+        <div class="hr-stat-label">@Localizer["ExpiringContracts"]</div>
+        <div class="hr-stat-value">@Model.ExpiringContracts</div>
+    </div>
 </div>
 
-<div class="row g-3" data-aos="fade-up">
-    <div class="col-md-4">
-        <div class="dashboard-card card p-3">
-            <h6><i class="fas fa-sitemap me-1 text-primary"></i> @Localizer["ByDepartment"]</h6>
+<!-- Detail Cards Section -->
+<div class="hr-section-title" data-aos="fade-up"><i class="fas fa-chart-pie text-primary"></i> @Localizer["HrDashboard"] — Details</div>
+
+<div class="row g-4" data-aos="fade-up">
+    <div class="col-lg-4">
+        <div class="dashboard-card card p-4">
+            <h6><i class="fas fa-sitemap me-2 text-primary"></i>@Localizer["ByDepartment"]</h6>
             <ul class="list-group list-group-flush">
                 @foreach (var d in Model.EmployeesByDepartment)
                 {
-                    <li class="list-group-item d-flex justify-content-between"><span>@d.Key</span><span class="badge bg-primary rounded-pill">@d.Value</span></li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span><i class="fas fa-building me-2" style="color:var(--primary-400);font-size:0.75rem;"></i>@d.Key</span>
+                        <span class="badge rounded-pill" style="background:linear-gradient(135deg, var(--primary-500), var(--primary-700));min-width:36px;">@d.Value</span>
+                    </li>
                 }
             </ul>
         </div>
     </div>
-    <div class="col-md-4">
-        <div class="dashboard-card card p-3">
-            <h6><i class="fas fa-briefcase me-1 text-info"></i> @Localizer["ByType"]</h6>
+    <div class="col-lg-4">
+        <div class="dashboard-card card p-4">
+            <h6><i class="fas fa-briefcase me-2 text-info"></i>@Localizer["ByType"]</h6>
             <ul class="list-group list-group-flush">
                 @foreach (var t in Model.EmployeesByType)
                 {
-                    <li class="list-group-item d-flex justify-content-between"><span>@t.Key</span><span class="badge bg-info rounded-pill">@t.Value</span></li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span><i class="fas fa-id-badge me-2" style="color:var(--info-500);font-size:0.75rem;"></i>@t.Key</span>
+                        <span class="badge rounded-pill" style="background:linear-gradient(135deg, var(--info-500), #0891b2);min-width:36px;">@t.Value</span>
+                    </li>
                 }
             </ul>
         </div>
     </div>
-    <div class="col-md-4">
-        <div class="dashboard-card card p-3">
-            <h6><i class="fas fa-tasks me-1 text-warning"></i> @Localizer["PendingItems"]</h6>
+    <div class="col-lg-4">
+        <div class="dashboard-card card p-4">
+            <h6><i class="fas fa-tasks me-2 text-warning"></i>@Localizer["PendingItems"]</h6>
             <ul class="list-group list-group-flush">
-                <li class="list-group-item d-flex justify-content-between"><span>@Localizer["HrLeaves"]</span><span class="badge bg-warning rounded-pill">@Model.PendingLeaves</span></li>
-                <li class="list-group-item d-flex justify-content-between"><span>@Localizer["Advances"]</span><span class="badge bg-warning rounded-pill">@Model.PendingAdvances</span></li>
-                <li class="list-group-item d-flex justify-content-between"><span>@Localizer["Overtime"]</span><span class="badge bg-warning rounded-pill">@Model.PendingOvertime</span></li>
-                <li class="list-group-item d-flex justify-content-between"><span>@Localizer["ExpiringDocuments"]</span><span class="badge bg-danger rounded-pill">@Model.ExpiringDocuments</span></li>
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <span><i class="fas fa-plane-departure me-2" style="color:var(--warning-500);font-size:0.75rem;"></i>@Localizer["HrLeaves"]</span>
+                    <span class="badge rounded-pill" style="background:linear-gradient(135deg, var(--warning-500), #d97706);min-width:36px;">@Model.PendingLeaves</span>
+                </li>
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <span><i class="fas fa-hand-holding-usd me-2" style="color:var(--warning-500);font-size:0.75rem;"></i>@Localizer["Advances"]</span>
+                    <span class="badge rounded-pill" style="background:linear-gradient(135deg, var(--warning-500), #d97706);min-width:36px;">@Model.PendingAdvances</span>
+                </li>
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <span><i class="fas fa-business-time me-2" style="color:var(--warning-500);font-size:0.75rem;"></i>@Localizer["Overtime"]</span>
+                    <span class="badge rounded-pill" style="background:linear-gradient(135deg, var(--warning-500), #d97706);min-width:36px;">@Model.PendingOvertime</span>
+                </li>
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <span><i class="fas fa-file-exclamation me-2" style="color:var(--danger-500);font-size:0.75rem;"></i>@Localizer["ExpiringDocuments"]</span>
+                    <span class="badge rounded-pill" style="background:linear-gradient(135deg, var(--danger-500), #dc2626);min-width:36px;">@Model.ExpiringDocuments</span>
+                </li>
             </ul>
         </div>
     </div>

@@ -13,12 +13,18 @@ public class StudentSubscriptionService : IStudentSubscriptionService
     private readonly IRepository<StudentSubscription> _repository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
+    private readonly ITeacherEarningService _earningService;
 
-    public StudentSubscriptionService(IRepository<StudentSubscription> repository, IUnitOfWork unitOfWork, IMapper mapper)
+    public StudentSubscriptionService(
+        IRepository<StudentSubscription> repository,
+        IUnitOfWork unitOfWork,
+        IMapper mapper,
+        ITeacherEarningService earningService)
     {
         _repository = repository;
         _unitOfWork = unitOfWork;
         _mapper = mapper;
+        _earningService = earningService;
     }
 
     public async Task<List<StudentSubscriptionDto>> GetAllAsync()
@@ -106,6 +112,10 @@ public class StudentSubscriptionService : IStudentSubscriptionService
         entity.Status = status;
         _repository.Update(entity);
         await _unitOfWork.SaveChangesAsync();
+
+        // تسجيل أرباح المدرسين تلقائياً عند الموافقة
+        if (status == SubscriptionStatus.Approved)
+            await _earningService.RecordEarningForSubscriptionAsync(id);
     }
 
     public async Task MarkAsPaidAsync(int id)
@@ -118,6 +128,9 @@ public class StudentSubscriptionService : IStudentSubscriptionService
         entity.Status = SubscriptionStatus.Approved;
         _repository.Update(entity);
         await _unitOfWork.SaveChangesAsync();
+
+        // تسجيل أرباح المدرسين تلقائياً عند تأكيد الدفع
+        await _earningService.RecordEarningForSubscriptionAsync(id);
     }
 
     public async Task<byte[]> ExportToExcelAsync()

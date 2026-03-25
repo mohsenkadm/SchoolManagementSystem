@@ -9,6 +9,7 @@ public class School : BaseEntity
     public bool IsActive { get; set; }
     public DateTime? ExpiryDate { get; set; }
     public bool OnlinePlatformEnabled { get; set; }
+    public decimal DefaultTeacherCommissionRate { get; set; }
     public bool IsHrModuleEnabled { get; set; }
 
     // HR Settings

@@ -27,6 +27,8 @@ BEGIN TRY
         -- Feature Modules
         ('Parents'),('Events'),('Announcements'),('Behavior'),('Health'),('Complaints'),
         ('Visitors'),('Library'),('Transport'),('Assets'),('AuditLog'),('Reports'),
+        -- New Modules
+        ('TeacherEarnings'),('StorageRequests'),('AcademicYears'),('StudentSubscriptions'),('OnlineSubscriptionPlans'),
         -- HR Module
         ('HrDashboard'),('HrDepartments'),('HrJobTitles'),('HrJobGrades'),('HrEmployees'),
         ('HrContracts'),('HrWorkShifts'),('HrFingerprint'),('HrAttendance'),('HrOvertime'),

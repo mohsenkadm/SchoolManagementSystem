@@ -24,6 +24,17 @@ public class HrContractService : IHrContractService
     public async Task<List<HrEmployeeContractDto>> GetAllAsync()
     {
         var items = await _repository.Query().Include(c => c.Employee).OrderByDescending(c => c.StartDate).ToListAsync();
+        return MapContracts(items);
+    }
+
+    public async Task<List<HrEmployeeContractDto>> GetBySchoolIdAsync(int schoolId)
+    {
+        var items = await _repository.Query().Where(c => c.SchoolId == schoolId).Include(c => c.Employee).OrderByDescending(c => c.StartDate).ToListAsync();
+        return MapContracts(items);
+    }
+
+    private static List<HrEmployeeContractDto> MapContracts(List<HrEmployeeContract> items)
+    {
         return items.Select(c => new HrEmployeeContractDto
         {
             Id = c.Id, EmployeeId = c.EmployeeId, EmployeeName = c.Employee?.FullName,

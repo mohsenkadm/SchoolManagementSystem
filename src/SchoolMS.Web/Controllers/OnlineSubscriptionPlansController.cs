@@ -6,7 +6,7 @@ using SchoolMS.Web.Filters;
 
 namespace SchoolMS.Web.Controllers;
 
-[Authorize]
+[Authorize, RequireOnlinePlatform]
 public class OnlineSubscriptionPlansController : Controller
 {
     private readonly IOnlineSubscriptionPlanService _service;

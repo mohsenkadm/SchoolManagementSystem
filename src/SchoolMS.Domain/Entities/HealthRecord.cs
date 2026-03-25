@@ -12,6 +12,8 @@ public class HealthRecord : BaseEntity
     public string? AttachmentUrl { get; set; }
     public DateTime? FollowUpDate { get; set; }
     public bool NotifyParent { get; set; }
+    public int? AcademicYearId { get; set; }
 
     public virtual Student Student { get; set; } = null!;
+    public virtual AcademicYear? AcademicYear { get; set; }
 }

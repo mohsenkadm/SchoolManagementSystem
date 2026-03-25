@@ -13,14 +13,16 @@ public class AttendanceController : Controller
     private readonly IBranchService _branchService;
     private readonly IPlatformService _platformService;
     private readonly IOneSignalNotificationService _pushService;
+    private readonly IAcademicYearService _academicYearService;
 
     public AttendanceController(IAttendanceService service, IBranchService branchService, IPlatformService platformService,
-        IOneSignalNotificationService pushService)
+        IOneSignalNotificationService pushService, IAcademicYearService academicYearService)
     {
         _service = service;
         _branchService = branchService;
         _platformService = platformService;
         _pushService = pushService;
+        _academicYearService = academicYearService;
     }
 
     private bool IsSuperAdmin => User.IsInRole("SuperAdmin");
@@ -105,6 +107,11 @@ public class AttendanceController : Controller
             : CurrentSchoolId.HasValue
                 ? await _branchService.GetBySchoolIdAsync(CurrentSchoolId.Value)
                 : new List<BranchDto>();
+        ViewBag.AcademicYears = IsSuperAdmin
+            ? await _academicYearService.GetAllAsync()
+            : CurrentSchoolId.HasValue
+                ? await _academicYearService.GetAllAsync(CurrentSchoolId.Value)
+                : new List<AcademicYearDto>();
         return View();
     }
 
@@ -120,14 +127,15 @@ public class AttendanceController : Controller
     public async Task<IActionResult> GetData([FromBody] DataTableRequest request) => Ok(await _service.GetDataTableAsync(request));
 
     [HttpGet]
-    public async Task<IActionResult> ExportExcel(DateTime? dateFrom, DateTime? dateTo, int? type, int? personType, int? branchId, int? schoolId, string? search)
+    public async Task<IActionResult> ExportExcel(DateTime? dateFrom, DateTime? dateTo, int? type, int? personType, int? branchId, int? schoolId, string? search, int? academicYearId)
     {
         var filter = new AttendanceFilterDto
         {
             DateFrom = dateFrom, DateTo = dateTo,
             Type = type.HasValue ? (Domain.Enums.AttendanceType)type.Value : null,
             PersonType = personType.HasValue ? (Domain.Enums.PersonType)personType.Value : null,
-            BranchId = branchId, SchoolId = schoolId, SearchValue = search
+            BranchId = branchId, SchoolId = schoolId, SearchValue = search,
+            AcademicYearId = academicYearId
         };
         var bytes = await _service.ExportToExcelAsync(filter);
         return File(bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "Attendance.xlsx");

@@ -26,4 +26,6 @@ public class CourseVideo : BaseEntity
     public virtual ICollection<VideoFavorite> Favorites { get; set; } = new List<VideoFavorite>();
     public virtual ICollection<VideoLike> Likes { get; set; } = new List<VideoLike>();
     public virtual ICollection<VideoSeen> Seens { get; set; } = new List<VideoSeen>();
+    public virtual ICollection<VideoQuizQuestion> QuizQuestions { get; set; } = new List<VideoQuizQuestion>();
+    public virtual ICollection<VideoNote> Notes { get; set; } = new List<VideoNote>();
 }

@@ -7,7 +7,7 @@ using SchoolMS.Web.Filters;
 
 namespace SchoolMS.Web.Controllers;
 
-[Authorize]
+[Authorize, RequireOnlinePlatform]
 public class LiveStreamsController : Controller
 {
     private readonly ILiveStreamService _service;
@@ -154,4 +154,8 @@ public class LiveStreamsController : Controller
 
     [HttpDelete("{id}"), HasPermission("Courses", "Delete")]
     public async Task<IActionResult> Delete(int id) { await _service.DeleteAsync(id); return Ok(); }
+
+    [HttpGet]
+    public async Task<IActionResult> GetComments(int liveStreamId)
+        => Json(await _service.GetCommentsByLiveStreamIdAsync(liveStreamId));
 }

@@ -1,5 +1,11 @@
-@model List<SchoolMS.Application.DTOs.HrEmployeeDto>
-@{ ViewData["Title"] = Localizer["Employees"].Value; }
+@using SchoolMS.Application.DTOs
+@model List<HrEmployeeDto>
+@{
+    ViewData["Title"] = Localizer["Employees"].Value;
+    var isSuperAdmin = (bool)(ViewBag.IsSuperAdmin ?? false);
+    var schools = ViewBag.Schools as List<SchoolDto> ?? new();
+    var branches = ViewBag.Branches as List<BranchDto> ?? new();
+}
 @Html.AntiForgeryToken()
 
 <div class="page-header" data-aos="fade-down">
@@ -17,26 +23,42 @@
 <div class="filter-panel" data-aos="fade-up">
     <div class="filter-title"><i class="fas fa-filter"></i> @Localizer["Filter"]</div>
     <div class="row g-2 align-items-end">
-        <div class="col-md-4"><input type="text" id="searchInput" class="form-control" placeholder="🔍 @Localizer["Search"]..." /></div>
-        <div class="col-md-3">
+        @if (isSuperAdmin)
+        {
+            <div class="col-md-2">
+                <select id="filterSchool" class="form-select select2">
+                    <option value="">@Localizer["AllSchools"]</option>
+                    @foreach (var s in schools) { <option value="@s.Name">@s.Name</option> }
+                </select>
+            </div>
+        }
+        <div class="col-md-2">
+            <select id="filterBranch" class="form-select">
+                <option value="">@Localizer["AllBranches"]</option>
+                @foreach (var b in branches) { <option value="@b.Name">@b.Name</option> }
+            </select>
+        </div>
+        <div class="col-md-2"><input type="text" id="searchInput" class="form-control" placeholder="🔍 @Localizer["Search"]..." /></div>
+        <div class="col-md-2">
             <select id="filterStatus" class="form-select">
                 <option value="">@Localizer["AllStatuses"]</option>
                 @foreach (var s in Enum.GetValues<HrEmployeeStatus>()) { <option value="@s">@s</option> }
             </select>
         </div>
-        <div class="col-md-3">
+        <div class="col-md-2">
             <select id="filterType" class="form-select">
                 <option value="">@Localizer["AllTypes"]</option>
                 @foreach (var t in Enum.GetValues<EmployeeType>()) { <option value="@t">@t</option> }
             </select>
         </div>
-        <div class="col-md-2"><button class="btn btn-filter w-100" onclick="applyFilters()"><i class="fas fa-search"></i> @Localizer["Filter"]</button></div>
+        <div class="col-md-1"><button class="btn btn-filter w-100" onclick="applyFilters()"><i class="fas fa-search"></i></button></div>
+        <div class="col-md-1"><button class="btn btn-reset w-100" onclick="resetFilters()"><i class="fas fa-redo"></i></button></div>
     </div>
 </div>
 
 <div class="table-card hover-lift" data-aos="fade-up">
     <table id="dataTable" class="table table-hover" style="width:100%">
-        <thead><tr><th>#</th><th>@Localizer["Photo"]</th><th>@Localizer["EmployeeNo"]</th><th>@Localizer["Name"]</th><th>@Localizer["Department"]</th><th>@Localizer["JobTitle"]</th><th>@Localizer["Type"]</th><th>@Localizer["Status"]</th><th>@Localizer["Actions"]</th></tr></thead>
+        <thead><tr><th>#</th><th>@Localizer["Photo"]</th><th>@Localizer["EmployeeNo"]</th><th>@Localizer["Name"]</th><th>@Localizer["Department"]</th><th>@Localizer["JobTitle"]</th><th>@Localizer["Type"]</th><th>@Localizer["Status"]</th>@if (isSuperAdmin) { <th>@Localizer["School"]</th> }<th>@Localizer["Actions"]</th></tr></thead>
         <tbody>
             @for (int i = 0; i < Model.Count; i++)
             {
@@ -54,11 +76,12 @@
                         }
                         <span class="badge @statusClass">@e.Status</span>
                     </td>
+                    @if (isSuperAdmin) { <td>@e.SchoolName</td> }
                     <td>
-                        <div class="d-flex gap-1">
-                            <a href="@Url.Action("Details", new { id = e.Id })" class="btn btn-sm btn-info"><i class="fas fa-eye"></i></a>
-                            <a href="@Url.Action("Edit", new { id = e.Id })" class="btn btn-sm btn-primary"><i class="fas fa-edit"></i></a>
-                            <button class="btn btn-sm btn-danger" onclick="del(@e.Id)"><i class="fas fa-trash"></i></button>
+                        <div class="action-group">
+                            <a href="@Url.Action("Details", new { id = e.Id })" class="btn-act btn-act-view"><i class="fas fa-eye"></i></a>
+                            <a href="@Url.Action("Edit", new { id = e.Id })" class="btn-act btn-act-edit"><i class="fas fa-edit"></i></a>
+                            <button class="btn-act btn-act-delete" onclick="del(@e.Id)"><i class="fas fa-trash"></i></button>
                         </div>
                     </td>
                 </tr>
@@ -69,12 +92,25 @@
 
 @section Scripts {
 <script>
+    var isSuperAdmin = @(isSuperAdmin ? "true" : "false");
     var dt;
+    var schoolCol = isSuperAdmin ? 8 : -1;
     $(function () {
         dt = $('#dataTable').DataTable({ responsive: true, pageLength: 25, dom: 'rtip' });
         $('#searchInput').on('keyup', function () { dt.search(this.value).draw(); });
     });
-    function applyFilters() { dt.search($('#searchInput').val()).draw(); dt.column(7).search($('#filterStatus').val()).draw(); dt.column(6).search($('#filterType').val()).draw(); }
+    function applyFilters() {
+        dt.search($('#searchInput').val());
+        dt.column(7).search($('#filterStatus').val());
+        dt.column(6).search($('#filterType').val());
+        if (isSuperAdmin) { dt.column(schoolCol).search($('#filterSchool').val()); }
+        dt.draw();
+    }
+    function resetFilters() {
+        $('#searchInput, #filterBranch, #filterStatus, #filterType').val('');
+        if (isSuperAdmin) { $('#filterSchool').val(''); }
+        dt.search('').columns().search('').draw();
+    }
     function del(id) { confirmDelete('@Url.Action("Delete")', id, function () { location.reload(); }); }
 </script>
 }

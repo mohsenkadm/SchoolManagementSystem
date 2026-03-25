@@ -14,18 +14,20 @@ public class ChatController : Controller
     private readonly IPlatformService _platformService;
     private readonly IClassRoomService _classRoomService;
     private readonly ISubjectService _subjectService;
+    private readonly ITeacherService _teacherService;
     private readonly IOneSignalNotificationService _pushService;
 
     public ChatController(IChatService service, IBranchService branchService,
         IPlatformService platformService, IClassRoomService classRoomService, ISubjectService subjectService,
-        IOneSignalNotificationService pushService)
+        ITeacherService teacherService, IOneSignalNotificationService pushService)
     {
         _service = service; _branchService = branchService;
         _platformService = platformService; _classRoomService = classRoomService; _subjectService = subjectService;
-        _pushService = pushService;
+        _teacherService = teacherService; _pushService = pushService;
     }
 
     private bool IsSuperAdmin => User.IsInRole("SuperAdmin");
+    private bool IsAdmin => User.IsInRole("SuperAdmin") || User.IsInRole("SchoolAdmin");
     private int? CurrentSchoolId { get { var c = User.FindFirst("SchoolId"); return c != null && int.TryParse(c.Value, out var id) ? id : null; } }
     private int? CurrentBranchId { get { var c = User.FindFirst("BranchId"); return c != null && int.TryParse(c.Value, out var id) ? id : null; } }
 
@@ -34,6 +36,7 @@ public class ChatController : Controller
     {
         ViewData["Title"] = "Chat";
         ViewBag.IsSuperAdmin = IsSuperAdmin;
+        ViewBag.IsAdmin = IsAdmin;
 
         if (IsSuperAdmin)
         {
@@ -41,6 +44,7 @@ public class ChatController : Controller
             ViewBag.Branches = new List<BranchDto>();
             ViewBag.Subjects = new List<SubjectDto>();
             ViewBag.ClassRooms = new List<ClassRoomDto>();
+            ViewBag.Teachers = new List<TeacherDto>();
         }
         else
         {
@@ -52,6 +56,9 @@ public class ChatController : Controller
                 ? await _subjectService.GetBySchoolIdAsync(CurrentSchoolId.Value)
                 : new List<SubjectDto>();
             ViewBag.ClassRooms = await _classRoomService.GetAllAsync();
+            ViewBag.Teachers = CurrentSchoolId.HasValue
+                ? await _teacherService.GetBySchoolIdAsync(CurrentSchoolId.Value)
+                : new List<TeacherDto>();
         }
 
         ViewBag.CurrentBranchId = CurrentBranchId;
@@ -114,5 +121,12 @@ public class ChatController : Controller
     {
         var subjects = await _subjectService.GetBySchoolIdAsync(schoolId);
         return Json(subjects.Select(s => new { s.Id, Name = s.SubjectName }));
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> GetTeachersBySchool(int schoolId)
+    {
+        var teachers = await _teacherService.GetBySchoolIdAsync(schoolId);
+        return Json(teachers.Select(t => new { t.Id, t.FullName }));
     }
 }

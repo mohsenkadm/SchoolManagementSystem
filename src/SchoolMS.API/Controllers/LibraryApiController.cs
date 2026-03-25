@@ -18,10 +18,20 @@ public class LibraryApiController : ControllerBase
 
     // ========== الكتب ==========
 
-    // جلب جميع كتب المدرسة
+    // جلب جميع كتب المدرسة مع فلاتر
     [HttpGet("books")]
-    public async Task<ActionResult<List<LibraryBookDto>>> GetAllBooks(int schoolId, [FromQuery] int? branchId = null)
-        => Ok(await _service.GetBooksBySchoolIdAsync(schoolId, branchId));
+    public async Task<ActionResult<List<LibraryBookDto>>> GetAllBooks(int schoolId,
+        [FromQuery] int? branchId = null, [FromQuery] string? search = null,
+        [FromQuery] string? category = null)
+    {
+        var items = await _service.GetBooksBySchoolIdAsync(schoolId, branchId);
+        if (!string.IsNullOrEmpty(search))
+            items = items.Where(b => b.Title.Contains(search, StringComparison.OrdinalIgnoreCase)
+                || (b.Author != null && b.Author.Contains(search, StringComparison.OrdinalIgnoreCase))).ToList();
+        if (!string.IsNullOrEmpty(category))
+            items = items.Where(b => b.Category != null && b.Category.Equals(category, StringComparison.OrdinalIgnoreCase)).ToList();
+        return Ok(items);
+    }
 
     // جلب كتاب بالمعرف
     [HttpGet("books/{id}")]
@@ -30,5 +40,5 @@ public class LibraryApiController : ControllerBase
         var item = await _service.GetBookByIdAsync(id);
         return item == null ? NotFound() : Ok(item);
     }
-                                 
+
 }

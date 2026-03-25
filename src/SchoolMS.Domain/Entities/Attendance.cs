@@ -12,6 +12,8 @@ public class Attendance : BaseEntity
     public AttendanceType Type { get; set; }
     public int BranchId { get; set; }
     public bool IsAutoAbsent { get; set; }
+    public int? AcademicYearId { get; set; }
 
     public virtual Branch Branch { get; set; } = null!;
+    public virtual AcademicYear? AcademicYear { get; set; }
 }

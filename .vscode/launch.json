@@ -1,0 +1,57 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        
+        {
+            "name": "Launch SchoolMS.Website",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build-website",
+            "program": "${workspaceFolder}/src/SchoolMS.Website/bin/Debug/net8.0/SchoolMS.Website.dll",
+            "args": [],
+            "cwd": "${workspaceFolder}/src/SchoolMS.Website",
+            "stopAtEntry": false,
+            "env": {
+                "ASPNETCORE_ENVIRONMENT": "Development"
+            },
+            "serverReadyAction": {
+                "action": "openExternally",
+                "pattern": "\\bNow listening on:\\s+(https?://\\S+)"
+            }
+        },
+        {
+            "name": "Launch SchoolMS.API",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build-api",
+            "program": "${workspaceFolder}/src/SchoolMS.API/bin/Debug/net8.0/SchoolMS.API.dll",
+            "args": [],
+            "cwd": "${workspaceFolder}/src/SchoolMS.API",
+            "stopAtEntry": false,
+            "env": {
+                "ASPNETCORE_ENVIRONMENT": "Development"
+            },
+            "serverReadyAction": {
+                "action": "openExternally",
+                "pattern": "\\bNow listening on:\\s+(https?://\\S+)"
+            }
+        },
+        {
+            "name": "Launch SchoolMS.Web",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build-web",
+            "program": "${workspaceFolder}/src/SchoolMS.Web/bin/Debug/net8.0/SchoolMS.Web.dll",
+            "args": [],
+            "cwd": "${workspaceFolder}/src/SchoolMS.Web",
+            "stopAtEntry": false,
+            "env": {
+                "ASPNETCORE_ENVIRONMENT": "Development"
+            },
+            "serverReadyAction": {
+                "action": "openExternally",
+                "pattern": "\\bNow listening on:\\s+(https?://\\S+)"
+            }
+        }
+    ]
+}

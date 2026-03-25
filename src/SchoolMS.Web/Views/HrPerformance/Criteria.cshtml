@@ -20,7 +20,7 @@
                             <td>@c.SortOrder</td><td>@c.CriteriaName</td><td>@c.Category</td>
                             <td><span class="badge bg-info">@c.Weight%</span></td><td>@c.MaxScore</td>
                             <td>@(c.IsActive ? "✅" : "❌")</td>
-                            <td><button class="btn btn-sm btn-danger" onclick="del(@c.Id)"><i class="fas fa-trash"></i></button></td>
+                            <td><div class="action-group"><button class="btn-act btn-act-delete" onclick="del(@c.Id)"><i class="fas fa-trash"></i></button></div></td>
                         </tr>
                     }
                 </tbody>

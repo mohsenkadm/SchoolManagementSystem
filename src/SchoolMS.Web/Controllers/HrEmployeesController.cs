@@ -15,20 +15,41 @@ public class HrEmployeesController : Controller
     private readonly IHrJobGradeService _gradeService;
     private readonly IBranchService _branchService;
     private readonly IHrWorkShiftService _shiftService;
+    private readonly IPlatformService _platformService;
     private readonly IOneSignalNotificationService _pushService;
 
     public HrEmployeesController(IHrEmployeeService service, IHrDepartmentService deptService,
         IHrJobTitleService titleService, IHrJobGradeService gradeService,
-        IBranchService branchService, IHrWorkShiftService shiftService, IOneSignalNotificationService pushService)
+        IBranchService branchService, IHrWorkShiftService shiftService, IPlatformService platformService, IOneSignalNotificationService pushService)
     {
         _service = service; _deptService = deptService; _titleService = titleService;
-        _gradeService = gradeService; _branchService = branchService; _shiftService = shiftService; _pushService = pushService;
+        _gradeService = gradeService; _branchService = branchService; _shiftService = shiftService; _platformService = platformService; _pushService = pushService;
     }
 
+    private bool IsSuperAdmin => User.IsInRole("SuperAdmin");
     private int? CurrentSchoolId { get { var c = User.FindFirst("SchoolId"); return c != null && int.TryParse(c.Value, out var id) ? id : null; } }
 
     [HasPermission("HrEmployees", "View")]
-    public async Task<IActionResult> Index() => View(await _service.GetAllAsync());
+    public async Task<IActionResult> Index()
+    {
+        ViewBag.IsSuperAdmin = IsSuperAdmin;
+        if (IsSuperAdmin)
+        {
+            ViewBag.Schools = await _platformService.GetAllSchoolsAsync();
+            ViewBag.Branches = await _branchService.GetAllAsync();
+        }
+        else
+        {
+            ViewBag.Schools = new List<SchoolDto>();
+            ViewBag.Branches = CurrentSchoolId.HasValue
+                ? await _branchService.GetBySchoolIdAsync(CurrentSchoolId.Value)
+                : new List<BranchDto>();
+        }
+        var list = CurrentSchoolId.HasValue
+            ? await _service.GetBySchoolIdAsync(CurrentSchoolId.Value)
+            : await _service.GetAllAsync();
+        return View(list);
+    }
 
     [HasPermission("HrEmployees", "View")]
     public async Task<IActionResult> Details(int id)

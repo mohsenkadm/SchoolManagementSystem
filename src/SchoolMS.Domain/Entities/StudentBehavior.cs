@@ -14,6 +14,8 @@ public class StudentBehavior : BaseEntity
     public DateTime IncidentDate { get; set; }
     public bool NotifyParent { get; set; }
     public string? ParentResponse { get; set; }
+    public int? AcademicYearId { get; set; }
 
     public virtual Student Student { get; set; } = null!;
+    public virtual AcademicYear? AcademicYear { get; set; }
 }

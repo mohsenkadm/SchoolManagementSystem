@@ -9,11 +9,10 @@ namespace SchoolMS.Application.Services;
 
 public class SchoolService : ISchoolService
 {
-    private readonly IRepository<School> _repository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IRepository<School> _repository;     
 
-    public SchoolService(IRepository<School> repository, IUnitOfWork unitOfWork)
-    { _repository = repository; _unitOfWork = unitOfWork; }
+    public SchoolService(IRepository<School> repository )
+    { _repository = repository;  }
 
 
     public async Task<List<SchoolDto>> GetBySchoolIdAsync(int schoolId)

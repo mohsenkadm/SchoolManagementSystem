@@ -60,8 +60,8 @@
                     <td>@(i + 1)</td><td>@Model[i].VisitorName</td><td>@Model[i].Phone</td><td>@Model[i].Purpose</td><td>@Model[i].BranchName</td><td>@Model[i].CheckInTime.ToString("yyyy-MM-dd HH:mm")</td><td>@Model[i].CheckOutTime?.ToString("HH:mm")</td><td><span class="badge @sBadge">@Model[i].Status</span></td>
                     @if (isSuperAdmin){<td>@Model[i].SchoolName</td>}
                     <td>
-                        <div class="d-flex gap-1">
-                            @if (Model[i].Status == VisitorStatus.CheckedIn) { <button class="btn btn-sm btn-warning" onclick="checkout(@Model[i].Id)" data-bs-toggle="tooltip" title="@Localizer["CheckOut"]"><i class="fas fa-sign-out-alt"></i></button> }
+                        <div class="action-group">
+                            @if (Model[i].Status == VisitorStatus.CheckedIn) { <button class="btn-act btn-act-warning" onclick="checkout(@Model[i].Id)" data-bs-toggle="tooltip" title="@Localizer["CheckOut"]"><i class="fas fa-sign-out-alt"></i></button> }
                         </div>
                     </td>
                 </tr>

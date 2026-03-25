@@ -13,24 +13,34 @@ public class AttendanceService : IAttendanceService
     private readonly IRepository<Attendance> _attendanceRepo;
     private readonly IRepository<Student> _studentRepo;
     private readonly IRepository<Teacher> _teacherRepo;
-    private readonly IRepository<Staff> _staffRepo;
+    private readonly IRepository<HrEmployee> _staffRepo;
     private readonly IRepository<Branch> _branchRepo;
+    private readonly IRepository<AcademicYear> _academicYearRepo;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
 
     public AttendanceService(IRepository<Attendance> attendanceRepo, IRepository<Student> studentRepo,
-        IRepository<Teacher> teacherRepo, IRepository<Staff> staffRepo,
-        IRepository<Branch> branchRepo, IUnitOfWork unitOfWork, IMapper mapper)
+        IRepository<Teacher> teacherRepo, IRepository<HrEmployee> staffRepo,
+        IRepository<Branch> branchRepo, IRepository<AcademicYear> academicYearRepo,
+        IUnitOfWork unitOfWork, IMapper mapper)
     {
         _attendanceRepo = attendanceRepo; _studentRepo = studentRepo;
         _teacherRepo = teacherRepo; _staffRepo = staffRepo;
-        _branchRepo = branchRepo; _unitOfWork = unitOfWork; _mapper = mapper;
+        _branchRepo = branchRepo; _academicYearRepo = academicYearRepo;
+        _unitOfWork = unitOfWork; _mapper = mapper;
     }
 
     private async Task<int> ResolveSchoolIdAsync(int branchId)
     {
         var branch = await _branchRepo.Query().FirstOrDefaultAsync(b => b.Id == branchId);
         return branch?.SchoolId ?? 0;
+    }
+
+    private async Task<int?> ResolveCurrentAcademicYearIdAsync(int schoolId)
+    {
+        var year = await _academicYearRepo.Query()
+            .FirstOrDefaultAsync(a => a.SchoolId == schoolId && a.IsCurrent);
+        return year?.Id;
     }
 
     public async Task<BulkAttendanceItemDto?> ResolveBadgeAsync(string badgeCardNumber)
@@ -66,6 +76,7 @@ public class AttendanceService : IAttendanceService
         }
 
         var schoolId = await ResolveSchoolIdAsync(dto.BranchId);
+        var academicYearId = await ResolveCurrentAcademicYearIdAsync(schoolId);
         var entity = new Attendance
         {
             PersonId = person.PersonId,
@@ -75,7 +86,8 @@ public class AttendanceService : IAttendanceService
             Time = DateTime.UtcNow.TimeOfDay,
             Type = dto.Type,
             BranchId = dto.BranchId,
-            SchoolId = schoolId
+            SchoolId = schoolId,
+            AcademicYearId = academicYearId
         };
         await _attendanceRepo.AddAsync(entity);
         await _unitOfWork.SaveChangesAsync();
@@ -90,6 +102,7 @@ public class AttendanceService : IAttendanceService
         var now = DateTime.UtcNow;
         var today = now.Date;
         var schoolId = await ResolveSchoolIdAsync(dto.BranchId);
+        var academicYearId = await ResolveCurrentAcademicYearIdAsync(schoolId);
 
         // Get existing records for today to detect duplicates
         var existingToday = await _attendanceRepo.Query()
@@ -121,7 +134,8 @@ public class AttendanceService : IAttendanceService
                 Time = now.TimeOfDay,
                 Type = dto.Type,
                 BranchId = dto.BranchId,
-                SchoolId = schoolId
+                SchoolId = schoolId,
+                AcademicYearId = academicYearId
             });
             savedItems.Add(item);
         }
@@ -230,6 +244,7 @@ public class AttendanceService : IAttendanceService
     {
         var dateOnly = date.Date;
         var schoolId = await ResolveSchoolIdAsync(branchId);
+        var academicYearId = await ResolveCurrentAcademicYearIdAsync(schoolId);
 
         // Get all people who already have a record for this date+branch
         var existingRecords = await _attendanceRepo.Query()
@@ -264,7 +279,8 @@ public class AttendanceService : IAttendanceService
                 Type = AttendanceType.Absent,
                 BranchId = branchId,
                 SchoolId = schoolId,
-                IsAutoAbsent = true
+                IsAutoAbsent = true,
+                AcademicYearId = academicYearId
             });
             count++;
         }
@@ -274,13 +290,14 @@ public class AttendanceService : IAttendanceService
 
     private IQueryable<Attendance> BuildFilteredQuery(AttendanceFilterDto filter)
     {
-        var query = _attendanceRepo.Query().Include(a => a.Branch).Include(a => a.School).AsQueryable();
+        var query = _attendanceRepo.Query().Include(a => a.Branch).Include(a => a.School).Include(a => a.AcademicYear).AsQueryable();
         if (filter.DateFrom.HasValue) query = query.Where(a => a.AttendanceDate >= filter.DateFrom.Value.Date);
         if (filter.DateTo.HasValue) query = query.Where(a => a.AttendanceDate <= filter.DateTo.Value.Date);
         if (filter.Type.HasValue) query = query.Where(a => a.Type == filter.Type.Value);
         if (filter.PersonType.HasValue) query = query.Where(a => a.PersonType == filter.PersonType.Value);
         if (filter.BranchId.HasValue) query = query.Where(a => a.BranchId == filter.BranchId.Value);
         if (filter.SchoolId.HasValue) query = query.Where(a => a.SchoolId == filter.SchoolId.Value);
+        if (filter.AcademicYearId.HasValue) query = query.Where(a => a.AcademicYearId == filter.AcademicYearId.Value);
         if (!string.IsNullOrWhiteSpace(filter.SearchValue))
             query = query.Where(a => a.BadgeCardNumber!.Contains(filter.SearchValue));
         return query;
@@ -314,19 +331,27 @@ public class AttendanceService : IAttendanceService
         }
     }
 
-    public async Task<List<AttendanceDto>> GetByPersonAsync(int personId, PersonType personType, int schoolId)
+    public async Task<List<AttendanceDto>> GetByPersonAsync(int personId, PersonType personType, int schoolId,
+        DateTime? dateFrom = null, DateTime? dateTo = null, AttendanceType? type = null, int? academicYearId = null)
     {
-        var items = await _attendanceRepo.Query()
-            .Include(a => a.Branch).Include(a => a.School)
-            .Where(a => a.PersonId == personId && a.PersonType == personType && a.SchoolId == schoolId)
-            .OrderByDescending(a => a.AttendanceDate).ThenByDescending(a => a.Time)
+        var query = _attendanceRepo.Query()
+            .Include(a => a.Branch).Include(a => a.School).Include(a => a.AcademicYear)
+            .Where(a => a.PersonId == personId && a.PersonType == personType && a.SchoolId == schoolId);
+
+        if (dateFrom.HasValue) query = query.Where(a => a.AttendanceDate >= dateFrom.Value.Date);
+        if (dateTo.HasValue) query = query.Where(a => a.AttendanceDate <= dateTo.Value.Date);
+        if (type.HasValue) query = query.Where(a => a.Type == type.Value);
+        if (academicYearId.HasValue) query = query.Where(a => a.AcademicYearId == academicYearId.Value);
+
+        var items = await query.OrderByDescending(a => a.AttendanceDate).ThenByDescending(a => a.Time)
             .ToListAsync();
         var dtos = _mapper.Map<List<AttendanceDto>>(items);
         await ResolvePersonNamesAsync(items, dtos);
         return dtos;
     }
 
-    public async Task<List<AttendanceDto>> GetByParentChildrenAsync(int parentId, int schoolId)
+    public async Task<List<AttendanceDto>> GetByParentChildrenAsync(int parentId, int schoolId,
+        DateTime? dateFrom = null, DateTime? dateTo = null, AttendanceType? type = null, int? academicYearId = null)
     {
         var childrenIds = await _studentRepo.Query()
             .Where(s => s.ParentId == parentId && s.SchoolId == schoolId)
@@ -335,10 +360,16 @@ public class AttendanceService : IAttendanceService
 
         if (childrenIds.Count == 0) return new List<AttendanceDto>();
 
-        var items = await _attendanceRepo.Query()
-            .Include(a => a.Branch).Include(a => a.School)
-            .Where(a => childrenIds.Contains(a.PersonId) && a.PersonType == PersonType.Student && a.SchoolId == schoolId)
-            .OrderByDescending(a => a.AttendanceDate).ThenByDescending(a => a.Time)
+        var query = _attendanceRepo.Query()
+            .Include(a => a.Branch).Include(a => a.School).Include(a => a.AcademicYear)
+            .Where(a => childrenIds.Contains(a.PersonId) && a.PersonType == PersonType.Student && a.SchoolId == schoolId);
+
+        if (dateFrom.HasValue) query = query.Where(a => a.AttendanceDate >= dateFrom.Value.Date);
+        if (dateTo.HasValue) query = query.Where(a => a.AttendanceDate <= dateTo.Value.Date);
+        if (type.HasValue) query = query.Where(a => a.Type == type.Value);
+        if (academicYearId.HasValue) query = query.Where(a => a.AcademicYearId == academicYearId.Value);
+
+        var items = await query.OrderByDescending(a => a.AttendanceDate).ThenByDescending(a => a.Time)
             .ToListAsync();
         var dtos = _mapper.Map<List<AttendanceDto>>(items);
         await ResolvePersonNamesAsync(items, dtos);

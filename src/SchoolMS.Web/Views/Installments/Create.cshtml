@@ -92,9 +92,9 @@
                         </td>
                         <td>
                             @if (p.Status != PaymentStatus.Paid)
-                            { <button class="btn btn-sm btn-success" onclick="payAction(@p.Id, 'record')"><i class="fas fa-check"></i></button> }
+                            { <button class="btn-act btn-act-success" onclick="payAction(@p.Id, 'record')"><i class="fas fa-check"></i></button> }
                             else
-                            { <button class="btn btn-sm btn-outline-warning" onclick="payAction(@p.Id, 'cancel')"><i class="fas fa-undo"></i></button> }
+                            { <button class="btn-act btn-act-warning" onclick="payAction(@p.Id, 'cancel')"><i class="fas fa-undo"></i></button> }
                         </td>
                     </tr>
                 }

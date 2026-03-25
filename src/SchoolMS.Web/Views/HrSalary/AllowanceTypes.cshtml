@@ -20,7 +20,7 @@
                             <td>@(i + 1)</td><td>@a.AllowanceName</td><td>@a.AllowanceCode</td>
                             <td><span class="badge bg-info">@a.CalculationType</span></td><td>@a.DefaultValue?.ToString("N0")</td>
                             <td>@(a.IsTaxable ? "✅" : "❌")</td><td>@(a.IsActive ? "✅" : "❌")</td>
-                            <td><button class="btn btn-sm btn-danger" onclick="del(@a.Id)"><i class="fas fa-trash"></i></button></td>
+                            <td><div class="action-group"><button class="btn-act btn-act-delete" onclick="del(@a.Id)"><i class="fas fa-trash"></i></button></div></td>
                         </tr>
                     }
                 </tbody>

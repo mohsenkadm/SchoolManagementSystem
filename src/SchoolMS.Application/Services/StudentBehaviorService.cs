@@ -11,24 +11,37 @@ public class StudentBehaviorService : IStudentBehaviorService
 {
     private readonly IRepository<StudentBehavior> _repository;
     private readonly IRepository<Student> _studentRepo;
+    private readonly IRepository<AcademicYear> _academicYearRepo;
     private readonly IUnitOfWork _unitOfWork;
 
-    public StudentBehaviorService(IRepository<StudentBehavior> repository, IRepository<Student> studentRepo, IUnitOfWork unitOfWork)
-    { _repository = repository; _studentRepo = studentRepo; _unitOfWork = unitOfWork; }
+    public StudentBehaviorService(IRepository<StudentBehavior> repository, IRepository<Student> studentRepo,
+        IRepository<AcademicYear> academicYearRepo, IUnitOfWork unitOfWork)
+    { _repository = repository; _studentRepo = studentRepo; _academicYearRepo = academicYearRepo; _unitOfWork = unitOfWork; }
 
-    public async Task<List<StudentBehaviorDto>> GetAllAsync()
+    private async Task<int?> ResolveCurrentAcademicYearIdAsync(int schoolId)
     {
-        var items = await _repository.Query().Include(b => b.Student).OrderByDescending(b => b.IncidentDate).ToListAsync();
+        var year = await _academicYearRepo.Query()
+            .FirstOrDefaultAsync(a => a.SchoolId == schoolId && a.IsCurrent);
+        return year?.Id;
+    }
+
+    public async Task<List<StudentBehaviorDto>> GetAllAsync(int? academicYearId = null)
+    {
+        var query = _repository.Query().Include(b => b.Student).Include(b => b.AcademicYear).AsQueryable();
+        if (academicYearId.HasValue) query = query.Where(b => b.AcademicYearId == academicYearId.Value);
+        var items = await query.OrderByDescending(b => b.IncidentDate).ToListAsync();
         return items.Select(MapToDto).ToList();
     }
 
-    public async Task<List<StudentBehaviorDto>> GetByStudentIdAsync(int studentId)
+    public async Task<List<StudentBehaviorDto>> GetByStudentIdAsync(int studentId, int? academicYearId = null)
     {
-        var items = await _repository.Query().Where(b => b.StudentId == studentId).Include(b => b.Student).OrderByDescending(b => b.IncidentDate).ToListAsync();
+        var query = _repository.Query().Where(b => b.StudentId == studentId).Include(b => b.Student).Include(b => b.AcademicYear).AsQueryable();
+        if (academicYearId.HasValue) query = query.Where(b => b.AcademicYearId == academicYearId.Value);
+        var items = await query.OrderByDescending(b => b.IncidentDate).ToListAsync();
         return items.Select(MapToDto).ToList();
     }
 
-    public async Task<List<StudentBehaviorDto>> GetByParentChildrenAsync(int parentId, int schoolId)
+    public async Task<List<StudentBehaviorDto>> GetByParentChildrenAsync(int parentId, int schoolId, int? academicYearId = null)
     {
         var childrenIds = await _studentRepo.Query()
             .Where(s => s.ParentId == parentId && s.SchoolId == schoolId)
@@ -37,31 +50,32 @@ public class StudentBehaviorService : IStudentBehaviorService
 
         if (childrenIds.Count == 0) return new List<StudentBehaviorDto>();
 
-        var items = await _repository.Query()
+        var query = _repository.Query()
             .Where(b => childrenIds.Contains(b.StudentId) && b.SchoolId == schoolId)
-            .Include(b => b.Student)
-            .OrderByDescending(b => b.IncidentDate)
-            .ToListAsync();
+            .Include(b => b.Student).Include(b => b.AcademicYear).AsQueryable();
+        if (academicYearId.HasValue) query = query.Where(b => b.AcademicYearId == academicYearId.Value);
+        var items = await query.OrderByDescending(b => b.IncidentDate).ToListAsync();
         return items.Select(MapToDto).ToList();
     }
 
     public async Task<StudentBehaviorDto?> GetByIdAsync(int id)
     {
-        var b = await _repository.Query().Include(x => x.Student).FirstOrDefaultAsync(x => x.Id == id);
+        var b = await _repository.Query().Include(x => x.Student).Include(x => x.AcademicYear).FirstOrDefaultAsync(x => x.Id == id);
         return b == null ? null : MapToDto(b);
     }
 
     public async Task<StudentBehaviorDto> CreateAsync(StudentBehaviorDto dto)
     {
+        var academicYearId = await ResolveCurrentAcademicYearIdAsync(dto.SchoolId);
         var entity = new StudentBehavior
         {
             StudentId = dto.StudentId, Type = dto.Type, Title = dto.Title, Description = dto.Description,
             Points = dto.Points, ActionTaken = dto.ActionTaken, RecordedBy = dto.RecordedBy,
             IncidentDate = dto.IncidentDate, NotifyParent = dto.NotifyParent,
-            SchoolId = dto.SchoolId
+            SchoolId = dto.SchoolId, AcademicYearId = academicYearId
         };
         await _repository.AddAsync(entity); await _unitOfWork.SaveChangesAsync();
-        dto.Id = entity.Id; return dto;
+        dto.Id = entity.Id; dto.AcademicYearId = academicYearId; return dto;
     }
 
     public async Task<StudentBehaviorDto> UpdateAsync(StudentBehaviorDto dto)
@@ -85,7 +99,8 @@ public class StudentBehaviorService : IStudentBehaviorService
         Id = b.Id, StudentId = b.StudentId, StudentName = b.Student?.FullName, Type = b.Type,
         Title = b.Title, Description = b.Description, Points = b.Points, ActionTaken = b.ActionTaken,
         RecordedBy = b.RecordedBy, IncidentDate = b.IncidentDate, NotifyParent = b.NotifyParent,
-        SchoolId = b.SchoolId
+        SchoolId = b.SchoolId, AcademicYearId = b.AcademicYearId,
+        AcademicYearName = b.AcademicYear?.YearName
     };
 }
 

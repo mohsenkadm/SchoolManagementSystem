@@ -24,6 +24,10 @@ public class RequireHrModuleFilter : IAsyncAuthorizationFilter
 
     public async Task OnAuthorizationAsync(AuthorizationFilterContext context)
     {
+        // SuperAdmin bypasses all checks
+        if (context.HttpContext.User.IsInRole("SuperAdmin"))
+            return;
+
         var schoolId = _tenantProvider.GetCurrentSchoolId();
         if (!schoolId.HasValue)
         {
@@ -31,13 +35,17 @@ public class RequireHrModuleFilter : IAsyncAuthorizationFilter
             return;
         }
 
-        var school = await _context.Schools
+        // Check if the school's active subscription plan includes HR
+        var activeSub = await _context.SchoolSubscriptions
             .IgnoreQueryFilters()
-            .FirstOrDefaultAsync(s => s.Id == schoolId.Value && !s.IsDeleted);
+            .Include(s => s.SystemSubscriptionPlan)
+            .Where(s => s.SchoolId == schoolId.Value && s.IsActive && !s.IsDeleted)
+            .OrderByDescending(s => s.ActivatedAt)
+            .FirstOrDefaultAsync();
 
-        if (school == null || !school.IsHrModuleEnabled)
+        if (activeSub?.SystemSubscriptionPlan == null || !activeSub.SystemSubscriptionPlan.IncludesHrModule)
         {
-            context.Result = new RedirectResult("/AccessDenied?reason=hr-module-disabled");
+            context.Result = new RedirectResult("/AccessDenied?reason=hr-module-not-in-plan");
         }
     }
 }

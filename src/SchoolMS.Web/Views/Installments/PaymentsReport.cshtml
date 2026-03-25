@@ -97,15 +97,15 @@
                     </td>
                     @if (isSuperAdmin) { <td>@p.SchoolName</td> }
                     <td class="no-print">
-                        <div class="d-flex gap-1">
+                        <div class="action-group">
                             @if (p.Status != PaymentStatus.Paid)
                             {
-                                <button class="btn btn-sm btn-success" onclick="payAction(@p.Id, 'record')" data-bs-toggle="tooltip" title="@Localizer["MarkPaid"]"><i class="fas fa-check"></i></button>
+                                <button class="btn-act btn-act-success" onclick="payAction(@p.Id, 'record')" data-bs-toggle="tooltip" title="@Localizer["MarkPaid"]"><i class="fas fa-check"></i></button>
                             }
                             else
                             {
-                                <button class="btn btn-sm btn-outline-warning" onclick="payAction(@p.Id, 'cancel')" data-bs-toggle="tooltip" title="@Localizer["CancelPayment"]"><i class="fas fa-undo"></i></button>
-                                <button class="btn btn-sm btn-outline-primary" onclick="printReceipt(@i)" data-bs-toggle="tooltip" title="@Localizer["PrintReceipt"]"><i class="fas fa-print"></i></button>
+                                <button class="btn-act btn-act-warning" onclick="payAction(@p.Id, 'cancel')" data-bs-toggle="tooltip" title="@Localizer["CancelPayment"]"><i class="fas fa-undo"></i></button>
+                                <button class="btn-act btn-act-print" onclick="printReceipt(@i)" data-bs-toggle="tooltip" title="@Localizer["PrintReceipt"]"><i class="fas fa-print"></i></button>
                             }
                         </div>
                     </td>

@@ -6,7 +6,7 @@ using SchoolMS.Web.Filters;
 
 namespace SchoolMS.Web.Controllers;
 
-[Authorize]
+[Authorize, RequireOnlinePlatform]
 public class CoursesController : Controller
 {
     private readonly ICourseService _service;

@@ -8,6 +8,6 @@ public class Branch : BaseEntity
 
     public virtual ICollection<Student> Students { get; set; } = new List<Student>();
     public virtual ICollection<Teacher> Teachers { get; set; } = new List<Teacher>();
-    public virtual ICollection<Staff> StaffMembers { get; set; } = new List<Staff>();
+    public virtual ICollection<HrEmployee> StaffMembers { get; set; } = new List<HrEmployee>();
     public virtual ICollection<ClassRoom> ClassRooms { get; set; } = new List<ClassRoom>();
 }

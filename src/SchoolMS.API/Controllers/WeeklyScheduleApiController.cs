@@ -35,26 +35,30 @@ public class WeeklyScheduleApiController : ControllerBase
     private string GetUserTypeFromToken() =>
         User.FindFirst("UserType")?.Value ?? throw new UnauthorizedAccessException();
 
-    // جلب الجدول الأسبوعي للمدرسة
+    // جلب الجدول الأسبوعي للمدرسة مع فلاتر
     [HttpGet]
-    public async Task<ActionResult<List<WeeklyScheduleDto>>> GetAll(int schoolId)
-        => Ok(await _service.GetBySchoolIdAsync(schoolId));
+    public async Task<ActionResult<List<WeeklyScheduleDto>>> GetAll(int schoolId,
+        [FromQuery] int? subjectId = null, [FromQuery] int? teacherId = null,
+        [FromQuery] DayOfWeek? dayOfWeek = null, [FromQuery] int? classRoomId = null)
+        => Ok(await _service.GetBySchoolIdAsync(schoolId, subjectId, teacherId, dayOfWeek, classRoomId));
 
-    // جدول الطالب - حسب فصل الطالب
+    // جدول الطالب - حسب فصل الطالب مع فلاتر
     [HttpGet("student")]
-    public async Task<ActionResult<List<WeeklyScheduleDto>>> GetStudentSchedule(int schoolId)
+    public async Task<ActionResult<List<WeeklyScheduleDto>>> GetStudentSchedule(int schoolId,
+        [FromQuery] int? subjectId = null, [FromQuery] DayOfWeek? dayOfWeek = null)
     {
         var userType = GetUserTypeFromToken();
         if (userType != "Student") return Forbid();
         var studentId = GetPersonIdFromToken();
         var student = await _studentRepo.Query().FirstOrDefaultAsync(s => s.Id == studentId && s.SchoolId == schoolId);
         if (student == null) return NotFound();
-        return Ok(await _service.GetByClassRoomIdsAsync(new List<int> { student.ClassRoomId }, schoolId));
+        return Ok(await _service.GetByClassRoomIdsAsync(new List<int> { student.ClassRoomId }, schoolId, subjectId, dayOfWeek));
     }
 
-    // جدول المعلم - حسب الفصول المعينة للمعلم
+    // جدول المعلم - حسب الفصول المعينة للمعلم مع فلاتر
     [HttpGet("teacher")]
-    public async Task<ActionResult<List<WeeklyScheduleDto>>> GetTeacherSchedule(int schoolId)
+    public async Task<ActionResult<List<WeeklyScheduleDto>>> GetTeacherSchedule(int schoolId,
+        [FromQuery] int? subjectId = null, [FromQuery] DayOfWeek? dayOfWeek = null)
     {
         var userType = GetUserTypeFromToken();
         if (userType != "Teacher") return Forbid();
@@ -62,12 +66,13 @@ public class WeeklyScheduleApiController : ControllerBase
         var classRoomIds = await _assignmentRepo.Query()
             .Where(a => a.TeacherId == teacherId && a.SchoolId == schoolId)
             .Select(a => a.ClassRoomId).Distinct().ToListAsync();
-        return Ok(await _service.GetByClassRoomIdsAsync(classRoomIds, schoolId));
+        return Ok(await _service.GetByClassRoomIdsAsync(classRoomIds, schoolId, subjectId, dayOfWeek));
     }
 
-    // جدول أبناء ولي الأمر
+    // جدول أبناء ولي الأمر مع فلاتر
     [HttpGet("parent/children")]
-    public async Task<ActionResult<List<WeeklyScheduleDto>>> GetParentChildrenSchedule(int schoolId)
+    public async Task<ActionResult<List<WeeklyScheduleDto>>> GetParentChildrenSchedule(int schoolId,
+        [FromQuery] int? subjectId = null, [FromQuery] DayOfWeek? dayOfWeek = null)
     {
         var userType = GetUserTypeFromToken();
         if (userType != "Parent") return Forbid();
@@ -75,6 +80,6 @@ public class WeeklyScheduleApiController : ControllerBase
         var classRoomIds = await _studentRepo.Query()
             .Where(s => s.ParentId == parentId && s.SchoolId == schoolId)
             .Select(s => s.ClassRoomId).Distinct().ToListAsync();
-        return Ok(await _service.GetByClassRoomIdsAsync(classRoomIds, schoolId));
+        return Ok(await _service.GetByClassRoomIdsAsync(classRoomIds, schoolId, subjectId, dayOfWeek));
     }
 }

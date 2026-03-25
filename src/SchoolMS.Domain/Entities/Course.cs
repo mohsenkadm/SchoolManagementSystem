@@ -9,6 +9,7 @@ public class Course : BaseEntity
     public string? ThumbnailImage { get; set; }
     public string? BackgroundImage { get; set; }
     public bool IsPublished { get; set; }
+    public decimal? CommissionRate { get; set; }
 
     public virtual Subject Subject { get; set; } = null!;
     public virtual Teacher Teacher { get; set; } = null!;

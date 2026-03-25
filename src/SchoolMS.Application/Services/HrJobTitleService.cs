@@ -23,6 +23,17 @@ public class HrJobTitleService : IHrJobTitleService
     public async Task<List<HrJobTitleDto>> GetAllAsync()
     {
         var items = await _repository.Query().Include(j => j.Department).ToListAsync();
+        return MapJobTitles(items);
+    }
+
+    public async Task<List<HrJobTitleDto>> GetBySchoolIdAsync(int schoolId)
+    {
+        var items = await _repository.Query().Where(j => j.SchoolId == schoolId).Include(j => j.Department).ToListAsync();
+        return MapJobTitles(items);
+    }
+
+    private static List<HrJobTitleDto> MapJobTitles(List<HrJobTitle> items)
+    {
         return items.Select(j => new HrJobTitleDto
         {
             Id = j.Id,

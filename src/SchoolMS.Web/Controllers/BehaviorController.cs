@@ -14,22 +14,29 @@ public class BehaviorController : Controller
     private readonly IBranchService _branchService;
     private readonly IPlatformService _platformService;
     private readonly IOneSignalNotificationService _pushService;
+    private readonly IAcademicYearService _academicYearService;
 
     public BehaviorController(IStudentBehaviorService service, IStudentService studentService, IBranchService branchService,
-        IPlatformService platformService, IOneSignalNotificationService pushService)
-    { _service = service; _studentService = studentService; _branchService = branchService; _platformService = platformService; _pushService = pushService; }
+        IPlatformService platformService, IOneSignalNotificationService pushService, IAcademicYearService academicYearService)
+    { _service = service; _studentService = studentService; _branchService = branchService; _platformService = platformService; _pushService = pushService; _academicYearService = academicYearService; }
 
     private bool IsSuperAdmin => User.IsInRole("SuperAdmin");
     private int? CurrentSchoolId { get { var c = User.FindFirst("SchoolId"); return c != null && int.TryParse(c.Value, out var id) ? id : null; } }
 
     [HasPermission("Behavior", "View")]
-    public async Task<IActionResult> Index()
+    public async Task<IActionResult> Index(int? academicYearId = null)
     {
         ViewData["Title"] = "Student Behavior";
         ViewBag.IsSuperAdmin = IsSuperAdmin;
         if (IsSuperAdmin) { ViewBag.Schools = await _platformService.GetAllSchoolsAsync(); ViewBag.Branches = await _branchService.GetAllAsync(); }
         else { ViewBag.Schools = new List<SchoolDto>(); ViewBag.Branches = CurrentSchoolId.HasValue ? await _branchService.GetBySchoolIdAsync(CurrentSchoolId.Value) : new List<BranchDto>(); }
-        return View(await _service.GetAllAsync());
+        ViewBag.AcademicYears = IsSuperAdmin
+            ? await _academicYearService.GetAllAsync()
+            : CurrentSchoolId.HasValue
+                ? await _academicYearService.GetAllAsync(CurrentSchoolId.Value)
+                : new List<AcademicYearDto>();
+        ViewBag.SelectedAcademicYearId = academicYearId;
+        return View(await _service.GetAllAsync(academicYearId));
     }
 
     [HasPermission("Behavior", "Add")]

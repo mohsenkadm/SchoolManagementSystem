@@ -21,7 +21,7 @@
                 <tr>
                     <td>@(i + 1)</td><td>@d.DeviceName</td><td>@d.SerialNumber</td><td>@d.BranchName</td><td>@d.IpAddress</td>
                     <td><span class="badge @cls">@d.Status</span></td>
-                    <td><button class="btn btn-sm btn-danger" onclick="del(@d.Id)"><i class="fas fa-trash"></i></button></td>
+                    <td><div class="action-group"><button class="btn-act btn-act-delete" onclick="del(@d.Id)"><i class="fas fa-trash"></i></button></div></td>
                 </tr>
             }
         </tbody>

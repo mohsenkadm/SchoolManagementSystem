@@ -18,7 +18,7 @@ public class HrEmployeesApiController : ControllerBase
     public HrEmployeesApiController(IHrEmployeeService service, IOneSignalNotificationService pushService) { _service = service; _pushService = pushService; }
 
     [HttpGet]
-    public async Task<ActionResult<List<HrEmployeeListDto>>> GetAll(int schoolId) => Ok(await _service.GetAllAsync());
+    public async Task<ActionResult<List<HrEmployeeListDto>>> GetAll(int schoolId) => Ok(await _service.GetBySchoolIdAsync(schoolId));
 
     [HttpGet("{id}")]
     public async Task<ActionResult<HrEmployeeDto>> Get(int schoolId, int id)

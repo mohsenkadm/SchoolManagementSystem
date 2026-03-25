@@ -14,4 +14,8 @@ public interface ILiveStreamService
     Task UpdateStatusAsync(int id, Domain.Enums.LiveStreamStatus status);
     Task DeleteAsync(int id);
     Task MarkSeenAsync(int liveStreamId, int studentId);
+
+    // Live Stream Comments
+    Task<List<LiveStreamCommentDto>> GetCommentsByLiveStreamIdAsync(int liveStreamId);
+    Task<LiveStreamCommentDto> AddCommentAsync(CreateLiveStreamCommentDto dto);
 }

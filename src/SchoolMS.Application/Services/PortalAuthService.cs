@@ -16,20 +16,23 @@ public class PortalAuthService : IPortalAuthService
     private readonly IRepository<Teacher> _teacherRepo;
     private readonly IRepository<Student> _studentRepo;
     private readonly IRepository<Parent> _parentRepo;
-    private readonly IRepository<Staff> _staffRepo;
+    private readonly IRepository<HrEmployee> _staffRepo;
+    private readonly IUnitOfWork _unitOfWork;
     private readonly IConfiguration _configuration;
 
     public PortalAuthService(
         IRepository<Teacher> teacherRepo,
         IRepository<Student> studentRepo,
         IRepository<Parent> parentRepo,
-        IRepository<Staff> staffRepo,
+        IRepository<HrEmployee> staffRepo,
+        IUnitOfWork unitOfWork,
         IConfiguration configuration)
     {
         _teacherRepo = teacherRepo;
         _studentRepo = studentRepo;
         _parentRepo = parentRepo;
         _staffRepo = staffRepo;
+        _unitOfWork = unitOfWork;
         _configuration = configuration;
     }
 
@@ -41,7 +44,7 @@ public class PortalAuthService : IPortalAuthService
         if (teacher == null || teacher.Password != dto.Password)
             return new PortalLoginResultDto { Error = "InvalidCredentials" };
 
-        var token = GeneratePortalToken(teacher.Id, teacher.FullName, "Teacher", teacher.SchoolId, teacher.BranchId);
+        var token = GeneratePortalToken(teacher.Id, teacher.FullName, "Teacher", teacher.SchoolId, teacher.BranchId, null);
         return new PortalLoginResultDto
         {
             Succeeded = true, Token = token, FullName = teacher.FullName,
@@ -58,7 +61,26 @@ public class PortalAuthService : IPortalAuthService
         if (student == null || student.Password != dto.Password)
             return new PortalLoginResultDto { Error = "InvalidCredentials" };
 
-        var token = GeneratePortalToken(student.Id, student.FullName, "Student", student.SchoolId, student.BranchId);
+        // Single-device enforcement: DeviceId is required for student login
+        if (string.IsNullOrWhiteSpace(dto.DeviceId))
+            return new PortalLoginResultDto { Error = "DeviceIdRequired", ErrorMessage = "يجب إرسال معرّف الجهاز (DeviceId) عند تسجيل الدخول." };
+
+        // If this student already has an active device and it's different, reject login
+        if (!string.IsNullOrWhiteSpace(student.ActiveDeviceId) && student.ActiveDeviceId != dto.DeviceId)
+        {
+            return new PortalLoginResultDto
+            {
+                Error = "DeviceAlreadyActive",
+                ErrorMessage = "حسابك مسجّل الدخول على جهاز آخر. يُسمح بتسجيل الدخول من جهاز واحد فقط. يرجى تسجيل الخروج من الجهاز الآخر أولاً."
+            };
+        }
+
+        // Store/update the active device
+        student.ActiveDeviceId = dto.DeviceId;
+        _studentRepo.Update(student);
+        await _unitOfWork.SaveChangesAsync();
+
+        var token = GeneratePortalToken(student.Id, student.FullName, "Student", student.SchoolId, student.BranchId, dto.DeviceId);
         return new PortalLoginResultDto
         {
             Succeeded = true, Token = token, FullName = student.FullName,
@@ -75,7 +97,7 @@ public class PortalAuthService : IPortalAuthService
         if (parent == null || parent.PasswordHash != dto.Password)
             return new PortalLoginResultDto { Error = "InvalidCredentials" };
 
-        var token = GeneratePortalToken(parent.Id, parent.FatherName, "Parent", parent.SchoolId, null);
+        var token = GeneratePortalToken(parent.Id, parent.FatherName, "Parent", parent.SchoolId, null, null);
         return new PortalLoginResultDto
         {
             Succeeded = true, Token = token, FullName = parent.FatherName,
@@ -92,7 +114,7 @@ public class PortalAuthService : IPortalAuthService
         if (staff == null || staff.Password != dto.Password)
             return new PortalLoginResultDto { Error = "InvalidCredentials" };
 
-        var token = GeneratePortalToken(staff.Id, staff.FullName, "Staff", staff.SchoolId, staff.BranchId);
+        var token = GeneratePortalToken(staff.Id, staff.FullName, "Staff", staff.SchoolId, staff.BranchId, null);
         return new PortalLoginResultDto
         {
             Succeeded = true, Token = token, FullName = staff.FullName,
@@ -101,7 +123,7 @@ public class PortalAuthService : IPortalAuthService
         };
     }
 
-    private string GeneratePortalToken(int personId, string fullName, string userType, int schoolId, int? branchId)
+    private string GeneratePortalToken(int personId, string fullName, string userType, int schoolId, int? branchId, string? deviceId)
     {
         var jwtSettings = _configuration.GetSection("JwtSettings");
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings["Secret"]!));
@@ -119,6 +141,8 @@ public class PortalAuthService : IPortalAuthService
 
         if (branchId.HasValue)
             claims.Add(new Claim("BranchId", branchId.Value.ToString()));
+        if (!string.IsNullOrWhiteSpace(deviceId))
+            claims.Add(new Claim("DeviceId", deviceId));
 
         var token = new JwtSecurityToken(
             issuer: jwtSettings["Issuer"],
@@ -128,5 +152,17 @@ public class PortalAuthService : IPortalAuthService
             signingCredentials: credentials);
 
         return new JwtSecurityTokenHandler().WriteToken(token);
+    }
+
+    public async Task<bool> LogoutStudentDeviceAsync(int studentId)
+    {
+        var student = await _studentRepo.Query().IgnoreQueryFilters()
+            .FirstOrDefaultAsync(s => s.Id == studentId && !s.IsDeleted);
+        if (student == null) return false;
+
+        student.ActiveDeviceId = null;
+        _studentRepo.Update(student);
+        await _unitOfWork.SaveChangesAsync();
+        return true;
     }
 }

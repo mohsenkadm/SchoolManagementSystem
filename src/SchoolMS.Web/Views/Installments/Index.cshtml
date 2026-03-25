@@ -58,6 +58,7 @@
         }
         <div class="col-md-3"><input type="text" id="searchInput" class="form-control" placeholder="🔍 @Localizer["SearchStudent"]..." /></div>
         <div class="col-md-2"><select id="filterYear" class="form-select"><option value="">@Localizer["AllYears"]</option>@foreach (var y in Model.Select(m => m.AcademicYearName).Distinct().OrderBy(y => y)) { <option value="@y">@y</option> }</select></div>
+        <div class="col-md-2"><select id="filterPayStatus" class="form-select"><option value="">@Localizer["All"]</option><option value="fully-paid">@Localizer["FullyPaid"]</option><option value="has-pending">@Localizer["HasPending"]</option></select></div>
         <div class="col-md-1"><button class="btn btn-filter w-100" onclick="applyFilters()"><i class="fas fa-search"></i></button></div>
         <div class="col-md-1"><button class="btn btn-reset w-100" onclick="resetFilters()"><i class="fas fa-redo"></i></button></div>
     </div>
@@ -83,9 +84,9 @@
                     <td>@Model[i].AcademicYearName</td>
                     @if (isSuperAdmin) { <td>@Model[i].SchoolName</td> }
                     <td class="no-print">
-                        <div class="d-flex gap-1">
-                            <a href="@Url.Action("Edit", new { id = Model[i].Id })" class="btn btn-sm btn-primary" data-bs-toggle="tooltip" title="@Localizer["Edit"]"><i class="fas fa-edit"></i></a>
-                            <button class="btn btn-sm btn-danger" onclick="del(@Model[i].Id)" data-bs-toggle="tooltip" title="@Localizer["Delete"]"><i class="fas fa-trash"></i></button>
+                        <div class="action-group">
+                            <a href="@Url.Action("Edit", new { id = Model[i].Id })" class="btn-act btn-act-edit" data-bs-toggle="tooltip" title="@Localizer["Edit"]"><i class="fas fa-edit"></i></a>
+                            <button class="btn-act btn-act-delete" onclick="del(@Model[i].Id)" data-bs-toggle="tooltip" title="@Localizer["Delete"]"><i class="fas fa-trash"></i></button>
                         </div>
                     </td>
                 </tr>
@@ -115,12 +116,17 @@
         dt.search($('#searchInput').val());
         dt.column(yearColIdx).search($('#filterYear').val());
         if (isSuperAdmin) { dt.column(schoolColIdx).search($('#filterSchool').val()); }
+        var payFilter = $('#filterPayStatus').val();
+        if (payFilter === 'fully-paid') { dt.column(5).search('100%'); }
+        else if (payFilter === 'has-pending') { dt.column(5).search('').draw(); dt.rows().every(function () { var d = this.data(); if (d[5] && d[5].indexOf('100%') !== -1) { $(this.node()).hide(); } else { $(this.node()).show(); } }); }
+        else { dt.column(5).search(''); }
         dt.draw();
     }
     function resetFilters() {
-        $('#searchInput, #filterYear').val('');
+        $('#searchInput, #filterYear, #filterPayStatus').val('');
         if (isSuperAdmin) { $('#filterSchool').val(''); }
         dt.search('').columns().search('').draw();
+        dt.rows().every(function () { $(this.node()).show(); });
     }
     function del(id) { confirmDelete('@Url.Action("Delete")', id, function () { location.reload(); }); }
     function printSchedule() { window.print(); }

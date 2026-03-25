@@ -87,6 +87,8 @@ public class ChatRoomDto
     public string? ClassRoomName { get; set; }
     public int? SubjectId { get; set; }
     public string? SubjectName { get; set; }
+    public int? TeacherId { get; set; }
+    public string? TeacherName { get; set; }
 }
 
 public class ChatMessageDto
@@ -97,6 +99,8 @@ public class ChatMessageDto
     public string? SenderName { get; set; }
     public string? SenderType { get; set; }
     public string Message { get; set; } = string.Empty;
+    public string? FileUrl { get; set; }
+    public string? FileType { get; set; }
     public DateTime SentAt { get; set; }
     public bool IsRead { get; set; }
 }

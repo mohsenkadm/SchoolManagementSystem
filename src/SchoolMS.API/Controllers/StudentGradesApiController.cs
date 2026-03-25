@@ -35,26 +35,32 @@ public class StudentGradesApiController : ControllerBase
     private string GetUserTypeFromToken() =>
         User.FindFirst("UserType")?.Value ?? throw new UnauthorizedAccessException();
 
-    // جلب درجات الطلاب للمدرسة
+    // جلب درجات الطلاب للمدرسة مع فلاتر
     [HttpGet]
-    public async Task<ActionResult<List<StudentGradeDto>>> GetAll(int schoolId)
-        => Ok(await _service.GetBySchoolIdAsync(schoolId));
+    public async Task<ActionResult<List<StudentGradeDto>>> GetAll(int schoolId,
+        [FromQuery] int? subjectId = null, [FromQuery] int? examTypeId = null,
+        [FromQuery] int? academicYearId = null)
+        => Ok(await _service.GetBySchoolIdAsync(schoolId, subjectId, examTypeId, academicYearId));
 
-    // درجات الطالب - حسب فصل الطالب
+    // درجات الطالب - حسب فصل الطالب مع فلاتر
     [HttpGet("student")]
-    public async Task<ActionResult<List<StudentGradeDto>>> GetStudentGrades(int schoolId)
+    public async Task<ActionResult<List<StudentGradeDto>>> GetStudentGrades(int schoolId,
+        [FromQuery] int? subjectId = null, [FromQuery] int? examTypeId = null,
+        [FromQuery] int? academicYearId = null)
     {
         var userType = GetUserTypeFromToken();
         if (userType != "Student") return Forbid();
         var studentId = GetPersonIdFromToken();
         var student = await _studentRepo.Query().FirstOrDefaultAsync(s => s.Id == studentId && s.SchoolId == schoolId);
         if (student == null) return NotFound();
-        return Ok(await _service.GetByClassRoomIdsAsync(new List<int> { student.ClassRoomId }, schoolId));
+        return Ok(await _service.GetByClassRoomIdsAsync(new List<int> { student.ClassRoomId }, schoolId, subjectId, examTypeId, academicYearId));
     }
 
-    // درجات المعلم - حسب الفصول المعينة للمعلم
+    // درجات المعلم - حسب الفصول المعينة للمعلم مع فلاتر
     [HttpGet("teacher")]
-    public async Task<ActionResult<List<StudentGradeDto>>> GetTeacherGrades(int schoolId)
+    public async Task<ActionResult<List<StudentGradeDto>>> GetTeacherGrades(int schoolId,
+        [FromQuery] int? subjectId = null, [FromQuery] int? examTypeId = null,
+        [FromQuery] int? academicYearId = null)
     {
         var userType = GetUserTypeFromToken();
         if (userType != "Teacher") return Forbid();
@@ -62,12 +68,14 @@ public class StudentGradesApiController : ControllerBase
         var classRoomIds = await _assignmentRepo.Query()
             .Where(a => a.TeacherId == teacherId && a.SchoolId == schoolId)
             .Select(a => a.ClassRoomId).Distinct().ToListAsync();
-        return Ok(await _service.GetByClassRoomIdsAsync(classRoomIds, schoolId));
+        return Ok(await _service.GetByClassRoomIdsAsync(classRoomIds, schoolId, subjectId, examTypeId, academicYearId));
     }
 
-    // درجات أبناء ولي الأمر
+    // درجات أبناء ولي الأمر مع فلاتر
     [HttpGet("parent/children")]
-    public async Task<ActionResult<List<StudentGradeDto>>> GetParentChildrenGrades(int schoolId)
+    public async Task<ActionResult<List<StudentGradeDto>>> GetParentChildrenGrades(int schoolId,
+        [FromQuery] int? subjectId = null, [FromQuery] int? examTypeId = null,
+        [FromQuery] int? academicYearId = null)
     {
         var userType = GetUserTypeFromToken();
         if (userType != "Parent") return Forbid();
@@ -75,6 +83,6 @@ public class StudentGradesApiController : ControllerBase
         var classRoomIds = await _studentRepo.Query()
             .Where(s => s.ParentId == parentId && s.SchoolId == schoolId)
             .Select(s => s.ClassRoomId).Distinct().ToListAsync();
-        return Ok(await _service.GetByClassRoomIdsAsync(classRoomIds, schoolId));
+        return Ok(await _service.GetByClassRoomIdsAsync(classRoomIds, schoolId, subjectId, examTypeId, academicYearId));
     }
 }

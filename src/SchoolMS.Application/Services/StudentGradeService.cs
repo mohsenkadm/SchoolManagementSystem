@@ -27,10 +27,14 @@ public class StudentGradeService : IStudentGradeService
         return _mapper.Map<List<StudentGradeDto>>(items);
     }
 
-    public async Task<List<StudentGradeDto>> GetBySchoolIdAsync(int schoolId)
+    public async Task<List<StudentGradeDto>> GetBySchoolIdAsync(int schoolId,
+        int? subjectId = null, int? examTypeId = null, int? academicYearId = null)
     {
-        var items = await _repository.Query()
-            .Where(g => g.SchoolId == schoolId)
+        var query = _repository.Query().Where(g => g.SchoolId == schoolId);
+        if (subjectId.HasValue) query = query.Where(g => g.SubjectId == subjectId.Value);
+        if (examTypeId.HasValue) query = query.Where(g => g.ExamTypeId == examTypeId.Value);
+        if (academicYearId.HasValue) query = query.Where(g => g.AcademicYearId == academicYearId.Value);
+        var items = await query
             .Include(g => g.Student).Include(g => g.Subject)
             .Include(g => g.ExamType).Include(g => g.AcademicYear)
             .Include(g => g.School)
@@ -38,17 +42,20 @@ public class StudentGradeService : IStudentGradeService
         return _mapper.Map<List<StudentGradeDto>>(items);
     }
 
-    public async Task<List<StudentGradeDto>> GetByClassRoomIdsAsync(List<int> classRoomIds, int schoolId)
+    public async Task<List<StudentGradeDto>> GetByClassRoomIdsAsync(List<int> classRoomIds, int schoolId,
+        int? subjectId = null, int? examTypeId = null, int? academicYearId = null)
     {
         if (classRoomIds.Count == 0) return new List<StudentGradeDto>();
-        var studentIds = await _repository.Query()
+        var query = _repository.Query()
             .Where(g => g.SchoolId == schoolId)
             .Include(g => g.Student)
-            .Where(g => classRoomIds.Contains(g.Student.ClassRoomId))
-            .Select(g => g.Id)
-            .ToListAsync();
+            .Where(g => classRoomIds.Contains(g.Student.ClassRoomId));
+        if (subjectId.HasValue) query = query.Where(g => g.SubjectId == subjectId.Value);
+        if (examTypeId.HasValue) query = query.Where(g => g.ExamTypeId == examTypeId.Value);
+        if (academicYearId.HasValue) query = query.Where(g => g.AcademicYearId == academicYearId.Value);
+        var gradeIds = await query.Select(g => g.Id).ToListAsync();
         var items = await _repository.Query()
-            .Where(g => g.SchoolId == schoolId && studentIds.Contains(g.Id))
+            .Where(g => gradeIds.Contains(g.Id))
             .Include(g => g.Student).Include(g => g.Subject)
             .Include(g => g.ExamType).Include(g => g.AcademicYear)
             .Include(g => g.School)

@@ -60,7 +60,9 @@ public class ExamScheduleApiController : ControllerBase
 
     // جدول امتحانات المعلم - حسب الفصول المعينة للمعلم
     [HttpGet("teacher")]
-    public async Task<ActionResult<List<ExamScheduleDto>>> GetTeacherExams(int schoolId)
+    public async Task<ActionResult<List<ExamScheduleDto>>> GetTeacherExams(int schoolId,
+        [FromQuery] int? examTypeId = null, [FromQuery] int? subjectId = null,
+        [FromQuery] int? classRoomId = null, [FromQuery] int? academicYearId = null)
     {
         var userType = GetUserTypeFromToken();
         if (userType != "Teacher") return Forbid();
@@ -72,7 +74,14 @@ public class ExamScheduleApiController : ControllerBase
             .Distinct()
             .ToListAsync();
 
-        return Ok(await _service.GetByClassRoomIdsAsync(classRoomIds, schoolId));
+        if (classRoomId.HasValue)
+            classRoomIds = classRoomIds.Where(id => id == classRoomId.Value).ToList();
+
+        var results = await _service.GetByClassRoomIdsAsync(classRoomIds, schoolId);
+        if (examTypeId.HasValue) results = results.Where(e => e.ExamTypeId == examTypeId.Value).ToList();
+        if (subjectId.HasValue) results = results.Where(e => e.SubjectId == subjectId.Value).ToList();
+        if (academicYearId.HasValue) results = results.Where(e => e.AcademicYearId == academicYearId.Value).ToList();
+        return Ok(results);
     }
 
     // جدول امتحانات أبناء ولي الأمر - حسب فصول الأبناء

@@ -22,7 +22,7 @@
                             <td>@t.LeaveCode</td><td>@t.DefaultDaysPerYear</td>
                             <td>@(t.IsPaid ? "✅" : "❌")</td>
                             <td>@(t.IsActive ? "✅" : "❌")</td>
-                            <td><button class="btn btn-sm btn-danger" onclick="delType(@t.Id)"><i class="fas fa-trash"></i></button></td>
+                            <td><div class="action-group"><button class="btn-act btn-act-delete" onclick="delType(@t.Id)"><i class="fas fa-trash"></i></button></div></td>
                         </tr>
                     }
                 </tbody>

@@ -13,12 +13,14 @@ public class QuizService : IQuizService
     private readonly IRepository<QuizGroup> _groupRepo;
     private readonly IRepository<QuizQuestion> _questionRepo;
     private readonly IRepository<QuizAnswer> _answerRepo;
+    private readonly IRepository<Student> _studentRepo;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
 
     public QuizService(IRepository<QuizGroup> groupRepo, IRepository<QuizQuestion> questionRepo,
-        IRepository<QuizAnswer> answerRepo, IUnitOfWork unitOfWork, IMapper mapper)
-    { _groupRepo = groupRepo; _questionRepo = questionRepo; _answerRepo = answerRepo; _unitOfWork = unitOfWork; _mapper = mapper; }
+        IRepository<QuizAnswer> answerRepo, IRepository<Student> studentRepo,
+        IUnitOfWork unitOfWork, IMapper mapper)
+    { _groupRepo = groupRepo; _questionRepo = questionRepo; _answerRepo = answerRepo; _studentRepo = studentRepo; _unitOfWork = unitOfWork; _mapper = mapper; }
 
     public async Task<List<QuizGroupDto>> GetAllGroupsAsync()
     {
@@ -120,11 +122,15 @@ public class QuizService : IQuizService
         _questionRepo.Update(entity); await _unitOfWork.SaveChangesAsync();
     }
 
-    public async Task<List<QuizGroupDto>> GetBySchoolIdAsync(int schoolId, int? branchId = null, int? teacherId = null)
+    public async Task<List<QuizGroupDto>> GetBySchoolIdAsync(int schoolId, int? branchId = null, int? teacherId = null,
+        int? subjectId = null, int? academicYearId = null, int? classRoomId = null)
     {
         var query = _groupRepo.Query().Where(q => q.SchoolId == schoolId);
         if (branchId.HasValue) query = query.Where(q => q.ClassRoom.BranchId == branchId.Value);
         if (teacherId.HasValue) query = query.Where(q => q.TeacherId == teacherId.Value);
+        if (subjectId.HasValue) query = query.Where(q => q.SubjectId == subjectId.Value);
+        if (academicYearId.HasValue) query = query.Where(q => q.AcademicYearId == academicYearId.Value);
+        if (classRoomId.HasValue) query = query.Where(q => q.ClassRoomId == classRoomId.Value);
         var items = await query
             .Include(q => q.ClassRoom).ThenInclude(c => c.Grade)
             .Include(q => q.ClassRoom).ThenInclude(c => c.Division)
@@ -133,11 +139,15 @@ public class QuizService : IQuizService
         return MapGroups(items, await GetQuestionCounts(items));
     }
 
-    public async Task<List<QuizGroupDto>> GetByClassRoomIdsAsync(List<int> classRoomIds, int schoolId)
+    public async Task<List<QuizGroupDto>> GetByClassRoomIdsAsync(List<int> classRoomIds, int schoolId,
+        int? subjectId = null, int? teacherId = null)
     {
         if (classRoomIds.Count == 0) return new List<QuizGroupDto>();
-        var items = await _groupRepo.Query()
-            .Where(q => q.SchoolId == schoolId && classRoomIds.Contains(q.ClassRoomId))
+        var query = _groupRepo.Query()
+            .Where(q => q.SchoolId == schoolId && classRoomIds.Contains(q.ClassRoomId));
+        if (subjectId.HasValue) query = query.Where(q => q.SubjectId == subjectId.Value);
+        if (teacherId.HasValue) query = query.Where(q => q.TeacherId == teacherId.Value);
+        var items = await query
             .Include(q => q.ClassRoom).ThenInclude(c => c.Grade)
             .Include(q => q.ClassRoom).ThenInclude(c => c.Division)
             .Include(q => q.Subject).Include(q => q.Teacher)
@@ -196,6 +206,34 @@ public class QuizService : IQuizService
             .Include(a => a.QuizQuestion)
             .Include(a => a.Student)
             .ToListAsync();
+
+        return items.Select(a => new QuizAnswerDto
+        {
+            Id = a.Id, QuizQuestionId = a.QuizQuestionId,
+            QuestionText = a.QuizQuestion?.QuestionText,
+            StudentId = a.StudentId, StudentName = a.Student?.FullName,
+            Answer = a.Answer, IsCorrect = a.IsCorrect, PointsEarned = a.PointsEarned
+        }).ToList();
+    }
+
+    public async Task<List<QuizAnswerDto>> GetAllAnswersByGroupAsync(int quizGroupId, int? classRoomId = null)
+    {
+        var questionIds = await _questionRepo.Query()
+            .IgnoreQueryFilters()
+            .Where(q => !q.IsDeleted && q.QuizGroupId == quizGroupId)
+            .Select(q => q.Id)
+            .ToListAsync();
+
+        IQueryable<QuizAnswer> query = _answerRepo.Query()
+            .Where(a => questionIds.Contains(a.QuizQuestionId));
+
+        if (classRoomId.HasValue)
+            query = query.Where(a => a.Student.ClassRoomId == classRoomId.Value);
+
+        var items = await query
+            .Include(a => a.QuizQuestion)
+            .Include(a => a.Student)
+            .OrderBy(a => a.StudentId).ThenBy(a => a.QuizQuestionId).ToListAsync();
 
         return items.Select(a => new QuizAnswerDto
         {

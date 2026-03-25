@@ -7,7 +7,7 @@ using SubscriptionStatus = SchoolMS.Domain.Enums.SubscriptionStatus;
 
 namespace SchoolMS.Web.Controllers;
 
-[Authorize]
+[Authorize, RequireOnlinePlatform]
 public class StudentSubscriptionsController : Controller
 {
     private readonly IStudentSubscriptionService _service;

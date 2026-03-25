@@ -75,6 +75,16 @@
                         </a>
                     </li>
                     <li class="nav-item">
+                        <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Platform" && ViewContext.RouteData.Values["action"]?.ToString() == "StoragePlans" ? "active" : "")" href="@Url.Action("StoragePlans", "Platform")">
+                            <i class="fas fa-database"></i><span>@Localizer["StoragePlans"]</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Platform" && ViewContext.RouteData.Values["action"]?.ToString() == "StorageRequests" ? "active" : "")" href="@Url.Action("StorageRequests", "Platform")">
+                            <i class="fas fa-hdd"></i><span>@Localizer["StorageRequests"]</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "RegistrationRequests" ? "active" : "")" href="@Url.Action("Index", "RegistrationRequests")">
                             <i class="fas fa-clipboard-list"></i><span>@Localizer["RegistrationRequests"]</span>
                         </a>
@@ -87,6 +97,11 @@
                     </a>
                 </li>
                 <li class="nav-heading">@Localizer["Academic"]</li>
+                <li class="nav-item">
+                    <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "AcademicYears" ? "active" : "")" href="@Url.Action("Index", "AcademicYears")">
+                        <i class="fas fa-calendar-check"></i><span>@Localizer["AcademicYears"]</span>
+                    </a>
+                </li>
                 <li class="nav-item">
                     <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Students" ? "active" : "")" href="@Url.Action("Index", "Students")">
                         <i class="fas fa-user-graduate"></i><span>@Localizer["Students"]</span>
@@ -206,6 +221,13 @@
                         <i class="fas fa-comments"></i><span>@Localizer["Chat"]</span>
                     </a>
                 </li>
+                @{
+                    var isSuperAdmin = User.IsInRole("SuperAdmin");
+                    var includesCourses = isSuperAdmin || (Context.Items["IncludesCourses"] is bool ic && ic);
+                    var includesHr = isSuperAdmin || (Context.Items["IncludesHrModule"] is bool ihr && ihr);
+                }
+                @if (includesCourses)
+                {
                 <li class="nav-heading">@Localizer["OnlinePlatform"]</li>
                 <li class="nav-item">
                     <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Courses" ? "active" : "")" href="@Url.Action("Index", "Courses")">
@@ -232,7 +254,18 @@
                         <i class="fas fa-ticket-alt"></i><span>@Localizer["PromoCodes"]</span>
                     </a>
                 </li>
+                <li class="nav-item">
+                    <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "StorageRequests" ? "active" : "")" href="@Url.Action("Index", "StorageRequests")">
+                        <i class="fas fa-hdd"></i><span>@Localizer["StorageRequests"]</span>
+                    </a>
+                </li>
+                }
                 <li class="nav-heading">@Localizer["Administration"]</li>
+                <li class="nav-item">
+                    <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "SchoolSubscriptions" ? "active" : "")" href="@Url.Action("Index", "SchoolSubscriptions")">
+                        <i class="fas fa-crown"></i><span>Subscription</span>
+                    </a>
+                </li>
                 <li class="nav-item">
                     <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Branches" ? "active" : "")" href="@Url.Action("Index", "Branches")">
                         <i class="fas fa-building"></i><span>@Localizer["Branches"]</span>
@@ -316,7 +349,7 @@
                     </a>
                 </li>
                 @{ var ctrl = ViewContext.RouteData.Values["controller"]?.ToString() ?? ""; }
-                @if (ctrl.StartsWith("Hr") || true)
+                @if (includesHr)
                 {
                 <li class="nav-heading"><i class="fas fa-id-card-alt me-1 text-info"></i>@Localizer["HrModule"]</li>
                 <li class="nav-item">

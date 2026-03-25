@@ -13,12 +13,12 @@ public class LeaveService : ILeaveService
     private readonly IRepository<LeaveRequest> _repository;
     private readonly IRepository<Student> _studentRepo;
     private readonly IRepository<Teacher> _teacherRepo;
-    private readonly IRepository<Staff> _staffRepo;
+    private readonly IRepository<HrEmployee> _staffRepo;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
 
     public LeaveService(IRepository<LeaveRequest> repository, IRepository<Student> studentRepo,
-        IRepository<Teacher> teacherRepo, IRepository<Staff> staffRepo,
+        IRepository<Teacher> teacherRepo, IRepository<HrEmployee> staffRepo,
         IUnitOfWork unitOfWork, IMapper mapper)
     {
         _repository = repository; _studentRepo = studentRepo;

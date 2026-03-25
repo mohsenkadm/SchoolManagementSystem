@@ -13,15 +13,14 @@ public class LeavesController : Controller
     private readonly ITeacherService _teacherService;
     private readonly IStudentService _studentService;
     private readonly IPlatformService _platformService;
-    private readonly IStaffService _staffService;
     private readonly IOneSignalNotificationService _pushService;
 
     public LeavesController(ILeaveService service, ITeacherService teacherService,
-        IStudentService studentService, IPlatformService platformService, IStaffService staffService,
+        IStudentService studentService, IPlatformService platformService,
         IOneSignalNotificationService pushService)
     {
         _service = service; _teacherService = teacherService;
-        _studentService = studentService; _platformService = platformService; _staffService = staffService;
+        _studentService = studentService; _platformService = platformService;
         _pushService = pushService;
     }
 
@@ -118,12 +117,6 @@ public class LeavesController : Controller
         else if (personType == "Student")
         {
             var all = await _studentService.GetAllAsync();
-            var filtered = sid.HasValue ? all.Where(s => s.SchoolId == sid.Value).ToList() : all;
-            return Json(filtered.Select(s => new { id = s.Id, name = s.FullName }));
-        }
-        else if (personType == "Staff")
-        {
-            var all = await _staffService.GetAllAsync();
             var filtered = sid.HasValue ? all.Where(s => s.SchoolId == sid.Value).ToList() : all;
             return Json(filtered.Select(s => new { id = s.Id, name = s.FullName }));
         }

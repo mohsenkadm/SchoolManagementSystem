@@ -539,6 +539,9 @@ namespace SchoolMS.Infrastructure.Data.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<int?>("AcademicYearId")
+                        .HasColumnType("int");
+
                     b.Property<DateTime>("AttendanceDate")
                         .HasColumnType("datetime2");
 
@@ -576,9 +579,6 @@ namespace SchoolMS.Infrastructure.Data.Migrations
                     b.Property<int>("SchoolId")
                         .HasColumnType("int");
 
-                    b.Property<int?>("StaffId")
-                        .HasColumnType("int");
-
                     b.Property<int?>("StudentId")
                         .HasColumnType("int");
 
@@ -599,11 +599,11 @@ namespace SchoolMS.Infrastructure.Data.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("AcademicYearId");
+
                     b.HasIndex("BranchId");
 
                     b.HasIndex("SchoolId");
-
-                    b.HasIndex("StaffId");
 
                     b.HasIndex("StudentId");
 
@@ -868,6 +868,12 @@ namespace SchoolMS.Infrastructure.Data.Migrations
                     b.Property<string>("DeletedBy")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("FileType")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("FileUrl")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
@@ -883,6 +889,10 @@ namespace SchoolMS.Infrastructure.Data.Migrations
 
                     b.Property<int>("SenderId")
                         .HasColumnType("int");
+
+                    b.Property<string>("SenderName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("SenderType")
                         .IsRequired()
@@ -946,6 +956,9 @@ namespace SchoolMS.Infrastructure.Data.Migrations
                     b.Property<int?>("SubjectId")
                         .HasColumnType("int");
 
+                    b.Property<int?>("TeacherId")
+                        .HasColumnType("int");
+
                     b.Property<int>("Type")
                         .HasColumnType("int");
 
@@ -964,6 +977,8 @@ namespace SchoolMS.Infrastructure.Data.Migrations
                     b.HasIndex("SchoolId");
 
                     b.HasIndex("SubjectId");
+
+                    b.HasIndex("TeacherId");
 
                     b.ToTable("ChatRooms");
                 });
@@ -1122,6 +1137,10 @@ namespace SchoolMS.Infrastructure.Data.Migrations
 
                     b.Property<string>("BackgroundImage")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal?>("CommissionRate")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
@@ -1763,6 +1782,9 @@ namespace SchoolMS.Infrastructure.Data.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<int?>("AcademicYearId")
+                        .HasColumnType("int");
+
                     b.Property<string>("AttachmentUrl")
                         .HasColumnType("nvarchar(max)");
 
@@ -1820,6 +1842,8 @@ namespace SchoolMS.Infrastructure.Data.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("AcademicYearId");
 
                     b.HasIndex("SchoolId");
 
@@ -2899,6 +2923,9 @@ namespace SchoolMS.Infrastructure.Data.Migrations
 
                     b.Property<int?>("NumberOfDependents")
                         .HasColumnType("int");
+
+                    b.Property<string>("Password")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("PersonalEmail")
                         .HasColumnType("nvarchar(max)");
@@ -6398,10 +6425,21 @@ namespace SchoolMS.Infrastructure.Data.Migrations
                     b.Property<int>("SchoolId")
                         .HasColumnType("int");
 
+                    b.Property<string>("SenderName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("SenderType")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<DateTime>("SentAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<int>("StudentId")
+                    b.Property<int?>("StudentId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("TeacherId")
                         .HasColumnType("int");
 
                     b.Property<DateTime?>("UpdatedAt")
@@ -6417,6 +6455,8 @@ namespace SchoolMS.Infrastructure.Data.Migrations
                     b.HasIndex("SchoolId");
 
                     b.HasIndex("StudentId");
+
+                    b.HasIndex("TeacherId");
 
                     b.ToTable("LiveStreamComments");
                 });
@@ -7294,6 +7334,10 @@ namespace SchoolMS.Infrastructure.Data.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<decimal>("DefaultTeacherCommissionRate")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("datetime2");
 
@@ -7613,23 +7657,13 @@ namespace SchoolMS.Infrastructure.Data.Migrations
                     b.ToTable("SchoolSubscriptions");
                 });
 
-            modelBuilder.Entity("SchoolMS.Domain.Entities.Staff", b =>
+            modelBuilder.Entity("SchoolMS.Domain.Entities.StoragePlan", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("BadgeCardNumber")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<decimal>("BaseSalary")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<int>("BranchId")
-                        .HasColumnType("int");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
@@ -7644,24 +7678,29 @@ namespace SchoolMS.Infrastructure.Data.Migrations
                     b.Property<string>("DeletedBy")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("FullName")
-                        .IsRequired()
+                    b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
-                    b.Property<string>("Password")
+                    b.Property<string>("PlanName")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Phone")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Position")
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<decimal>("Price")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<int>("SchoolId")
                         .HasColumnType("int");
+
+                    b.Property<decimal>("StorageGB")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
@@ -7669,16 +7708,11 @@ namespace SchoolMS.Infrastructure.Data.Migrations
                     b.Property<string>("UpdatedBy")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Username")
-                        .HasColumnType("nvarchar(max)");
-
                     b.HasKey("Id");
-
-                    b.HasIndex("BranchId");
 
                     b.HasIndex("SchoolId");
 
-                    b.ToTable("StaffMembers");
+                    b.ToTable("StoragePlans");
                 });
 
             modelBuilder.Entity("SchoolMS.Domain.Entities.StorageRequest", b =>
@@ -7734,6 +7768,9 @@ namespace SchoolMS.Infrastructure.Data.Migrations
                     b.Property<int>("SchoolSubscriptionId")
                         .HasColumnType("int");
 
+                    b.Property<int?>("StoragePlanId")
+                        .HasColumnType("int");
+
                     b.Property<decimal>("TotalPrice")
                         .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
@@ -7750,6 +7787,8 @@ namespace SchoolMS.Infrastructure.Data.Migrations
 
                     b.HasIndex("SchoolSubscriptionId");
 
+                    b.HasIndex("StoragePlanId");
+
                     b.ToTable("StorageRequests");
                 });
 
@@ -7763,6 +7802,9 @@ namespace SchoolMS.Infrastructure.Data.Migrations
 
                     b.Property<int>("AcademicYearId")
                         .HasColumnType("int");
+
+                    b.Property<string>("ActiveDeviceId")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Address")
                         .HasColumnType("nvarchar(max)");
@@ -7867,6 +7909,9 @@ namespace SchoolMS.Infrastructure.Data.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<int?>("AcademicYearId")
+                        .HasColumnType("int");
+
                     b.Property<string>("ActionTaken")
                         .HasColumnType("nvarchar(max)");
 
@@ -7924,6 +7969,8 @@ namespace SchoolMS.Infrastructure.Data.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("AcademicYearId");
 
                     b.HasIndex("SchoolId");
 
@@ -8532,6 +8579,82 @@ namespace SchoolMS.Infrastructure.Data.Migrations
                     b.ToTable("TeacherAssignments");
                 });
 
+            modelBuilder.Entity("SchoolMS.Domain.Entities.TeacherEarning", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("CommissionRate")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int?>("CourseId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("DeletedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal>("EarningAmount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Notes")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("PaidAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("SchoolId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("StudentSubscriptionId")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("SubscriptionAmount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("TeacherId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CourseId");
+
+                    b.HasIndex("SchoolId");
+
+                    b.HasIndex("StudentSubscriptionId");
+
+                    b.HasIndex("TeacherId");
+
+                    b.ToTable("TeacherEarnings");
+                });
+
             modelBuilder.Entity("SchoolMS.Domain.Entities.TransportRoute", b =>
                 {
                     b.Property<int>("Id")
@@ -8924,6 +9047,179 @@ namespace SchoolMS.Infrastructure.Data.Migrations
                     b.HasIndex("StudentId");
 
                     b.ToTable("VideoLikes");
+                });
+
+            modelBuilder.Entity("SchoolMS.Domain.Entities.VideoNote", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CourseVideoId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("DeletedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("NoteText")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("SchoolId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("StudentId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CourseVideoId");
+
+                    b.HasIndex("SchoolId");
+
+                    b.HasIndex("StudentId");
+
+                    b.ToTable("VideoNotes");
+                });
+
+            modelBuilder.Entity("SchoolMS.Domain.Entities.VideoQuizAnswer", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("AnsweredAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("DeletedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsCorrect")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("SchoolId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("SelectedAnswer")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("StudentId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("VideoQuizQuestionId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SchoolId");
+
+                    b.HasIndex("StudentId");
+
+                    b.HasIndex("VideoQuizQuestionId");
+
+                    b.ToTable("VideoQuizAnswers");
+                });
+
+            modelBuilder.Entity("SchoolMS.Domain.Entities.VideoQuizQuestion", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("CorrectAnswer")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("CourseVideoId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("DeletedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Options")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("QuestionText")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("SchoolId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CourseVideoId");
+
+                    b.HasIndex("SchoolId");
+
+                    b.ToTable("VideoQuizQuestions");
                 });
 
             modelBuilder.Entity("SchoolMS.Domain.Entities.VideoRating", b =>
@@ -9328,6 +9624,10 @@ namespace SchoolMS.Infrastructure.Data.Migrations
 
             modelBuilder.Entity("SchoolMS.Domain.Entities.Attendance", b =>
                 {
+                    b.HasOne("SchoolMS.Domain.Entities.AcademicYear", "AcademicYear")
+                        .WithMany()
+                        .HasForeignKey("AcademicYearId");
+
                     b.HasOne("SchoolMS.Domain.Entities.Branch", "Branch")
                         .WithMany()
                         .HasForeignKey("BranchId")
@@ -9340,10 +9640,6 @@ namespace SchoolMS.Infrastructure.Data.Migrations
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
-                    b.HasOne("SchoolMS.Domain.Entities.Staff", null)
-                        .WithMany("Attendances")
-                        .HasForeignKey("StaffId");
-
                     b.HasOne("SchoolMS.Domain.Entities.Student", null)
                         .WithMany("Attendances")
                         .HasForeignKey("StudentId");
@@ -9351,6 +9647,8 @@ namespace SchoolMS.Infrastructure.Data.Migrations
                     b.HasOne("SchoolMS.Domain.Entities.Teacher", null)
                         .WithMany("Attendances")
                         .HasForeignKey("TeacherId");
+
+                    b.Navigation("AcademicYear");
 
                     b.Navigation("Branch");
 
@@ -9446,6 +9744,11 @@ namespace SchoolMS.Infrastructure.Data.Migrations
                         .HasForeignKey("SubjectId")
                         .OnDelete(DeleteBehavior.NoAction);
 
+                    b.HasOne("SchoolMS.Domain.Entities.Teacher", "Teacher")
+                        .WithMany()
+                        .HasForeignKey("TeacherId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
                     b.Navigation("Branch");
 
                     b.Navigation("ClassRoom");
@@ -9453,6 +9756,8 @@ namespace SchoolMS.Infrastructure.Data.Migrations
                     b.Navigation("School");
 
                     b.Navigation("Subject");
+
+                    b.Navigation("Teacher");
                 });
 
             modelBuilder.Entity("SchoolMS.Domain.Entities.ClassRoom", b =>
@@ -9758,6 +10063,10 @@ namespace SchoolMS.Infrastructure.Data.Migrations
 
             modelBuilder.Entity("SchoolMS.Domain.Entities.HealthRecord", b =>
                 {
+                    b.HasOne("SchoolMS.Domain.Entities.AcademicYear", "AcademicYear")
+                        .WithMany()
+                        .HasForeignKey("AcademicYearId");
+
                     b.HasOne("SchoolMS.Domain.Entities.School", "School")
                         .WithMany()
                         .HasForeignKey("SchoolId")
@@ -9769,6 +10078,8 @@ namespace SchoolMS.Infrastructure.Data.Migrations
                         .HasForeignKey("StudentId")
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
+
+                    b.Navigation("AcademicYear");
 
                     b.Navigation("School");
 
@@ -10043,7 +10354,7 @@ namespace SchoolMS.Infrastructure.Data.Migrations
             modelBuilder.Entity("SchoolMS.Domain.Entities.HrEmployee", b =>
                 {
                     b.HasOne("SchoolMS.Domain.Entities.Branch", "Branch")
-                        .WithMany()
+                        .WithMany("StaffMembers")
                         .HasForeignKey("BranchId")
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
@@ -10895,14 +11206,20 @@ namespace SchoolMS.Infrastructure.Data.Migrations
                     b.HasOne("SchoolMS.Domain.Entities.Student", "Student")
                         .WithMany()
                         .HasForeignKey("StudentId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.HasOne("SchoolMS.Domain.Entities.Teacher", "Teacher")
+                        .WithMany()
+                        .HasForeignKey("TeacherId")
+                        .OnDelete(DeleteBehavior.NoAction);
 
                     b.Navigation("LiveStream");
 
                     b.Navigation("School");
 
                     b.Navigation("Student");
+
+                    b.Navigation("Teacher");
                 });
 
             modelBuilder.Entity("SchoolMS.Domain.Entities.LiveStreamSeen", b =>
@@ -11214,21 +11531,13 @@ namespace SchoolMS.Infrastructure.Data.Migrations
                     b.Navigation("SystemSubscriptionPlan");
                 });
 
-            modelBuilder.Entity("SchoolMS.Domain.Entities.Staff", b =>
+            modelBuilder.Entity("SchoolMS.Domain.Entities.StoragePlan", b =>
                 {
-                    b.HasOne("SchoolMS.Domain.Entities.Branch", "Branch")
-                        .WithMany("StaffMembers")
-                        .HasForeignKey("BranchId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-
                     b.HasOne("SchoolMS.Domain.Entities.School", "School")
                         .WithMany()
                         .HasForeignKey("SchoolId")
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
-
-                    b.Navigation("Branch");
 
                     b.Navigation("School");
                 });
@@ -11247,9 +11556,16 @@ namespace SchoolMS.Infrastructure.Data.Migrations
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
+                    b.HasOne("SchoolMS.Domain.Entities.StoragePlan", "StoragePlan")
+                        .WithMany("StorageRequests")
+                        .HasForeignKey("StoragePlanId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
                     b.Navigation("School");
 
                     b.Navigation("SchoolSubscription");
+
+                    b.Navigation("StoragePlan");
                 });
 
             modelBuilder.Entity("SchoolMS.Domain.Entities.Student", b =>
@@ -11296,6 +11612,10 @@ namespace SchoolMS.Infrastructure.Data.Migrations
 
             modelBuilder.Entity("SchoolMS.Domain.Entities.StudentBehavior", b =>
                 {
+                    b.HasOne("SchoolMS.Domain.Entities.AcademicYear", "AcademicYear")
+                        .WithMany()
+                        .HasForeignKey("AcademicYearId");
+
                     b.HasOne("SchoolMS.Domain.Entities.School", "School")
                         .WithMany()
                         .HasForeignKey("SchoolId")
@@ -11307,6 +11627,8 @@ namespace SchoolMS.Infrastructure.Data.Migrations
                         .HasForeignKey("StudentId")
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
+
+                    b.Navigation("AcademicYear");
 
                     b.Navigation("School");
 
@@ -11580,6 +11902,39 @@ namespace SchoolMS.Infrastructure.Data.Migrations
                     b.Navigation("Teacher");
                 });
 
+            modelBuilder.Entity("SchoolMS.Domain.Entities.TeacherEarning", b =>
+                {
+                    b.HasOne("SchoolMS.Domain.Entities.Course", "Course")
+                        .WithMany()
+                        .HasForeignKey("CourseId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.HasOne("SchoolMS.Domain.Entities.School", "School")
+                        .WithMany()
+                        .HasForeignKey("SchoolId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("SchoolMS.Domain.Entities.StudentSubscription", "StudentSubscription")
+                        .WithMany()
+                        .HasForeignKey("StudentSubscriptionId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.HasOne("SchoolMS.Domain.Entities.Teacher", "Teacher")
+                        .WithMany()
+                        .HasForeignKey("TeacherId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("Course");
+
+                    b.Navigation("School");
+
+                    b.Navigation("StudentSubscription");
+
+                    b.Navigation("Teacher");
+                });
+
             modelBuilder.Entity("SchoolMS.Domain.Entities.TransportRoute", b =>
                 {
                     b.HasOne("SchoolMS.Domain.Entities.Branch", "Branch")
@@ -11751,6 +12106,79 @@ namespace SchoolMS.Infrastructure.Data.Migrations
                     b.Navigation("School");
 
                     b.Navigation("Student");
+                });
+
+            modelBuilder.Entity("SchoolMS.Domain.Entities.VideoNote", b =>
+                {
+                    b.HasOne("SchoolMS.Domain.Entities.CourseVideo", "CourseVideo")
+                        .WithMany("Notes")
+                        .HasForeignKey("CourseVideoId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("SchoolMS.Domain.Entities.School", "School")
+                        .WithMany()
+                        .HasForeignKey("SchoolId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("SchoolMS.Domain.Entities.Student", "Student")
+                        .WithMany()
+                        .HasForeignKey("StudentId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("CourseVideo");
+
+                    b.Navigation("School");
+
+                    b.Navigation("Student");
+                });
+
+            modelBuilder.Entity("SchoolMS.Domain.Entities.VideoQuizAnswer", b =>
+                {
+                    b.HasOne("SchoolMS.Domain.Entities.School", "School")
+                        .WithMany()
+                        .HasForeignKey("SchoolId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("SchoolMS.Domain.Entities.Student", "Student")
+                        .WithMany()
+                        .HasForeignKey("StudentId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("SchoolMS.Domain.Entities.VideoQuizQuestion", "VideoQuizQuestion")
+                        .WithMany("Answers")
+                        .HasForeignKey("VideoQuizQuestionId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("School");
+
+                    b.Navigation("Student");
+
+                    b.Navigation("VideoQuizQuestion");
+                });
+
+            modelBuilder.Entity("SchoolMS.Domain.Entities.VideoQuizQuestion", b =>
+                {
+                    b.HasOne("SchoolMS.Domain.Entities.CourseVideo", "CourseVideo")
+                        .WithMany("QuizQuestions")
+                        .HasForeignKey("CourseVideoId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("SchoolMS.Domain.Entities.School", "School")
+                        .WithMany()
+                        .HasForeignKey("SchoolId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("CourseVideo");
+
+                    b.Navigation("School");
                 });
 
             modelBuilder.Entity("SchoolMS.Domain.Entities.VideoRating", b =>
@@ -11931,6 +12359,10 @@ namespace SchoolMS.Infrastructure.Data.Migrations
                     b.Navigation("Favorites");
 
                     b.Navigation("Likes");
+
+                    b.Navigation("Notes");
+
+                    b.Navigation("QuizQuestions");
 
                     b.Navigation("Ratings");
 
@@ -12124,9 +12556,9 @@ namespace SchoolMS.Infrastructure.Data.Migrations
                     b.Navigation("StorageRequests");
                 });
 
-            modelBuilder.Entity("SchoolMS.Domain.Entities.Staff", b =>
+            modelBuilder.Entity("SchoolMS.Domain.Entities.StoragePlan", b =>
                 {
-                    b.Navigation("Attendances");
+                    b.Navigation("StorageRequests");
                 });
 
             modelBuilder.Entity("SchoolMS.Domain.Entities.Student", b =>
@@ -12180,6 +12612,11 @@ namespace SchoolMS.Infrastructure.Data.Migrations
                     b.Navigation("Stops");
 
                     b.Navigation("StudentTransports");
+                });
+
+            modelBuilder.Entity("SchoolMS.Domain.Entities.VideoQuizQuestion", b =>
+                {
+                    b.Navigation("Answers");
                 });
 #pragma warning restore 612, 618
         }
