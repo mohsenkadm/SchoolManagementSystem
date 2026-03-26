@@ -1,0 +1,56 @@
+@{
+    ViewData["Title"] = System.Globalization.CultureInfo.CurrentUICulture.Name == "ar" ? "الإشعارات" : "Notifications";
+    var isRtl = System.Globalization.CultureInfo.CurrentUICulture.Name == "ar";
+    var notifications = Model as List<Notification> ?? new List<Notification>();
+}
+
+<div class="sp-page-header">
+    <h1 class="sp-page-title"><i class="fas fa-bell" style="color:var(--sp-primary);"></i> @ViewData["Title"]</h1>
+    <p class="sp-page-subtitle">@(isRtl ? "جميع الإشعارات والتنبيهات" : "All your notifications and alerts")</p>
+</div>
+
+@if (notifications.Count > 0)
+{
+    <div class="sp-notif-list">
+        @foreach (var n in notifications)
+        {
+            <div class="sp-notif-item">
+                <div class="sp-notif-icon">
+                    @switch (n.Target)
+                    {
+                        case NotificationTarget.Individual:
+                            <i class="fas fa-user"></i>
+                            break;
+                        case NotificationTarget.Class:
+                            <i class="fas fa-school"></i>
+                            break;
+                        case NotificationTarget.Branch:
+                            <i class="fas fa-building"></i>
+                            break;
+                        default:
+                            <i class="fas fa-bell"></i>
+                            break;
+                    }
+                </div>
+                <div class="sp-notif-body">
+                    <div class="sp-notif-title">@n.Title</div>
+                    <div class="sp-notif-msg">@n.Message</div>
+                    <div class="sp-notif-time">
+                        <i class="fas fa-clock"></i> @n.CreatedAt.ToString("yyyy/MM/dd HH:mm")
+                        @if (n.Target == NotificationTarget.Individual)
+                        {
+                            <span class="sp-badge" style="margin-inline-start:8px;font-size:0.68rem;">@(isRtl ? "شخصي" : "Personal")</span>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+else
+{
+    <div class="sp-empty">
+        <i class="fas fa-bell-slash"></i>
+        <p>@(isRtl ? "لا توجد إشعارات" : "No notifications")</p>
+    </div>
+}

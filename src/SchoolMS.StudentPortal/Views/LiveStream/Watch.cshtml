@@ -1,0 +1,118 @@
+@model LiveStream
+@{
+    ViewData["Title"] = Model.Title;
+    var isRtl = System.Globalization.CultureInfo.CurrentUICulture.Name == "ar";
+    var studentId = (int)(ViewBag.StudentId ?? 0);
+}
+
+<div class="sp-page-header" style="margin-bottom:16px;">
+    <a asp-action="Index" style="color:var(--sp-text-muted);font-size:0.85rem;">
+        <i class="fas fa-arrow-right"></i> @(isRtl ? "البث المباشر" : "Live Streams")
+    </a>
+</div>
+
+<div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
+    <h1 class="sp-page-title" style="margin:0;">@Model.Title</h1>
+    @if (Model.Status == LiveStreamStatus.Live)
+    {
+        <span class="sp-badge live"><i class="fas fa-circle" style="font-size:0.5rem;"></i> @(isRtl ? "مباشر" : "LIVE")</span>
+    }
+    else if (Model.Status == LiveStreamStatus.Scheduled)
+    {
+        <span class="sp-badge warning"><i class="fas fa-clock"></i> @(isRtl ? "مجدول" : "Scheduled")</span>
+    }
+    else
+    {
+        <span class="sp-badge"><i class="fas fa-check"></i> @(isRtl ? "انتهى" : "Ended")</span>
+    }
+</div>
+
+<!-- Stream Player -->
+<div class="sp-player-wrapper" style="margin-bottom:24px;">
+    @if (!string.IsNullOrEmpty(Model.StreamUrl))
+    {
+        <iframe src="@Model.StreamUrl" allowfullscreen></iframe>
+    }
+    else if (!string.IsNullOrEmpty(Model.CloudflareStreamId))
+    {
+        <iframe src="https://iframe.videodelivery.net/@Model.CloudflareStreamId" allowfullscreen></iframe>
+    }
+    else
+    {
+        <div class="sp-player-lock">
+            <i class="fas fa-broadcast-tower" style="font-size:3rem;"></i>
+            @if (Model.Status == LiveStreamStatus.Scheduled)
+            {
+                <p>@(isRtl ? "البث لم يبدأ بعد" : "Stream has not started yet")</p>
+                <p style="font-size:0.85rem;opacity:0.7;">@Model.ScheduledAt.ToString("yyyy/MM/dd HH:mm")</p>
+            }
+            else
+            {
+                <p>@(isRtl ? "البث غير متاح حالياً" : "Stream not available")</p>
+            }
+        </div>
+    }
+</div>
+
+<!-- Stream Info -->
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+    <div style="background:var(--sp-bg-card);border:1px solid var(--sp-border);border-radius:var(--sp-radius);padding:20px;">
+        <h3 style="font-weight:700;font-size:1rem;margin-bottom:16px;">
+            <i class="fas fa-info-circle" style="color:var(--sp-primary);margin-inline-end:8px;"></i>
+            @(isRtl ? "معلومات البث" : "Stream Info")
+        </h3>
+        <div style="display:flex;flex-direction:column;gap:8px;font-size:0.9rem;">
+            <div><i class="fas fa-chalkboard-teacher" style="width:20px;color:var(--sp-primary);"></i> @Model.Teacher?.FullName</div>
+            <div><i class="fas fa-book" style="width:20px;color:var(--sp-primary);"></i> @Model.Subject?.SubjectName</div>
+            <div><i class="fas fa-calendar" style="width:20px;color:var(--sp-primary);"></i> @Model.ScheduledAt.ToString("yyyy/MM/dd HH:mm")</div>
+            <div><i class="fas fa-eye" style="width:20px;color:var(--sp-primary);"></i> @Model.SeenCount @(isRtl ? "مشاهدة" : "views")</div>
+            @if (Model.Course != null)
+            {
+                <div><i class="fas fa-play-circle" style="width:20px;color:var(--sp-primary);"></i> @Model.Course.Title</div>
+            }
+        </div>
+    </div>
+
+    <div style="background:var(--sp-bg-card);border:1px solid var(--sp-border);border-radius:var(--sp-radius);padding:20px;">
+        <h3 style="font-weight:700;font-size:1rem;margin-bottom:16px;">
+            <i class="fas fa-comments" style="color:var(--sp-primary);margin-inline-end:8px;"></i>
+            @(isRtl ? "التعليقات" : "Comments") (@Model.Comments.Count)
+        </h3>
+        <div style="max-height:300px;overflow-y:auto;">
+            @if (Model.Comments.Any())
+            {
+                <div class="sp-comment-list">
+                    @foreach (var c in Model.Comments)
+                    {
+                        <div class="sp-comment-item">
+                            <div class="sp-avatar" style="width:28px;height:28px;font-size:0.6rem;">
+                                @(c.SenderName.Length > 0 ? c.SenderName[0].ToString() : "?")
+                            </div>
+                            <div class="sp-comment-body">
+                                <div class="sp-comment-name">@c.SenderName <span style="font-size:0.7rem;color:var(--sp-text-muted);">(@c.SenderType)</span></div>
+                                <div class="sp-comment-text">@c.Comment</div>
+                                <div class="sp-comment-date">@c.SentAt.ToString("HH:mm")</div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <div style="text-align:center;color:var(--sp-text-muted);padding:20px;font-size:0.85rem;">
+                    @(isRtl ? "لا توجد تعليقات" : "No comments yet")
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@section Styles {
+<style>
+    @@media (max-width: 767px) {
+        div[style*="grid-template-columns:1fr 1fr"] {
+            grid-template-columns: 1fr !important;
+        }
+    }
+</style>
+}

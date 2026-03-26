@@ -1,0 +1,144 @@
+@{
+    Layout = null;
+    var slug = ViewBag.SchoolSlug as string;
+    var otpContext = ViewBag.OtpContext as string ?? "register";
+    var error = ViewBag.Error as string;
+    var isRtl = System.Globalization.CultureInfo.CurrentUICulture.Name == "ar";
+    var isRegister = otpContext == "register";
+}
+<!DOCTYPE html>
+<html lang="@(isRtl ? "ar" : "en")" dir="@(isRtl ? "rtl" : "ltr")">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@(isRtl ? "التحقق من الرمز" : "Verify Code") - SchoolMS</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <link rel="stylesheet" href="~/css/portal.css" asp-append-version="true" />
+</head>
+<body class="sp-body">
+    <div class="sp-auth-page">
+        <div class="sp-auth-bg">
+            <div class="orb orb-1"></div>
+            <div class="orb orb-2"></div>
+            <div class="orb orb-3"></div>
+        </div>
+
+        <div class="sp-auth-card" style="max-width:440px;">
+            <div class="sp-auth-header">
+                <div class="sp-auth-icon">
+                    <i class="fas fa-envelope-open-text"></i>
+                </div>
+                <h2 class="gradient-text">@(isRtl ? "أدخل رمز التحقق" : "Enter Verification Code")</h2>
+                <p>
+                    @if (isRegister)
+                    {
+                        @(isRtl
+                            ? "أرسلنا رمز تحقق مكوّن من 6 أرقام إلى هاتفك"
+                            : "We sent a 6-digit verification code to your phone")
+                    }
+                    else
+                    {
+                        @(isRtl
+                            ? "أرسلنا رمز تحقق مكوّن من 6 أرقام إلى رقم هاتفك المسجّل"
+                            : "We sent a 6-digit verification code to your registered phone number")
+                    }
+                </p>
+            </div>
+
+            @if (!string.IsNullOrEmpty(error))
+            {
+                <div class="login-error">
+                    <i class="fas fa-exclamation-circle"></i> @error
+                </div>
+            }
+
+            <form method="post" class="sp-auth-form" id="otpForm">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="slug" value="@slug" />
+                <input type="hidden" name="context" value="@otpContext" />
+                <input type="hidden" name="otp" id="otpHidden" />
+
+                <div class="sp-otp-inputs">
+                    <input type="text" maxlength="1" inputmode="numeric" autofocus />
+                    <input type="text" maxlength="1" inputmode="numeric" />
+                    <input type="text" maxlength="1" inputmode="numeric" />
+                    <input type="text" maxlength="1" inputmode="numeric" />
+                    <input type="text" maxlength="1" inputmode="numeric" />
+                    <input type="text" maxlength="1" inputmode="numeric" />
+                </div>
+
+                <button type="submit" class="sp-auth-btn">
+                    <i class="fas fa-check-circle"></i>
+                    @(isRtl ? "تأكيد الرمز" : "Verify Code")
+                </button>
+            </form>
+
+            <div class="sp-resend-timer" style="margin-top:20px;">
+                <span id="timerText">
+                    @(isRtl ? "إعادة الإرسال خلال" : "Resend in") <strong id="countdown">60</strong> @(isRtl ? "ثانية" : "s")
+                </span>
+                <a id="resendBtn" style="display:none;" onclick="resendOtp()">
+                    <i class="fas fa-redo"></i> @(isRtl ? "إعادة إرسال الرمز" : "Resend Code")
+                </a>
+            </div>
+
+            <div class="sp-auth-divider">@(isRtl ? "أو" : "or")</div>
+
+            <div class="sp-auth-links">
+                <a asp-controller="Account" asp-action="@(isRegister ? "Register" : "Login")" asp-route-slug="@slug">
+                    <i class="fas fa-arrow-right" style="margin-inline-end:4px;"></i>
+                    @(isRtl ? "العودة" : "Go Back")
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script src="~/js/portal.js" asp-append-version="true"></script>
+    <script>
+        // OTP form submission: combine individual inputs
+        document.getElementById('otpForm').addEventListener('submit', function (e) {
+            var inputs = document.querySelectorAll('.sp-otp-inputs input');
+            var code = '';
+            inputs.forEach(function (inp) { code += inp.value; });
+            document.getElementById('otpHidden').value = code;
+            if (code.length < 6) { e.preventDefault(); inputs[0].focus(); }
+        });
+
+        // Countdown timer
+        var seconds = 60;
+        var interval = setInterval(function () {
+            seconds--;
+            var el = document.getElementById('countdown');
+            if (el) el.textContent = seconds;
+            if (seconds <= 0) {
+                clearInterval(interval);
+                var timer = document.getElementById('timerText');
+                var resend = document.getElementById('resendBtn');
+                if (timer) timer.style.display = 'none';
+                if (resend) resend.style.display = 'inline';
+            }
+        }, 1000);
+
+        function resendOtp() {
+            var resend = document.getElementById('resendBtn');
+            if (resend) { resend.style.display = 'none'; }
+            var timer = document.getElementById('timerText');
+            if (timer) { timer.style.display = 'inline'; }
+            seconds = 60;
+            var el = document.getElementById('countdown');
+            if (el) el.textContent = seconds;
+            interval = setInterval(function () {
+                seconds--;
+                if (el) el.textContent = seconds;
+                if (seconds <= 0) {
+                    clearInterval(interval);
+                    if (timer) timer.style.display = 'none';
+                    if (resend) resend.style.display = 'inline';
+                }
+            }, 1000);
+        }
+    </script>
+</body>
+</html>

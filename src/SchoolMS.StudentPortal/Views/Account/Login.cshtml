@@ -1,0 +1,117 @@
+@{
+    Layout = null;
+    var slug = ViewBag.SchoolSlug as string;
+    var schoolName = ViewBag.SchoolName as string;
+    var schoolLogo = ViewBag.SchoolLogo as string;
+    var error = ViewBag.Error as string;
+    var isRtl = System.Globalization.CultureInfo.CurrentUICulture.Name == "ar";
+}
+<!DOCTYPE html>
+<html lang="@(isRtl ? "ar" : "en")" dir="@(isRtl ? "rtl" : "ltr")">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@(isRtl ? "تسجيل الدخول" : "Login") - SchoolMS</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <link rel="stylesheet" href="~/css/portal.css" asp-append-version="true" />
+</head>
+<body class="sp-body">
+    <div class="login-page">
+        <div class="login-bg-orbs">
+            <div class="orb orb-1"></div>
+            <div class="orb orb-2"></div>
+        </div>
+
+        <div class="login-card">
+            <div class="login-logo">
+                @if (!string.IsNullOrEmpty(schoolLogo))
+                {
+                    <img src="@schoolLogo" alt="@schoolName" />
+                }
+                else
+                {
+                    <div style="width:72px;height:72px;border-radius:16px;background:var(--sp-gradient-1);display:flex;align-items:center;justify-content:center;margin:0 auto 12px;">
+                        <i class="fas fa-graduation-cap" style="font-size:2rem;color:#fff;"></i>
+                    </div>
+                }
+                @if (!string.IsNullOrEmpty(schoolName))
+                {
+                    <h2>@schoolName</h2>
+                }
+                else
+                {
+                    <h2 class="gradient-text">SchoolMS</h2>
+                }
+                <p>@(isRtl ? "بوابة الطالب — سجّل دخولك للمتابعة" : "Student Portal — Sign in to continue")</p>
+            </div>
+
+            @if (!string.IsNullOrEmpty(error))
+            {
+                <div class="login-error">
+                    <i class="fas fa-exclamation-circle"></i> @error
+                </div>
+            }
+
+            @if (string.IsNullOrEmpty(slug))
+            {
+                <div class="login-error">
+                    <i class="fas fa-info-circle"></i>
+                    @(isRtl ? "يجب الدخول عبر رابط المدرسة مثل: /school/اسم-المدرسة" : "Please access via school URL like: /school/school-name")
+                </div>
+            }
+            else
+            {
+                <form method="post" asp-controller="Account" asp-action="Login" class="login-form">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="slug" value="@slug" />
+
+                    <div class="form-group">
+                        <label>
+                            <i class="fas fa-user" style="margin-inline-end:6px;color:var(--sp-primary);"></i>
+                            @(isRtl ? "اسم المستخدم" : "Username")
+                        </label>
+                        <input type="text" name="username" class="form-input" placeholder="@(isRtl ? "أدخل اسم المستخدم" : "Enter your username")" required autofocus />
+                    </div>
+
+                    <div class="form-group">
+                        <label>
+                            <i class="fas fa-lock" style="margin-inline-end:6px;color:var(--sp-primary);"></i>
+                            @(isRtl ? "كلمة المرور" : "Password")
+                        </label>
+                        <input type="password" name="password" class="form-input" placeholder="@(isRtl ? "أدخل كلمة المرور" : "Enter your password")" required />
+                    </div>
+
+                    <button type="submit" class="login-btn">
+                        <i class="fas fa-sign-in-alt" style="margin-inline-end:8px;"></i>
+                        @(isRtl ? "تسجيل الدخول" : "Sign In")
+                    </button>
+
+                    <div style="display:flex;justify-content:space-between;margin-top:16px;font-size:0.82rem;">
+                        <a asp-controller="Account" asp-action="ForgotPassword" asp-route-slug="@slug"
+                           style="color:var(--sp-primary);font-weight:600;">
+                            <i class="fas fa-key" style="margin-inline-end:4px;"></i>
+                            @(isRtl ? "نسيت كلمة المرور؟" : "Forgot Password?")
+                        </a>
+                        <a asp-controller="Account" asp-action="Register" asp-route-slug="@slug"
+                           style="color:var(--sp-primary);font-weight:600;">
+                            <i class="fas fa-user-plus" style="margin-inline-end:4px;"></i>
+                            @(isRtl ? "إنشاء حساب" : "Register")
+                        </a>
+                    </div>
+                    </form>
+            }
+
+            <div style="text-align:center;margin-top:24px;">
+                <span style="font-size:0.78rem;color:var(--sp-text-muted);">
+                    <i class="fas fa-shield-alt" style="margin-inline-end:4px;"></i>
+                    @(isRtl ? "يُسمح بتسجيل الدخول من جهاز واحد فقط" : "Only one device login allowed")
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <script src="~/js/portal.js" asp-append-version="true"></script>
+</body>
+</html>

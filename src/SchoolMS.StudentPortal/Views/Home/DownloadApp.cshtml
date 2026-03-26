@@ -1,0 +1,89 @@
+@{
+    ViewData["Title"] = System.Globalization.CultureInfo.CurrentUICulture.Name == "ar" ? "تحميل التطبيق" : "Download App";
+    var isRtl = System.Globalization.CultureInfo.CurrentUICulture.Name == "ar";
+}
+
+<div class="sp-download-page">
+    <!-- Hero Section -->
+    <div class="sp-download-hero sp-anim-up">
+        <div class="sp-download-icon">
+            <i class="fas fa-mobile-alt"></i>
+        </div>
+        <h1 class="gradient-text">@(isRtl ? "حمّل تطبيق SchoolMS" : "Download SchoolMS App")</h1>
+        <p>
+            @(isRtl
+                ? "تعلّم في أي وقت ومكان! حمّل تطبيقنا المجاني واستمتع بالدروس المسجّلة والبث المباشر والاختبارات التفاعلية — كل شيء في جيبك."
+                : "Learn anytime, anywhere! Download our free app and enjoy recorded lessons, live streams, and interactive quizzes — everything in your pocket.")
+        </p>
+        <div class="sp-download-buttons">
+            <a href="#" class="sp-store-btn sp-anim-up-delay-1">
+                <i class="fab fa-google-play" style="color:#34a853;"></i>
+                <div class="btn-text">
+                    <small>@(isRtl ? "حمّل من" : "GET IT ON")</small>
+                    <strong>Google Play</strong>
+                </div>
+            </a>
+            <a href="#" class="sp-store-btn sp-anim-up-delay-2">
+                <i class="fab fa-apple" style="color:var(--sp-text);"></i>
+                <div class="btn-text">
+                    <small>@(isRtl ? "حمّل من" : "Download on the")</small>
+                    <strong>App Store</strong>
+                </div>
+            </a>
+            <a href="#" class="sp-store-btn sp-anim-up-delay-3">
+                <i class="fab fa-windows" style="color:#0078d4;"></i>
+                <div class="btn-text">
+                    <small>@(isRtl ? "حمّل لنظام" : "Download for")</small>
+                    <strong>Windows</strong>
+                </div>
+            </a>
+        </div>
+    </div>
+
+    <!-- Features Grid -->
+    <div class="sp-features-grid">
+        <div class="sp-feature-card sp-reveal">
+            <div class="sp-feature-icon purple">
+                <i class="fas fa-play-circle"></i>
+            </div>
+            <h3>@(isRtl ? "دروس مسجّلة" : "Recorded Lessons")</h3>
+            <p>@(isRtl ? "شاهد جميع الكورسات المسجّلة بجودة عالية في أي وقت يناسبك" : "Watch all recorded courses in high quality at any time that suits you")</p>
+        </div>
+        <div class="sp-feature-card sp-reveal">
+            <div class="sp-feature-icon pink">
+                <i class="fas fa-broadcast-tower"></i>
+            </div>
+            <h3>@(isRtl ? "بث مباشر" : "Live Streaming")</h3>
+            <p>@(isRtl ? "تابع البث المباشر مع المعلمين وتفاعل معهم في الوقت الفعلي" : "Follow live broadcasts with teachers and interact in real-time")</p>
+        </div>
+        <div class="sp-feature-card sp-reveal">
+            <div class="sp-feature-icon cyan">
+                <i class="fas fa-question-circle"></i>
+            </div>
+            <h3>@(isRtl ? "اختبارات تفاعلية" : "Interactive Quizzes")</h3>
+            <p>@(isRtl ? "اختبر نفسك بعد كل درس وتابع مستوى تقدّمك" : "Test yourself after each lesson and track your progress")</p>
+        </div>
+        <div class="sp-feature-card sp-reveal">
+            <div class="sp-feature-icon green">
+                <i class="fas fa-bell"></i>
+            </div>
+            <h3>@(isRtl ? "إشعارات فورية" : "Push Notifications")</h3>
+            <p>@(isRtl ? "احصل على إشعارات فورية للبثوث المباشرة والكورسات الجديدة" : "Get instant notifications for live streams and new courses")</p>
+        </div>
+    </div>
+
+    <!-- Extra Info -->
+    <div class="sp-reveal" style="margin-top:40px;padding:32px;background:var(--sp-bg-card);border:1px solid var(--sp-border);border-radius:var(--sp-radius);text-align:center;">
+        <div style="font-size:3rem;margin-bottom:16px;">
+            <i class="fas fa-shield-alt sp-anim-float" style="color:var(--sp-primary);opacity:0.5;"></i>
+        </div>
+        <h3 style="font-weight:800;font-size:1.1rem;color:var(--sp-text-heading);margin-bottom:8px;">
+            @(isRtl ? "آمن ومحمي" : "Secure & Protected")
+        </h3>
+        <p style="font-size:0.9rem;color:var(--sp-text-muted);max-width:500px;margin:0 auto;line-height:1.8;">
+            @(isRtl
+                ? "التطبيق محمي بتقنيات متقدّمة لمنع تسجيل الشاشة والتصوير. بياناتك وخصوصيتك في أمان تام."
+                : "The app is protected with advanced technologies to prevent screen recording and screenshots. Your data and privacy are completely secure.")
+        </p>
+    </div>
+</div>

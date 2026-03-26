@@ -357,6 +357,7 @@ public class PortalLoginResultDto
     public int PersonId { get; set; }
     public int SchoolId { get; set; }
     public int? BranchId { get; set; }
+    public int? ClassRoomId { get; set; }
 }
 
 public class UserProfileDto

@@ -85,7 +85,8 @@ public class PortalAuthService : IPortalAuthService
         {
             Succeeded = true, Token = token, FullName = student.FullName,
             UserType = "Student", PersonId = student.Id,
-            SchoolId = student.SchoolId, BranchId = student.BranchId
+            SchoolId = student.SchoolId, BranchId = student.BranchId,
+            ClassRoomId = student.ClassRoomId
         };
     }
 

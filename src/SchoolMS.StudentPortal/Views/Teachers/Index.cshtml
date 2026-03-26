@@ -1,0 +1,40 @@
+@model List<Teacher>
+@{
+    ViewData["Title"] = System.Globalization.CultureInfo.CurrentUICulture.Name == "ar" ? "المعلمين" : "Teachers";
+    var isRtl = System.Globalization.CultureInfo.CurrentUICulture.Name == "ar";
+}
+
+<div class="sp-page-header">
+    <h1 class="sp-page-title"><i class="fas fa-chalkboard-teacher" style="color:var(--sp-primary);"></i> @ViewData["Title"]</h1>
+    <p class="sp-page-subtitle">@(isRtl ? "تعرّف على المعلمين واكتشف كورساتهم" : "Meet the teachers and explore their courses")</p>
+</div>
+
+@if (Model.Count > 0)
+{
+    <div class="sp-teacher-grid">
+        @foreach (var teacher in Model)
+        {
+            <a asp-action="Details" asp-route-id="@teacher.Id" class="sp-teacher-card">
+                <div class="sp-teacher-avatar">
+                    @if (!string.IsNullOrEmpty(teacher.ProfileImage))
+                    {
+                        <img src="@teacher.ProfileImage" alt="@teacher.FullName" />
+                    }
+                    else
+                    {
+                        @(teacher.FullName.Length > 0 ? teacher.FullName[0].ToString() : "?")
+                    }
+                </div>
+                <div class="sp-teacher-name">@teacher.FullName</div>
+                <div class="sp-teacher-spec">@(teacher.Specialization ?? (isRtl ? "معلم" : "Teacher"))</div>
+            </a>
+        }
+    </div>
+}
+else
+{
+    <div class="sp-empty">
+        <i class="fas fa-chalkboard-teacher"></i>
+        <p>@(isRtl ? "لا يوجد معلمين حالياً" : "No teachers found")</p>
+    </div>
+}

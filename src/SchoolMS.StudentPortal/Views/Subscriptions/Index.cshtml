@@ -1,0 +1,73 @@
+@{
+    ViewData["Title"] = System.Globalization.CultureInfo.CurrentUICulture.Name == "ar" ? "اشتراكاتي" : "My Subscriptions";
+    var isRtl = System.Globalization.CultureInfo.CurrentUICulture.Name == "ar";
+    var subscriptions = Model as List<StudentSubscription> ?? new List<StudentSubscription>();
+}
+
+<div class="sp-page-header">
+    <h1 class="sp-page-title"><i class="fas fa-bookmark" style="color:var(--sp-primary);"></i> @ViewData["Title"]</h1>
+    <p class="sp-page-subtitle">@(isRtl ? "جميع اشتراكاتك الحالية والسابقة" : "All your current and past subscriptions")</p>
+</div>
+
+@if (subscriptions.Count > 0)
+{
+    <div class="sp-sub-list">
+        @foreach (var sub in subscriptions)
+        {
+            var isActive = sub.Status == SubscriptionStatus.Approved && sub.EndDate >= DateTime.UtcNow;
+            var isPending = sub.Status == SubscriptionStatus.Pending;
+            var statusClass = isActive ? "active" : (isPending ? "pending" : "expired");
+            <div class="sp-sub-card">
+                <div class="sp-sub-icon @statusClass">
+                    <i class="fas @(isActive ? "fa-check-circle" : (isPending ? "fa-clock" : "fa-times-circle"))"></i>
+                </div>
+                <div class="sp-sub-info">
+                    <div class="sp-sub-name">@sub.OnlineSubscriptionPlan?.PlanName</div>
+                    <div class="sp-sub-detail">
+                        <i class="fas fa-book"></i> @sub.OnlineSubscriptionPlan?.Subject?.SubjectName
+                        &nbsp;·&nbsp;
+                        <i class="fas fa-calendar"></i> @sub.StartDate.ToString("yyyy/MM/dd") - @sub.EndDate.ToString("yyyy/MM/dd")
+                    </div>
+                    <div class="sp-sub-detail" style="margin-top:2px;">
+                        @(isRtl ? "المبلغ المدفوع" : "Paid"): <strong>$@sub.PaidAmount</strong>
+                        @if (sub.DiscountAmount > 0)
+                        {
+                            <span style="color:var(--sp-success);">(@(isRtl ? "خصم" : "discount") $@sub.DiscountAmount)</span>
+                        }
+                    </div>
+                </div>
+                <div class="sp-sub-status">
+                    @if (isActive)
+                    {
+                        <span class="sp-badge success"><i class="fas fa-check"></i> @(isRtl ? "نشط" : "Active")</span>
+                    }
+                    else if (isPending)
+                    {
+                        <span class="sp-badge warning"><i class="fas fa-clock"></i> @(isRtl ? "قيد الانتظار" : "Pending")</span>
+                    }
+                    else
+                    {
+                        <span class="sp-badge danger"><i class="fas fa-times"></i> @(isRtl ? "منتهي" : "Expired")</span>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+}
+else
+{
+    <div class="sp-empty">
+        <div class="sp-empty-icon-wrap">
+            <i class="fas fa-bookmark"></i>
+        </div>
+        <p>@(isRtl ? "لا توجد لديك اشتراكات" : "No subscriptions yet")</p>
+        <p style="font-size:0.85rem;color:var(--sp-text-muted);margin-top:4px;">
+            @(isRtl ? "تصفّح الخطط المتاحة واختر ما يناسبك" : "Browse available plans and find the right one for you")
+        </p>
+        <a asp-action="Plans" class="sp-plan-subscribe-btn" style="display:inline-flex;margin-top:20px;">
+            <i class="fas fa-tags"></i>
+            <span>@(isRtl ? "تصفّح الخطط" : "Browse Plans")</span>
+            <div class="sp-btn-shine"></div>
+        </a>
+    </div>
+}

@@ -1,0 +1,160 @@
+@model Course
+@{
+    ViewData["Title"] = System.Globalization.CultureInfo.CurrentUICulture.Name == "ar" ? "نتائج الاختبارات" : "Quiz Results";
+    var isRtl = System.Globalization.CultureInfo.CurrentUICulture.Name == "ar";
+    var studentId = (int)(ViewBag.StudentId ?? 0);
+    var videos = Model.Videos.Where(v => !v.IsDeleted).OrderBy(v => v.SortOrder).ToList();
+
+    var allQuestions = videos.SelectMany(v => v.QuizQuestions).ToList();
+    var answeredQuestions = allQuestions.Where(q => q.Answers.Any()).ToList();
+    var correctAnswers = answeredQuestions.Count(q => q.Answers.First().IsCorrect);
+    var wrongAnswers = answeredQuestions.Count - correctAnswers;
+    var totalQuestions = allQuestions.Count;
+    var percentage = totalQuestions > 0 ? (int)Math.Round((double)correctAnswers / totalQuestions * 100) : 0;
+}
+
+<div class="sp-page-header sp-anim-up">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+        <a asp-action="Details" asp-route-id="@Model.Id" style="color:var(--sp-text-muted);font-size:0.85rem;">
+            <i class="fas fa-arrow-right"></i> @Model.Title
+        </a>
+        <span style="color:var(--sp-text-muted);font-size:0.85rem;">/</span>
+    </div>
+    <h1 class="sp-page-title"><i class="fas fa-chart-bar" style="color:var(--sp-primary);"></i> @ViewData["Title"]</h1>
+    <p class="sp-page-subtitle">@(isRtl ? "راجع إجاباتك وتعرّف على نتائجك" : "Review your answers and see your results")</p>
+</div>
+
+<!-- Summary Stats -->
+<div class="sp-results-summary sp-anim-up-delay-1">
+    <div class="sp-result-stat">
+        <div class="stat-icon" style="background:rgba(99,102,241,0.12);color:var(--sp-primary);">
+            <i class="fas fa-question-circle"></i>
+        </div>
+        <div class="stat-num">@totalQuestions</div>
+        <div class="stat-label">@(isRtl ? "إجمالي الأسئلة" : "Total Questions")</div>
+    </div>
+    <div class="sp-result-stat">
+        <div class="stat-icon" style="background:rgba(34,197,94,0.12);color:var(--sp-success);">
+            <i class="fas fa-check-circle"></i>
+        </div>
+        <div class="stat-num">@correctAnswers</div>
+        <div class="stat-label">@(isRtl ? "إجابات صحيحة" : "Correct Answers")</div>
+    </div>
+    <div class="sp-result-stat">
+        <div class="stat-icon" style="background:rgba(239,68,68,0.12);color:var(--sp-danger);">
+            <i class="fas fa-times-circle"></i>
+        </div>
+        <div class="stat-num">@wrongAnswers</div>
+        <div class="stat-label">@(isRtl ? "إجابات خاطئة" : "Wrong Answers")</div>
+    </div>
+    <div class="sp-result-stat">
+        <div class="stat-icon" style="background:rgba(245,158,11,0.12);color:var(--sp-warning);">
+            <i class="fas fa-percentage"></i>
+        </div>
+        <div class="stat-num">@percentage%</div>
+        <div class="stat-label">@(isRtl ? "النسبة الكلية" : "Total Rate")</div>
+        <div class="sp-progress-bar">
+            <div class="sp-progress-fill" style="width:@(percentage)%;"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Overall Grade -->
+<div class="sp-anim-up-delay-2" style="text-align:center;margin-bottom:32px;padding:24px;background:var(--sp-bg-card);border:1px solid var(--sp-border);border-radius:var(--sp-radius);">
+    @if (percentage >= 80)
+    {
+        <div style="font-size:3rem;margin-bottom:8px;">🏆</div>
+        <h3 style="color:var(--sp-success);font-weight:800;margin:0 0 4px;">@(isRtl ? "ممتاز!" : "Excellent!")</h3>
+        <p style="color:var(--sp-text-muted);font-size:0.9rem;margin:0;">@(isRtl ? "أداء رائع! استمر بهذا المستوى" : "Great performance! Keep up this level")</p>
+    }
+    else if (percentage >= 50)
+    {
+        <div style="font-size:3rem;margin-bottom:8px;">👍</div>
+        <h3 style="color:var(--sp-warning);font-weight:800;margin:0 0 4px;">@(isRtl ? "جيد" : "Good")</h3>
+        <p style="color:var(--sp-text-muted);font-size:0.9rem;margin:0;">@(isRtl ? "أداء جيد! يمكنك التحسّن أكثر" : "Good job! You can still improve")</p>
+    }
+    else if (totalQuestions > 0)
+    {
+        <div style="font-size:3rem;margin-bottom:8px;">📚</div>
+        <h3 style="color:var(--sp-danger);font-weight:800;margin:0 0 4px;">@(isRtl ? "تحتاج مراجعة" : "Needs Review")</h3>
+        <p style="color:var(--sp-text-muted);font-size:0.9rem;margin:0;">@(isRtl ? "راجع الدروس وحاول مرة أخرى" : "Review the lessons and try again")</p>
+    }
+    else
+    {
+        <div style="font-size:3rem;margin-bottom:8px;">📋</div>
+        <h3 style="color:var(--sp-text-muted);font-weight:800;margin:0 0 4px;">@(isRtl ? "لا توجد اختبارات" : "No Quizzes")</h3>
+        <p style="color:var(--sp-text-muted);font-size:0.9rem;margin:0;">@(isRtl ? "هذا الكورس لا يحتوي على اختبارات بعد" : "This course doesn't have quizzes yet")</p>
+    }
+</div>
+
+<!-- Per-video breakdown -->
+@foreach (var video in videos.Where(v => v.QuizQuestions.Any()))
+{
+    var vQuestions = video.QuizQuestions.ToList();
+    var vAnswered = vQuestions.Where(q => q.Answers.Any()).ToList();
+    var vCorrect = vAnswered.Count(q => q.Answers.First().IsCorrect);
+    var vTotal = vQuestions.Count;
+    var vPct = vTotal > 0 ? (int)Math.Round((double)vCorrect / vTotal * 100) : 0;
+
+    <div class="sp-reveal" style="background:var(--sp-bg-card);border:1px solid var(--sp-border);border-radius:var(--sp-radius);padding:24px;margin-bottom:20px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px;">
+            <div>
+                <h3 style="font-weight:700;font-size:1.05rem;margin:0 0 4px;color:var(--sp-text-heading);">
+                    <i class="fas fa-play-circle" style="color:var(--sp-primary);margin-inline-end:8px;"></i>@video.Title
+                </h3>
+                <span style="font-size:0.82rem;color:var(--sp-text-muted);">
+                    @vCorrect / @vTotal @(isRtl ? "صحيح" : "correct") — @vPct%
+                </span>
+            </div>
+            <div class="sp-progress-bar" style="width:120px;">
+                <div class="sp-progress-fill" style="width:@(vPct)%;"></div>
+            </div>
+        </div>
+
+        @foreach (var q in vQuestions)
+        {
+            var sa = q.Answers.FirstOrDefault();
+            var opts = System.Text.Json.JsonSerializer.Deserialize<List<string>>(q.Options) ?? new List<string>();
+            <div style="margin-bottom:16px;padding:14px;background:var(--sp-input-bg);border-radius:var(--sp-radius-sm);">
+                <div style="font-weight:700;font-size:0.92rem;margin-bottom:10px;color:var(--sp-text-heading);">@q.QuestionText</div>
+                <div style="display:flex;flex-direction:column;gap:6px;">
+                    @foreach (var opt in opts)
+                    {
+                        var isCorr = q.CorrectAnswer == opt;
+                        var isSel = sa?.SelectedAnswer == opt;
+                        var bg = "";
+                        var color = "var(--sp-text-muted)";
+                        var icon = "";
+                        if (sa != null)
+                        {
+                            if (isSel && sa.IsCorrect) { bg = "rgba(34,197,94,0.1)"; color = "var(--sp-success)"; icon = "fa-check-circle"; }
+                            else if (isSel && !sa.IsCorrect) { bg = "rgba(239,68,68,0.1)"; color = "var(--sp-danger)"; icon = "fa-times-circle"; }
+                            else if (isCorr) { bg = "rgba(34,197,94,0.06)"; color = "var(--sp-success)"; icon = "fa-check"; }
+                        }
+                        <div style="padding:8px 14px;border-radius:8px;font-size:0.88rem;display:flex;align-items:center;gap:8px;background:@(string.IsNullOrEmpty(bg) ? "transparent" : bg);color:@color;border:1px solid @(string.IsNullOrEmpty(bg) ? "var(--sp-border)" : "transparent");">
+                            @if (!string.IsNullOrEmpty(icon))
+                            {
+                                <i class="fas @icon" style="font-size:0.85rem;"></i>
+                            }
+                            @opt
+                        </div>
+                    }
+                </div>
+                @if (sa == null)
+                {
+                    <div style="margin-top:8px;font-size:0.8rem;color:var(--sp-text-muted);font-style:italic;">
+                        <i class="fas fa-minus-circle"></i> @(isRtl ? "لم تتم الإجابة بعد" : "Not answered yet")
+                    </div>
+                }
+            </div>
+        }
+    </div>
+}
+
+@if (!videos.Any(v => v.QuizQuestions.Any()))
+{
+    <div class="sp-empty sp-reveal">
+        <i class="fas fa-clipboard-list"></i>
+        <p>@(isRtl ? "لا توجد اختبارات في هذا الكورس" : "No quizzes available in this course")</p>
+    </div>
+}

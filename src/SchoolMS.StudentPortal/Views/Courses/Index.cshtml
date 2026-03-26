@@ -1,0 +1,93 @@
+@{
+    ViewData["Title"] = System.Globalization.CultureInfo.CurrentUICulture.Name == "ar" ? "الكورسات" : "Courses";
+    var isRtl = System.Globalization.CultureInfo.CurrentUICulture.Name == "ar";
+    var courses = ViewBag.Courses as List<Course> ?? new List<Course>();
+    var subscribedSubjectIds = ViewBag.SubscribedSubjectIds as HashSet<int> ?? new HashSet<int>();
+    var subjectSubscriberCounts = ViewBag.SubjectSubscriberCounts as Dictionary<int, int> ?? new Dictionary<int, int>();
+}
+
+<div class="sp-page-header">
+    <h1 class="sp-page-title"><i class="fas fa-play-circle" style="color:var(--sp-primary);"></i> @ViewData["Title"]</h1>
+    <p class="sp-page-subtitle">@(isRtl ? "تصفّح جميع الكورسات المتاحة" : "Browse all available courses")</p>
+</div>
+
+@if (courses.Count > 0)
+{
+    <div class="sp-courses-grid">
+        @foreach (var course in courses)
+        {
+            var isSubscribed = subscribedSubjectIds.Contains(course.SubjectId);
+            var publishedVideos = course.Videos.Where(v => !v.IsDeleted && (!v.IsScheduled || (v.ScheduledPublishAt.HasValue && v.ScheduledPublishAt.Value <= DateTime.UtcNow))).ToList();
+            var totalRating = publishedVideos.Count > 0 ? publishedVideos.Where(v => v.RatingCount > 0).DefaultIfEmpty().Average(v => v?.AverageRating ?? 0) : 0;
+            var totalSeen = publishedVideos.Sum(v => v.SeenCount);
+            subjectSubscriberCounts.TryGetValue(course.SubjectId, out var subscriberCount);
+            <a asp-action="Details" asp-route-id="@course.Id" class="sp-course-card">
+                <div class="sp-course-thumb">
+                    @if (!string.IsNullOrEmpty(course.ThumbnailImage))
+                    {
+                        <img src="@course.ThumbnailImage" alt="@course.Title" />
+                    }
+                    else
+                    {
+                        <div class="sp-course-thumb-placeholder"><i class="fas fa-play-circle"></i></div>
+                    }
+                    <div class="sp-course-thumb-overlay">
+                        <span class="sp-video-count"><i class="fas fa-play"></i> @publishedVideos.Count @(isRtl ? "فيديو" : "videos")</span>
+                    </div>
+                </div>
+                <div class="sp-course-body">
+                    <span class="sp-course-subject">@course.Subject?.SubjectName</span>
+                    <div class="sp-course-title">@course.Title</div>
+                    @if (!string.IsNullOrEmpty(course.Description))
+                    {
+                        <p style="font-size:0.82rem;color:var(--sp-text-muted);margin-bottom:8px;line-height:1.5;">
+                            @(course.Description.Length > 80 ? course.Description[..80] + "..." : course.Description)
+                        </p>
+                    }
+                    <div class="sp-course-teacher">
+                        <span class="sp-course-teacher-avatar">@(course.Teacher?.FullName?.Length > 0 ? course.Teacher.FullName[0].ToString() : "?")</span>
+                        <span class="sp-teacher-link" data-teacher-id="@course.TeacherId">@course.Teacher?.FullName</span>
+                    </div>
+                </div>
+                <div class="sp-course-footer">
+                    @if (isSubscribed)
+                    {
+                        <span class="sp-subscribed-badge"><i class="fas fa-check"></i> @(isRtl ? "مشترك" : "Subscribed")</span>
+                    }
+                    else
+                    {
+                        <span class="sp-badge warning"><i class="fas fa-lock"></i> @(isRtl ? "غير مشترك" : "Locked")</span>
+                    }
+                    <div style="display:flex;gap:12px;align-items:center;">
+                        @if (totalRating > 0)
+                        {
+                            <span class="sp-course-stat"><i class="fas fa-star" style="color:#f59e0b;"></i> @totalRating.ToString("F1")</span>
+                        }
+                        <span class="sp-course-stat"><i class="fas fa-eye"></i> @totalSeen</span>
+                        <span class="sp-course-stat"><i class="fas fa-users"></i> @subscriberCount</span>
+                    </div>
+                </div>
+            </a>
+        }
+    </div>
+}
+else
+{
+    <div class="sp-empty">
+        <i class="fas fa-book-open"></i>
+        <p>@(isRtl ? "لا توجد كورسات متاحة حالياً" : "No courses available yet")</p>
+    </div>
+}
+
+@section Scripts {
+<script>
+    // Make teacher name clickable — navigate to teacher profile
+    document.querySelectorAll('.sp-teacher-link').forEach(function (el) {
+        el.addEventListener('click', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            window.location.href = '/Teachers/Details/' + this.getAttribute('data-teacher-id');
+        });
+    });
+</script>
+}

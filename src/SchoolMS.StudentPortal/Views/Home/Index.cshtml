@@ -1,0 +1,300 @@
+﻿@{
+    ViewData["Title"] = System.Globalization.CultureInfo.CurrentUICulture.Name == "ar" ? "الرئيسية" : "Home";
+    var isRtl = System.Globalization.CultureInfo.CurrentUICulture.Name == "ar";
+    var carousels = ViewBag.Carousels as List<CarouselImage> ?? new List<CarouselImage>();
+    var myCourses = ViewBag.MyCourses as List<Course> ?? new List<Course>();
+    var allCourses = ViewBag.AllCourses as List<Course> ?? new List<Course>();
+    var mySubscriptions = ViewBag.MySubscriptions as List<StudentSubscription> ?? new List<StudentSubscription>();
+    var notifications = ViewBag.Notifications as List<Notification> ?? new List<Notification>();
+    var liveStreams = ViewBag.LiveStreams as List<LiveStream> ?? new List<LiveStream>();
+    var studentName = ViewBag.StudentName as string ?? "";
+}
+
+<!-- Welcome -->
+<div class="sp-page-header sp-anim-up">
+    <h1 class="sp-page-title">@(isRtl ? "مرحباً" : "Welcome"), @studentName 👋</h1>
+    <p class="sp-page-subtitle">@(isRtl ? "تابع تعلّمك من حيث توقفت" : "Continue your learning journey")</p>
+</div>
+
+<!-- Quick Info Cards -->
+<div class="sp-info-grid sp-anim-up-delay-1">
+    <div class="sp-info-card">
+        <div class="sp-info-card-icon" style="background:rgba(99,102,241,0.12);color:var(--sp-primary);">
+            <i class="fas fa-play-circle"></i>
+        </div>
+        <h3>@(isRtl ? "الكورسات" : "Courses")</h3>
+        <p>@(isRtl ? "تصفّح أكثر من " + allCourses.Count + " كورس وابدأ التعلم اليوم" : "Browse " + allCourses.Count + " courses and start learning today")</p>
+    </div>
+    <div class="sp-info-card">
+        <div class="sp-info-card-icon" style="background:rgba(34,197,94,0.12);color:var(--sp-success);">
+            <i class="fas fa-bookmark"></i>
+        </div>
+        <h3>@(isRtl ? "اشتراكاتك" : "Your Subscriptions")</h3>
+        <p>@(isRtl ? "لديك " + mySubscriptions.Count + " اشتراك نشط حالياً" : "You have " + mySubscriptions.Count + " active subscriptions")</p>
+    </div>
+    <div class="sp-info-card">
+        <div class="sp-info-card-icon" style="background:rgba(236,72,153,0.12);color:var(--sp-accent);">
+            <i class="fas fa-broadcast-tower"></i>
+        </div>
+        <h3>@(isRtl ? "البث المباشر" : "Live Streams")</h3>
+        <p>@(isRtl ? liveStreams.Count + " بث مباشر متاح الآن أو قريباً" : liveStreams.Count + " live streams available now or upcoming")</p>
+    </div>
+    <div class="sp-info-card">
+        <div class="sp-info-card-icon" style="background:rgba(6,182,212,0.12);color:var(--sp-info);">
+            <i class="fas fa-mobile-alt"></i>
+        </div>
+        <h3>@(isRtl ? "حمّل التطبيق" : "Download App")</h3>
+        <p>@(isRtl ? "تعلّم في أي وقت ومكان عبر تطبيق الهاتف" : "Learn anytime anywhere via our mobile app")</p>
+    </div>
+</div>
+
+<!-- Carousel -->
+@if (carousels.Count > 0)
+{
+    <div id="mainCarousel" class="carousel slide sp-carousel sp-anim-up-delay-2" data-bs-ride="carousel">
+        <div class="carousel-indicators">
+            @for (var i = 0; i < carousels.Count; i++)
+            {
+                <button type="button" data-bs-target="#mainCarousel" data-bs-slide-to="@i" class="@(i == 0 ? "active" : "")"></button>
+            }
+        </div>
+        <div class="carousel-inner">
+            @for (var i = 0; i < carousels.Count; i++)
+            {
+                <div class="carousel-item @(i == 0 ? "active" : "")">
+                    <img src="@carousels[i].ImageUrl" alt="Slide @(i + 1)" />
+                </div>
+            }
+        </div>
+        @if (carousels.Count > 1)
+        {
+            <button class="carousel-control-prev" type="button" data-bs-target="#mainCarousel" data-bs-slide="prev">
+                <i class="fas fa-chevron-right" style="color:var(--sp-text);"></i>
+            </button>
+            <button class="carousel-control-next" type="button" data-bs-target="#mainCarousel" data-bs-slide="next">
+                <i class="fas fa-chevron-left" style="color:var(--sp-text);"></i>
+            </button>
+        }
+    </div>
+}
+
+<!-- Live Streams -->
+@if (liveStreams.Count > 0)
+{
+    <div class="sp-section-header sp-reveal">
+        <h2 class="sp-section-title"><i class="fas fa-broadcast-tower"></i> @(isRtl ? "البث المباشر" : "Live Streams")</h2>
+        <a asp-controller="LiveStream" asp-action="Index" class="sp-view-all">
+            @(isRtl ? "عرض الكل" : "View All") <i class="fas fa-arrow-left"></i>
+        </a>
+    </div>
+    <div class="sp-live-grid sp-reveal" style="margin-bottom:32px;">
+        @foreach (var stream in liveStreams)
+        {
+            <a asp-controller="LiveStream" asp-action="Watch" asp-route-id="@stream.Id" class="sp-live-card">
+                <div class="sp-live-header">
+                    <i class="fas fa-broadcast-tower" style="font-size:2.5rem;color:var(--sp-primary);opacity:0.3;"></i>
+                    @if (stream.Status == LiveStreamStatus.Live)
+                    {
+                        <span class="sp-badge live"><i class="fas fa-circle" style="font-size:0.5rem;"></i> @(isRtl ? "مباشر الآن" : "LIVE")</span>
+                    }
+                    else
+                    {
+                        <span class="sp-badge warning"><i class="fas fa-clock"></i> @(isRtl ? "قريباً" : "Scheduled")</span>
+                    }
+                </div>
+                <div class="sp-live-body">
+                    <div class="sp-live-title">@stream.Title</div>
+                    <div class="sp-live-meta">
+                        <span><i class="fas fa-chalkboard-teacher"></i> @stream.Teacher?.FullName</span>
+                        <span><i class="fas fa-book"></i> @stream.Subject?.SubjectName</span>
+                        <span><i class="fas fa-calendar"></i> @stream.ScheduledAt.ToString("yyyy/MM/dd HH:mm")</span>
+                    </div>
+                </div>
+            </a>
+        }
+    </div>
+}
+
+<!-- My Courses -->
+@if (myCourses.Count > 0)
+{
+    <div class="sp-section-header sp-reveal">
+        <h2 class="sp-section-title"><i class="fas fa-play-circle"></i> @(isRtl ? "كورساتي" : "My Courses")</h2>
+        <a asp-controller="Courses" asp-action="Index" class="sp-view-all">
+            @(isRtl ? "عرض الكل" : "View All") <i class="fas fa-arrow-left"></i>
+        </a>
+    </div>
+    <div class="sp-courses-grid sp-reveal" style="margin-bottom:32px;">
+        @foreach (var course in myCourses.Take(6))
+        {
+            <a asp-controller="Courses" asp-action="Details" asp-route-id="@course.Id" class="sp-course-card">
+                <div class="sp-course-thumb">
+                    @if (!string.IsNullOrEmpty(course.ThumbnailImage))
+                    {
+                        <img src="@course.ThumbnailImage" alt="@course.Title" />
+                    }
+                    else
+                    {
+                        <div class="sp-course-thumb-placeholder"><i class="fas fa-play-circle"></i></div>
+                    }
+                    <div class="sp-course-thumb-overlay">
+                        <span class="sp-video-count"><i class="fas fa-play"></i> @course.Videos.Count(v => !v.IsDeleted) @(isRtl ? "فيديو" : "videos")</span>
+                    </div>
+                </div>
+                <div class="sp-course-body">
+                    <span class="sp-course-subject">@course.Subject?.SubjectName</span>
+                    <div class="sp-course-title">@course.Title</div>
+                    <div class="sp-course-teacher">
+                        <span class="sp-course-teacher-avatar">@(course.Teacher?.FullName?.Length > 0 ? course.Teacher.FullName[0].ToString() : "?")</span>
+                        @course.Teacher?.FullName
+                    </div>
+                </div>
+                <div class="sp-course-footer">
+                    <span class="sp-subscribed-badge"><i class="fas fa-check"></i> @(isRtl ? "مشترك" : "Subscribed")</span>
+                    <span class="sp-course-stat"><i class="fas fa-eye"></i> @course.Videos.Where(v => !v.IsDeleted).Sum(v => v.ViewCount)</span>
+                </div>
+            </a>
+        }
+    </div>
+}
+
+<!-- All Courses -->
+<div class="sp-section-header sp-reveal">
+    <h2 class="sp-section-title"><i class="fas fa-graduation-cap"></i> @(isRtl ? "جميع الكورسات" : "All Courses")</h2>
+    <a asp-controller="Courses" asp-action="Index" class="sp-view-all">
+        @(isRtl ? "عرض الكل" : "View All") <i class="fas fa-arrow-left"></i>
+    </a>
+</div>
+@if (allCourses.Count > 0)
+{
+    <div class="sp-courses-grid sp-reveal" style="margin-bottom:32px;">
+        @{
+            var subscribedSubjectIds = mySubscriptions.Select(s => s.OnlineSubscriptionPlan?.SubjectId ?? 0).ToHashSet();
+        }
+        @foreach (var course in allCourses.Take(8))
+        {
+            var isSubscribed = subscribedSubjectIds.Contains(course.SubjectId);
+            <a asp-controller="Courses" asp-action="Details" asp-route-id="@course.Id" class="sp-course-card">
+                <div class="sp-course-thumb">
+                    @if (!string.IsNullOrEmpty(course.ThumbnailImage))
+                    {
+                        <img src="@course.ThumbnailImage" alt="@course.Title" />
+                    }
+                    else
+                    {
+                        <div class="sp-course-thumb-placeholder"><i class="fas fa-play-circle"></i></div>
+                    }
+                    <div class="sp-course-thumb-overlay">
+                        <span class="sp-video-count"><i class="fas fa-play"></i> @course.Videos.Count(v => !v.IsDeleted) @(isRtl ? "فيديو" : "videos")</span>
+                    </div>
+                </div>
+                <div class="sp-course-body">
+                    <span class="sp-course-subject">@course.Subject?.SubjectName</span>
+                    <div class="sp-course-title">@course.Title</div>
+                    <div class="sp-course-teacher">
+                        <span class="sp-course-teacher-avatar">@(course.Teacher?.FullName?.Length > 0 ? course.Teacher.FullName[0].ToString() : "?")</span>
+                        @course.Teacher?.FullName
+                    </div>
+                </div>
+                <div class="sp-course-footer">
+                    @if (isSubscribed)
+                    {
+                        <span class="sp-subscribed-badge"><i class="fas fa-check"></i> @(isRtl ? "مشترك" : "Subscribed")</span>
+                    }
+                    else
+                    {
+                        <span class="sp-badge warning"><i class="fas fa-lock"></i> @(isRtl ? "غير مشترك" : "Locked")</span>
+                    }
+                    <span class="sp-course-stat"><i class="fas fa-eye"></i> @course.Videos.Where(v => !v.IsDeleted).Sum(v => v.ViewCount)</span>
+                </div>
+            </a>
+        }
+    </div>
+}
+else
+{
+    <div class="sp-empty sp-reveal">
+        <i class="fas fa-book-open"></i>
+        <p>@(isRtl ? "لا توجد كورسات متاحة حالياً" : "No courses available yet")</p>
+    </div>
+}
+
+<!-- About Section -->
+<div class="sp-about-section sp-reveal">
+    <div class="sp-about-illustration">
+        <i class="fas fa-graduation-cap sp-anim-float"></i>
+    </div>
+    <div class="sp-about-content">
+        <h2><i class="fas fa-info-circle" style="color:var(--sp-primary);margin-inline-end:8px;"></i> @(isRtl ? "من نحن" : "About Us")</h2>
+        <p>
+            @(isRtl
+                ? "منصة تعليمية متكاملة تقدّم أفضل الكورسات والدروس المباشرة مع نخبة من المعلمين المتخصصين. نسعى لتوفير تجربة تعليمية حديثة وسهلة تساعد كل طالب على تحقيق أهدافه الأكاديمية."
+                : "A comprehensive educational platform offering the best courses and live lessons with elite specialized teachers. We strive to provide a modern and easy learning experience that helps every student achieve their academic goals.")
+        </p>
+        <div class="sp-about-tags">
+            <span><i class="fas fa-check-circle"></i> @(isRtl ? "كورسات مسجّلة" : "Recorded Courses")</span>
+            <span><i class="fas fa-broadcast-tower"></i> @(isRtl ? "بث مباشر" : "Live Streams")</span>
+            <span><i class="fas fa-question-circle"></i> @(isRtl ? "اختبارات تفاعلية" : "Interactive Quizzes")</span>
+            <span><i class="fas fa-mobile-alt"></i> @(isRtl ? "تطبيق الهاتف" : "Mobile App")</span>
+        </div>
+    </div>
+</div>
+
+<!-- Policy Section -->
+<div class="sp-policy-section sp-reveal">
+    <h2><i class="fas fa-shield-alt"></i> @(isRtl ? "سياسة الاستخدام" : "Usage Policy")</h2>
+    <ul class="sp-policy-list">
+        <li>
+            <i class="fas fa-user-lock"></i>
+            @(isRtl ? "يُسمح بتسجيل الدخول من جهاز واحد فقط لكل حساب طالب لضمان أمان حسابك." : "Only one device login is allowed per student account to ensure your account security.")
+        </li>
+        <li>
+            <i class="fas fa-ban"></i>
+            @(isRtl ? "يُمنع تسجيل أو تصوير شاشة الفيديوات. المحتوى محمي بحقوق الملكية الفكرية." : "Screen recording or screenshots of videos is prohibited. Content is protected by intellectual property rights.")
+        </li>
+        <li>
+            <i class="fas fa-share-alt"></i>
+            @(isRtl ? "يُمنع مشاركة بيانات الحساب أو الاشتراكات مع أشخاص آخرين." : "Sharing account credentials or subscriptions with others is prohibited.")
+        </li>
+        <li>
+            <i class="fas fa-clock"></i>
+            @(isRtl ? "الاشتراكات صالحة للفترة المحددة فقط. يمكنك تجديدها عند انتهاء الصلاحية." : "Subscriptions are valid for the specified period only. You can renew upon expiration.")
+        </li>
+        <li>
+            <i class="fas fa-headset"></i>
+            @(isRtl ? "للدعم الفني أو أي استفسار، تواصل معنا عبر قسم الإشعارات أو البريد الإلكتروني." : "For technical support or any inquiry, contact us via the notifications section or email.")
+        </li>
+    </ul>
+</div>
+
+<!-- Download App CTA -->
+<div class="sp-reveal" style="text-align:center;margin-bottom:32px;">
+    <a asp-controller="Home" asp-action="DownloadApp" class="sp-subscribe-btn" style="display:inline-flex;">
+        <i class="fas fa-mobile-alt"></i>
+        @(isRtl ? "حمّل التطبيق الآن" : "Download Our App Now")
+    </a>
+</div>
+
+<!-- Recent Notifications -->
+@if (notifications.Count > 0)
+{
+    <div class="sp-section-header sp-reveal" style="margin-top:12px;">
+        <h2 class="sp-section-title"><i class="fas fa-bell"></i> @(isRtl ? "آخر الإشعارات" : "Recent Notifications")</h2>
+        <a asp-controller="Notifications" asp-action="Index" class="sp-view-all">
+            @(isRtl ? "عرض الكل" : "View All") <i class="fas fa-arrow-left"></i>
+        </a>
+    </div>
+    <div class="sp-notif-list sp-reveal" style="margin-bottom:32px;">
+        @foreach (var n in notifications.Take(5))
+        {
+            <div class="sp-notif-item">
+                <div class="sp-notif-icon"><i class="fas fa-bell"></i></div>
+                <div class="sp-notif-body">
+                    <div class="sp-notif-title">@n.Title</div>
+                    <div class="sp-notif-msg">@n.Message</div>
+                    <div class="sp-notif-time"><i class="fas fa-clock"></i> @n.CreatedAt.ToString("yyyy/MM/dd HH:mm")</div>
+                </div>
+            </div>
+        }
+    </div>
+}

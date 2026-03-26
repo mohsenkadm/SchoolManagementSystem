@@ -1,0 +1,56 @@
+@{
+    ViewData["Title"] = System.Globalization.CultureInfo.CurrentUICulture.Name == "ar" ? "البث المباشر" : "Live Streams";
+    var isRtl = System.Globalization.CultureInfo.CurrentUICulture.Name == "ar";
+    var streams = Model as List<LiveStream> ?? new List<LiveStream>();
+}
+
+<div class="sp-page-header">
+    <h1 class="sp-page-title"><i class="fas fa-broadcast-tower" style="color:var(--sp-primary);"></i> @ViewData["Title"]</h1>
+    <p class="sp-page-subtitle">@(isRtl ? "البثوث المباشرة والمجدولة" : "Live and scheduled streams")</p>
+</div>
+
+@if (streams.Count > 0)
+{
+    <div class="sp-live-grid">
+        @foreach (var stream in streams)
+        {
+            <a asp-action="Watch" asp-route-id="@stream.Id" class="sp-live-card">
+                <div class="sp-live-header">
+                    <i class="fas fa-broadcast-tower" style="font-size:2.5rem;color:var(--sp-primary);opacity:0.3;"></i>
+                    @if (stream.Status == LiveStreamStatus.Live)
+                    {
+                        <span class="sp-badge live"><i class="fas fa-circle" style="font-size:0.5rem;"></i> @(isRtl ? "مباشر الآن" : "LIVE NOW")</span>
+                    }
+                    else if (stream.Status == LiveStreamStatus.Scheduled)
+                    {
+                        <span class="sp-badge warning"><i class="fas fa-clock"></i> @(isRtl ? "مجدول" : "Scheduled")</span>
+                    }
+                    else
+                    {
+                        <span class="sp-badge"><i class="fas fa-check"></i> @(isRtl ? "انتهى" : "Ended")</span>
+                    }
+                </div>
+                <div class="sp-live-body">
+                    <div class="sp-live-title">@stream.Title</div>
+                    <div class="sp-live-meta">
+                        <span class="sp-teacher-link" onclick="event.preventDefault();event.stopPropagation();window.location.href='/Teachers/Details/@stream.TeacherId';">
+                            <i class="fas fa-chalkboard-teacher"></i> @stream.Teacher?.FullName
+                        </span>
+                        <span><i class="fas fa-book"></i> @stream.Subject?.SubjectName</span>
+                    </div>
+                    <div class="sp-live-meta" style="margin-top:6px;">
+                        <span><i class="fas fa-calendar"></i> @stream.ScheduledAt.ToString("yyyy/MM/dd HH:mm")</span>
+                        <span><i class="fas fa-eye"></i> @stream.SeenCount @(isRtl ? "مشاهدة" : "views")</span>
+                    </div>
+                </div>
+            </a>
+        }
+    </div>
+}
+else
+{
+    <div class="sp-empty">
+        <i class="fas fa-broadcast-tower"></i>
+        <p>@(isRtl ? "لا توجد بثوث متاحة حالياً" : "No live streams available")</p>
+    </div>
+}

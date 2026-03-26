@@ -1,0 +1,320 @@
+@model Course
+@{
+    ViewData["Title"] = Model.Title;
+    var isRtl = System.Globalization.CultureInfo.CurrentUICulture.Name == "ar";
+    var hasAccess = (bool)(ViewBag.HasAccess ?? false);
+    var studentId = (int)(ViewBag.StudentId ?? 0);
+    var studentName = Context.Session.GetString("StudentName") ?? "";
+    // Filter: exclude deleted, and exclude scheduled videos whose publish date hasn't arrived
+    var videos = Model.Videos
+        .Where(v => !v.IsDeleted)
+        .Where(v => !v.IsScheduled || (v.ScheduledPublishAt.HasValue && v.ScheduledPublishAt.Value <= DateTime.UtcNow))
+        .OrderBy(v => v.SortOrder).ToList();
+    // Pick first playable video: if not subscribed, pick first free trial video
+    var firstVideo = hasAccess ? videos.FirstOrDefault() : videos.FirstOrDefault(v => v.IsFreeTrial) ?? videos.FirstOrDefault();
+}
+
+<div class="sp-page-header sp-anim-up" style="margin-bottom:16px;">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+        <a asp-action="Index" style="color:var(--sp-text-muted);font-size:0.85rem;">
+            <i class="fas fa-arrow-right"></i> @(isRtl ? "الكورسات" : "Courses")
+        </a>
+        <span style="color:var(--sp-text-muted);font-size:0.85rem;">/</span>
+    </div>
+    <h1 class="sp-page-title">@Model.Title</h1>
+    <div style="display:flex;align-items:center;gap:16px;margin-top:8px;flex-wrap:wrap;">
+        <span class="sp-course-subject" style="margin:0;">@Model.Subject?.SubjectName</span>
+        <a asp-controller="Teachers" asp-action="Details" asp-route-id="@Model.TeacherId" style="font-size:0.85rem;color:var(--sp-text-muted);text-decoration:none;" class="sp-teacher-link">
+            <i class="fas fa-chalkboard-teacher"></i> @Model.Teacher?.FullName
+        </a>
+        <span style="font-size:0.85rem;color:var(--sp-text-muted);">
+            <i class="fas fa-play-circle"></i> @videos.Count @(isRtl ? "فيديو" : "videos")
+        </span>
+        @{
+            var courseAvgRating = videos.Where(v => v.RatingCount > 0).DefaultIfEmpty().Average(v => v?.AverageRating ?? 0);
+            var courseTotalSeen = videos.Sum(v => v.SeenCount);
+        }
+        @if (courseAvgRating > 0)
+        {
+            <span style="font-size:0.85rem;color:#f59e0b;">
+                <i class="fas fa-star"></i> @courseAvgRating.ToString("F1")
+            </span>
+        }
+        <span style="font-size:0.85rem;color:var(--sp-text-muted);">
+            <i class="fas fa-eye"></i> @courseTotalSeen @(isRtl ? "مشاهدة" : "views")
+        </span>
+        @if (hasAccess)
+        {
+            <span class="sp-subscribed-badge"><i class="fas fa-check"></i> @(isRtl ? "مشترك" : "Subscribed")</span>
+        }
+        else
+        {
+            <span class="sp-badge danger"><i class="fas fa-lock"></i> @(isRtl ? "غير مشترك" : "Not Subscribed")</span>
+        }
+        @if (hasAccess)
+        {
+            <a asp-controller="Courses" asp-action="QuizResults" asp-route-id="@Model.Id" class="sp-badge" style="text-decoration:none;cursor:pointer;">
+                <i class="fas fa-chart-bar"></i> @(isRtl ? "نتائج الاختبارات" : "Quiz Results")
+            </a>
+        }
+    </div>
+</div>
+
+@if (!string.IsNullOrEmpty(Model.Description))
+{
+    <p class="sp-anim-up-delay-1" style="color:var(--sp-text-muted);font-size:0.92rem;margin-bottom:24px;line-height:1.7;">@Model.Description</p>
+}
+
+<div class="sp-protected" style="display:grid;grid-template-columns:1fr 360px;gap:24px;align-items:start;">
+    <!-- Main Content -->
+    <div>
+        <!-- Video Player Area -->
+        <div class="sp-player-wrapper sp-anim-scale" id="playerArea">
+            @{
+                var canPlayFirst = hasAccess || (firstVideo != null && firstVideo.IsFreeTrial);
+            }
+            @if (!canPlayFirst)
+            {
+                <div class="sp-subscribe-overlay">
+                    <div class="sp-lock-icon">
+                        <i class="fas fa-lock"></i>
+                    </div>
+                    <p>@(isRtl ? "اشترك لمشاهدة المحتوى" : "Subscribe to watch content")</p>
+                    <a asp-controller="Subscriptions" asp-action="Plans" class="sp-subscribe-btn">
+                        <i class="fas fa-crown"></i> @(isRtl ? "اشترك الآن" : "Subscribe Now")
+                    </a>
+                    <span style="font-size:0.8rem;color:rgba(255,255,255,0.5);margin-top:4px;">
+                        @(isRtl ? "احصل على وصول كامل لجميع الفيديوات" : "Get full access to all videos")
+                    </span>
+                </div>
+            }
+            else if (firstVideo != null)
+            {
+                @if (!string.IsNullOrEmpty(firstVideo.VideoUrl))
+                {
+                    <iframe src="@firstVideo.VideoUrl" allowfullscreen></iframe>
+                }
+                else if (!string.IsNullOrEmpty(firstVideo.BunnyStreamVideoId))
+                {
+                    <iframe src="https://iframe.mediadelivery.net/embed/default/@firstVideo.BunnyStreamVideoId" allowfullscreen></iframe>
+                }
+                else
+                {
+                    <div class="sp-player-lock">
+                        <i class="fas fa-video-slash"></i>
+                        <p>@(isRtl ? "الفيديو غير متاح حالياً" : "Video not available")</p>
+                    </div>
+                }
+                <div class="sp-watermark-overlay">
+                    @for (var w = 0; w < 12; w++)
+                    {
+                        <span>@studentName · @studentId</span>
+                    }
+                </div>
+            }
+        </div>
+
+        <!-- Tabs for active video -->
+        @if (firstVideo != null && canPlayFirst)
+        {
+            <div class="sp-tabs sp-anim-up-delay-2" id="videoTabs">
+                <div class="sp-tab-nav">
+                    <button class="sp-tab-btn active" data-tab="tab-comments">
+                        <i class="fas fa-comments"></i> @(isRtl ? "التعليقات" : "Comments")
+                    </button>
+                    <button class="sp-tab-btn" data-tab="tab-notes">
+                        <i class="fas fa-sticky-note"></i> @(isRtl ? "ملاحظاتي" : "My Notes")
+                    </button>
+                    <button class="sp-tab-btn" data-tab="tab-rating">
+                        <i class="fas fa-star"></i> @(isRtl ? "التقييم" : "Rating")
+                    </button>
+                    @if (firstVideo.QuizQuestions.Any())
+                    {
+                        <button class="sp-tab-btn" data-tab="tab-quiz">
+                            <i class="fas fa-question-circle"></i> @(isRtl ? "الاختبار" : "Quiz")
+                        </button>
+                    }
+                </div>
+
+                <!-- Comments Tab -->
+                <div class="sp-tab-content active" id="tab-comments">
+                    <div class="sp-comment-list">
+                        @foreach (var comment in firstVideo.Comments.OrderByDescending(c => c.CreatedAt))
+                        {
+                            <div class="sp-comment-item">
+                                <div class="sp-avatar" style="width:32px;height:32px;font-size:0.7rem;">
+                                    @(comment.Student?.FullName?.Length > 0 ? comment.Student.FullName[0].ToString() : "?")
+                                </div>
+                                <div class="sp-comment-body">
+                                    <div class="sp-comment-name">@comment.Student?.FullName</div>
+                                    <div class="sp-comment-text">@comment.Comment</div>
+                                    <div class="sp-comment-date">@comment.CreatedAt.ToString("yyyy/MM/dd HH:mm")</div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                    <form class="sp-comment-form" data-video-id="@firstVideo.Id">
+                        <input type="text" placeholder="@(isRtl ? "أضف تعليقاً..." : "Add a comment...")" required />
+                        <button type="submit" class="sp-submit-btn"><i class="fas fa-paper-plane"></i> @(isRtl ? "إرسال" : "Send")</button>
+                    </form>
+                </div>
+
+                <!-- Notes Tab -->
+                <div class="sp-tab-content" id="tab-notes">
+                    <div class="sp-note-list sp-comment-list">
+                        @foreach (var note in firstVideo.Notes)
+                        {
+                            <div class="sp-comment-item">
+                                <div class="sp-comment-body">
+                                    <div class="sp-comment-text">@note.NoteText</div>
+                                    <div class="sp-comment-date">@note.CreatedAt.ToString("yyyy/MM/dd HH:mm")</div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                    <form class="sp-note-form" data-video-id="@firstVideo.Id">
+                        <label style="font-weight:600;font-size:0.88rem;color:var(--sp-text-heading);">
+                            <i class="fas fa-sticky-note" style="color:var(--sp-primary);margin-inline-end:6px;"></i>
+                            @(isRtl ? "أضف ملاحظة خاصة" : "Add a private note")
+                        </label>
+                        <textarea placeholder="@(isRtl ? "اكتب ملاحظتك هنا..." : "Write your note here...")" rows="3" required></textarea>
+                        <button type="submit" class="sp-submit-btn">
+                            <i class="fas fa-save"></i> @(isRtl ? "حفظ الملاحظة" : "Save Note")
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Rating Tab -->
+                <div class="sp-tab-content" id="tab-rating">
+                    <div style="text-align:center;padding:20px;">
+                        <p style="font-weight:600;margin-bottom:12px;">@(isRtl ? "قيّم هذا الفيديو" : "Rate this video")</p>
+                        @{
+                            var myRating = firstVideo.Ratings.FirstOrDefault(r => r.StudentId == studentId)?.Rating ?? 0;
+                        }
+                        <div class="sp-stars" data-video-id="@firstVideo.Id" style="justify-content:center;font-size:1.5rem;">
+                            @for (int i = 1; i <= 5; i++)
+                            {
+                                <i class="fas fa-star @(i <= myRating ? "filled" : "")"></i>
+                            }
+                        </div>
+                        <p style="font-size:0.85rem;color:var(--sp-text-muted);margin-top:12px;">
+                            @(isRtl ? "المعدل" : "Average"): @firstVideo.AverageRating.ToString("F1") / 5
+                            (@firstVideo.RatingCount @(isRtl ? "تقييم" : "ratings"))
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Quiz Tab -->
+                @if (firstVideo.QuizQuestions.Any())
+                {
+                    <div class="sp-tab-content" id="tab-quiz">
+                        @foreach (var q in firstVideo.QuizQuestions)
+                        {
+                            var studentAnswer = q.Answers.FirstOrDefault();
+                            var options = System.Text.Json.JsonSerializer.Deserialize<List<string>>(q.Options) ?? new List<string>();
+                            <div class="sp-quiz-item @(studentAnswer != null ? "answered" : "")" data-question-id="@q.Id">
+                                <div class="sp-quiz-question">@q.QuestionText</div>
+                                <div class="sp-quiz-options">
+                                    @foreach (var opt in options)
+                                    {
+                                        var isSelected = studentAnswer?.SelectedAnswer == opt;
+                                        var isCorrectAnswer = q.CorrectAnswer == opt;
+                                        var cls = "";
+                                        if (studentAnswer != null)
+                                        {
+                                            if (isSelected && studentAnswer.IsCorrect) cls = "correct";
+                                            else if (isSelected && !studentAnswer.IsCorrect) cls = "wrong";
+                                            else if (isCorrectAnswer) cls = "correct";
+                                        }
+                                        <div class="sp-quiz-option @cls @(isSelected ? "selected" : "")" data-answer="@opt" data-correct="@(isCorrectAnswer ? "true" : "false")">
+                                            <div class="sp-quiz-radio"></div>
+                                            <span>@opt</span>
+                                        </div>
+                                    }
+                                </div>
+                                @if (studentAnswer != null)
+                                {
+                                    <div class="sp-quiz-result @(studentAnswer.IsCorrect ? "correct" : "wrong")">
+                                        @if (studentAnswer.IsCorrect)
+                                        {
+                                            <i class="fas fa-check-circle"></i> @(isRtl ? "إجابة صحيحة!" : "Correct!")
+                                        }
+                                        else
+                                        {
+                                            <i class="fas fa-times-circle"></i> @(isRtl ? "إجابة خاطئة" : "Wrong answer")
+                                        }
+                                    </div>
+                                }
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        }
+    </div>
+
+    <!-- Video List Sidebar -->
+    <div>
+        <div class="sp-anim-right" style="background:var(--sp-bg-card);border:1px solid var(--sp-border);border-radius:var(--sp-radius);overflow:hidden;">
+            <div style="padding:16px;border-bottom:1px solid var(--sp-border);font-weight:700;font-size:0.95rem;">
+                <i class="fas fa-list" style="color:var(--sp-primary);margin-inline-end:8px;"></i>
+                @(isRtl ? "قائمة الفيديوات" : "Video List") (@videos.Count)
+            </div>
+            <div class="sp-video-list" style="padding:8px;max-height:600px;overflow-y:auto;">
+                @{ var idx = 0; }
+                @foreach (var video in videos)
+                {
+                    idx++;
+                    var isSeen = video.Seens.Any(s => s.StudentId == studentId);
+                    var isLocked = !hasAccess && !video.IsFreeTrial;
+                    <div class="sp-video-item @(idx == 1 ? "active" : "") @(isSeen ? "seen" : "")"
+                         data-video-id="@video.Id"
+                         style="@(isLocked ? "opacity:0.5;cursor:default;" : "")">
+                        <div class="sp-video-num">
+                            @if (isSeen)
+                            {
+                                <i class="fas fa-check" style="color:var(--sp-success);"></i>
+                            }
+                            else if (isLocked)
+                            {
+                                <i class="fas fa-lock" style="font-size:0.75rem;"></i>
+                            }
+                            else
+                            {
+                                @idx
+                            }
+                        </div>
+                        <div class="sp-video-info">
+                            <div class="sp-video-title">@video.Title</div>
+                            <div class="sp-video-meta">
+                                <span><i class="fas fa-clock"></i> @video.Duration.ToString(@"hh\:mm\:ss")</span>
+                                @if (video.IsFreeTrial)
+                                {
+                                    <span style="color:var(--sp-success);"><i class="fas fa-gift"></i> @(isRtl ? "مجاني" : "Free")</span>
+                                }
+                                <span><i class="fas fa-eye"></i> @video.ViewCount</span>
+                            </div>
+                        </div>
+                        @if (!isLocked && !isSeen)
+                        {
+                            <button class="sp-topbar-btn btn-mark-seen" data-video-id="@video.Id"
+                                    title="@(isRtl ? "تمت المشاهدة" : "Mark as seen")" style="width:32px;height:32px;">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+<style>
+    @@media (max-width: 991px) {
+        div[style*="grid-template-columns:1fr 360px"] {
+            grid-template-columns: 1fr !important;
+        }
+    }
+</style>
+}

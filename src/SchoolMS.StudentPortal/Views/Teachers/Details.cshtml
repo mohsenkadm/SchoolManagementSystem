@@ -1,0 +1,97 @@
+@model Teacher
+@{
+    ViewData["Title"] = Model.FullName;
+    var isRtl = System.Globalization.CultureInfo.CurrentUICulture.Name == "ar";
+    var courses = ViewBag.Courses as List<Course> ?? new List<Course>();
+    var totalVideos = courses.Sum(c => c.Videos.Count(v => !v.IsDeleted));
+    var totalRatings = courses.SelectMany(c => c.Videos.Where(v => !v.IsDeleted && v.RatingCount > 0)).ToList();
+    var avgRating = totalRatings.Count > 0 ? totalRatings.Average(v => v.AverageRating) : 0;
+    var totalViews = courses.Sum(c => c.Videos.Where(v => !v.IsDeleted).Sum(v => v.SeenCount));
+}
+
+<div class="sp-page-header" style="margin-bottom:16px;">
+    <a asp-action="Index" style="color:var(--sp-text-muted);font-size:0.85rem;">
+        <i class="fas fa-arrow-right"></i> @(isRtl ? "المعلمين" : "Teachers")
+    </a>
+</div>
+
+<div class="sp-profile-header" style="margin-bottom:28px;">
+    <div class="sp-profile-avatar" style="width:80px;height:80px;font-size:2rem;">
+        @if (!string.IsNullOrEmpty(Model.ProfileImage))
+        {
+            <img src="@Model.ProfileImage" alt="@Model.FullName" />
+        }
+        else
+        {
+            @(Model.FullName.Length > 0 ? Model.FullName[0].ToString() : "?")
+        }
+    </div>
+    <div>
+        <div class="sp-profile-name" style="font-size:1.2rem;">@Model.FullName</div>
+        <div class="sp-profile-detail">@(Model.Specialization ?? (isRtl ? "معلم" : "Teacher"))</div>
+        @if (!string.IsNullOrEmpty(Model.Email))
+        {
+            <div class="sp-profile-detail"><i class="fas fa-envelope" style="margin-inline-end:6px;color:var(--sp-primary);"></i> @Model.Email</div>
+        }
+        <div style="margin-top:10px;display:flex;gap:12px;flex-wrap:wrap;">
+            <span class="sp-badge"><i class="fas fa-play-circle"></i> @courses.Count @(isRtl ? "كورس" : "courses")</span>
+            <span class="sp-badge"><i class="fas fa-video"></i> @totalVideos @(isRtl ? "فيديو" : "videos")</span>
+            <span class="sp-badge"><i class="fas fa-eye"></i> @totalViews @(isRtl ? "مشاهدة" : "views")</span>
+            @if (avgRating > 0)
+            {
+                <span class="sp-badge" style="color:#f59e0b;"><i class="fas fa-star"></i> @avgRating.ToString("F1")</span>
+            }
+        </div>
+    </div>
+</div>
+
+<div class="sp-section-header">
+    <h2 class="sp-section-title"><i class="fas fa-play-circle"></i> @(isRtl ? "كورسات المعلم" : "Teacher's Courses")</h2>
+</div>
+
+@if (courses.Count > 0)
+{
+    <div class="sp-courses-grid">
+        @foreach (var course in courses)
+        {
+            var publishedVideos = course.Videos.Where(v => !v.IsDeleted).ToList();
+            var cRating = publishedVideos.Where(v => v.RatingCount > 0).DefaultIfEmpty().Average(v => v?.AverageRating ?? 0);
+            var cSeen = publishedVideos.Sum(v => v.SeenCount);
+            <a asp-controller="Courses" asp-action="Details" asp-route-id="@course.Id" class="sp-course-card">
+                <div class="sp-course-thumb">
+                    @if (!string.IsNullOrEmpty(course.ThumbnailImage))
+                    {
+                        <img src="@course.ThumbnailImage" alt="@course.Title" />
+                    }
+                    else
+                    {
+                        <div class="sp-course-thumb-placeholder"><i class="fas fa-play-circle"></i></div>
+                    }
+                    <div class="sp-course-thumb-overlay">
+                        <span class="sp-video-count"><i class="fas fa-play"></i> @publishedVideos.Count @(isRtl ? "فيديو" : "videos")</span>
+                    </div>
+                </div>
+                <div class="sp-course-body">
+                    <span class="sp-course-subject">@course.Subject?.SubjectName</span>
+                    <div class="sp-course-title">@course.Title</div>
+                </div>
+                <div class="sp-course-footer">
+                    <div style="display:flex;gap:12px;align-items:center;">
+                        @if (cRating > 0)
+                        {
+                            <span class="sp-course-stat"><i class="fas fa-star" style="color:#f59e0b;"></i> @cRating.ToString("F1")</span>
+                        }
+                        <span class="sp-course-stat"><i class="fas fa-eye"></i> @cSeen</span>
+                    </div>
+                </div>
+            </a>
+        }
+    </div>
+}
+else
+{
+    <div class="sp-empty">
+        <i class="fas fa-book-open"></i>
+        <p>@(isRtl ? "لا توجد كورسات لهذا المعلم" : "No courses by this teacher")</p>
+    </div>
+}

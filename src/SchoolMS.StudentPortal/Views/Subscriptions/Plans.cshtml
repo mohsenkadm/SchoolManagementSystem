@@ -1,0 +1,67 @@
+@{
+    ViewData["Title"] = System.Globalization.CultureInfo.CurrentUICulture.Name == "ar" ? "خطط الاشتراك" : "Subscription Plans";
+    var isRtl = System.Globalization.CultureInfo.CurrentUICulture.Name == "ar";
+    var plans = Model as List<OnlineSubscriptionPlan> ?? new List<OnlineSubscriptionPlan>();
+    var subscribedPlanIds = ViewBag.SubscribedPlanIds as HashSet<int> ?? new HashSet<int>();
+}
+
+<div class="sp-page-header sp-anim-up">
+    <h1 class="sp-page-title"><i class="fas fa-tags" style="color:var(--sp-primary);"></i> @ViewData["Title"]</h1>
+    <p class="sp-page-subtitle">@(isRtl ? "اختر الخطة المناسبة لك وابدأ التعلم الآن" : "Choose the right plan for you and start learning now")</p>
+</div>
+
+@if (plans.Count > 0)
+{
+    <div class="sp-plans-grid">
+        @{ var delay = 0; }
+        @foreach (var plan in plans)
+        {
+            delay++;
+            var isSubscribed = subscribedPlanIds.Contains(plan.Id);
+            <div class="sp-plan-card sp-anim-up-delay-@(Math.Min(delay, 4))">
+                <div class="sp-plan-crown-icon">
+                    <i class="fas fa-crown"></i>
+                </div>
+                <div class="sp-plan-name">@plan.PlanName</div>
+                <div class="sp-plan-price gradient-text">
+                    <span class="currency">$</span>@plan.Price
+                </div>
+                <div class="sp-plan-duration">
+                    <i class="fas fa-calendar-alt"></i> @plan.DurationMonths @(isRtl ? "شهر" : "months")
+                </div>
+                <div class="sp-plan-subject">
+                    <i class="fas fa-book"></i> @plan.Subject?.SubjectName
+                </div>
+                <div class="sp-plan-type">
+                    <i class="fas fa-layer-group"></i> @(isRtl ? "النوع" : "Type"): @plan.SubscriptionType
+                </div>
+
+                @if (isSubscribed)
+                {
+                    <div class="sp-plan-subscribed-badge">
+                        <i class="fas fa-check-circle"></i> @(isRtl ? "مشترك بالفعل" : "Already Subscribed")
+                    </div>
+                }
+                else
+                {
+                    <form method="post" asp-controller="Subscriptions" asp-action="Subscribe" style="margin-top:20px;width:100%;">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="planId" value="@plan.Id" />
+                        <button type="submit" class="sp-plan-subscribe-btn">
+                            <i class="fas fa-crown"></i>
+                            <span>@(isRtl ? "اشترك الآن" : "Subscribe Now")</span>
+                            <div class="sp-btn-shine"></div>
+                        </button>
+                    </form>
+                }
+            </div>
+        }
+    </div>
+}
+else
+{
+    <div class="sp-empty sp-anim-up">
+        <i class="fas fa-tags"></i>
+        <p>@(isRtl ? "لا توجد خطط متاحة حالياً" : "No plans available")</p>
+    </div>
+}
