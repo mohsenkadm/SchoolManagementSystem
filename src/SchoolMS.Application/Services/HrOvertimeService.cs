@@ -21,18 +21,20 @@ public class HrOvertimeService : IHrOvertimeService
         _mapper = mapper;
     }
 
-    public async Task<List<HrOvertimeRequestDto>> GetAllAsync(OvertimeStatus? status = null)
+    public async Task<List<HrOvertimeRequestDto>> GetAllAsync(OvertimeStatus? status = null, int? employeeId = null)
     {
         var query = _repository.Query().Include(o => o.Employee).AsQueryable();
         if (status.HasValue) query = query.Where(o => o.Status == status.Value);
+        if (employeeId.HasValue) query = query.Where(o => o.EmployeeId == employeeId.Value);
         var items = await query.OrderByDescending(o => o.OvertimeDate).ToListAsync();
         return MapOvertimeRequests(items);
     }
 
-    public async Task<List<HrOvertimeRequestDto>> GetBySchoolIdAsync(int schoolId, OvertimeStatus? status = null)
+    public async Task<List<HrOvertimeRequestDto>> GetBySchoolIdAsync(int schoolId, OvertimeStatus? status = null, int? employeeId = null)
     {
         var query = _repository.Query().Where(o => o.SchoolId == schoolId).Include(o => o.Employee).AsQueryable();
         if (status.HasValue) query = query.Where(o => o.Status == status.Value);
+        if (employeeId.HasValue) query = query.Where(o => o.EmployeeId == employeeId.Value);
         var items = await query.OrderByDescending(o => o.OvertimeDate).ToListAsync();
         return MapOvertimeRequests(items);
     }

@@ -26,18 +26,20 @@ public class HrPromotionService : IHrPromotionService
         _mapper = mapper;
     }
 
-    public async Task<List<HrPromotionDto>> GetAllAsync(HrPromotionStatus? status = null)
+    public async Task<List<HrPromotionDto>> GetAllAsync(HrPromotionStatus? status = null, int? employeeId = null)
     {
         var query = _promotionRepo.Query().Include(p => p.Employee).AsQueryable();
         if (status.HasValue) query = query.Where(p => p.Status == status.Value);
+        if (employeeId.HasValue) query = query.Where(p => p.EmployeeId == employeeId.Value);
         var items = await query.OrderByDescending(p => p.EffectiveDate).ToListAsync();
         return _mapper.Map<List<HrPromotionDto>>(items);
     }
 
-    public async Task<List<HrPromotionDto>> GetBySchoolIdAsync(int schoolId, HrPromotionStatus? status = null)
+    public async Task<List<HrPromotionDto>> GetBySchoolIdAsync(int schoolId, HrPromotionStatus? status = null, int? employeeId = null)
     {
         var query = _promotionRepo.Query().Where(p => p.SchoolId == schoolId).Include(p => p.Employee).AsQueryable();
         if (status.HasValue) query = query.Where(p => p.Status == status.Value);
+        if (employeeId.HasValue) query = query.Where(p => p.EmployeeId == employeeId.Value);
         var items = await query.OrderByDescending(p => p.EffectiveDate).ToListAsync();
         return _mapper.Map<List<HrPromotionDto>>(items);
     }

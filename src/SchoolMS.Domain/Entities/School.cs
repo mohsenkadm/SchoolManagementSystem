@@ -30,6 +30,10 @@ public class School : BaseEntity
     public decimal HrEarlyLeaveDeductionPerMinute { get; set; }
     public string? HrSalaryCalculationMethod { get; set; }
 
+    // OneSignal Configuration (per school)
+    public string? OneSignalAppId { get; set; }
+    public string? OneSignalApiKey { get; set; }
+
     public virtual ICollection<Branch> Branches { get; set; } = new List<Branch>();
     public virtual ICollection<SchoolSubscription> SchoolSubscriptions { get; set; } = new List<SchoolSubscription>();
 }

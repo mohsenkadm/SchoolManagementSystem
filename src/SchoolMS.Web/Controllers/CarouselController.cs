@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using SchoolMS.Application.DTOs;
 using SchoolMS.Application.Interfaces;
+using SchoolMS.Application.Settings;
 using SchoolMS.Web.Filters;
 
 namespace SchoolMS.Web.Controllers;
@@ -163,6 +164,6 @@ public class CarouselController : Controller
             await file.CopyToAsync(stream);
         }
 
-        return $"/uploads/carousel/{fileName}";
+        return AppUrlSettings.BuildWebUrl($"/uploads/carousel/{fileName}");
     }
 }

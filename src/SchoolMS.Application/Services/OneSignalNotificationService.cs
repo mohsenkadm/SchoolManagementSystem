@@ -1,9 +1,12 @@
 using System.Net.Http.Json;
 using System.Text.Json;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using SchoolMS.Application.Interfaces;
 using SchoolMS.Application.Settings;
+using SchoolMS.Domain.Entities;
+using SchoolMS.Domain.Interfaces;
 
 namespace SchoolMS.Application.Services;
 
@@ -11,13 +14,16 @@ public class OneSignalNotificationService : IOneSignalNotificationService
 {
     private readonly HttpClient _httpClient;
     private readonly OneSignalSettings _settings;
+    private readonly IRepository<School> _schoolRepository;
     private readonly ILogger<OneSignalNotificationService> _logger;
 
     public OneSignalNotificationService(HttpClient httpClient, IOptions<OneSignalSettings> settings,
+        IRepository<School> schoolRepository,
         ILogger<OneSignalNotificationService> logger)
     {
         _httpClient = httpClient;
         _settings = settings.Value;
+        _schoolRepository = schoolRepository;
         _logger = logger;
     }
 
@@ -25,7 +31,7 @@ public class OneSignalNotificationService : IOneSignalNotificationService
     {
         var filters = BuildSchoolFilter(schoolId);
         filters.AddRange(BuildPersonTypeFilters(personTypes));
-        await SendAsync(title, message, filters);
+        await SendAsync(title, message, filters, schoolId);
     }
 
     public async Task SendToClassRoomAsync(string title, string message, IEnumerable<string> personTypes,
@@ -34,7 +40,7 @@ public class OneSignalNotificationService : IOneSignalNotificationService
         var filters = BuildSchoolFilter(schoolId);
         filters.Add(new Dictionary<string, object> { ["field"] = "tag", ["key"] = "classRoomId", ["relation"] = "=", ["value"] = classRoomId.ToString() });
         filters.AddRange(BuildPersonTypeFilters(personTypes));
-        await SendAsync(title, message, filters);
+        await SendAsync(title, message, filters, schoolId);
     }
 
     public async Task SendToIndividualAsync(string title, string message, int personId, string personType, int schoolId)
@@ -42,13 +48,13 @@ public class OneSignalNotificationService : IOneSignalNotificationService
         var filters = BuildSchoolFilter(schoolId);
         filters.Add(new Dictionary<string, object> { ["field"] = "tag", ["key"] = "personId", ["relation"] = "=", ["value"] = personId.ToString() });
         filters.Add(new Dictionary<string, object> { ["field"] = "tag", ["key"] = "personType", ["relation"] = "=", ["value"] = personType });
-        await SendAsync(title, message, filters);
+        await SendAsync(title, message, filters, schoolId);
     }
 
     public async Task SendToSchoolAsync(string title, string message, int schoolId)
     {
         var filters = BuildSchoolFilter(schoolId);
-        await SendAsync(title, message, filters);
+        await SendAsync(title, message, filters, schoolId);
     }
 
     private static List<Dictionary<string, object>> BuildSchoolFilter(int schoolId)
@@ -76,11 +82,34 @@ public class OneSignalNotificationService : IOneSignalNotificationService
         return filters;
     }
 
-    private async Task SendAsync(string title, string message, List<Dictionary<string, object>> filters)
+    private async Task SendAsync(string title, string message, List<Dictionary<string, object>> filters, int schoolId)
     {
-        if (string.IsNullOrWhiteSpace(_settings.AppId) || string.IsNullOrWhiteSpace(_settings.RestApiKey))
+        // Try school-specific OneSignal credentials first, fall back to global settings
+        string? appId = null;
+        string? apiKey = null;
+
+        if (schoolId > 0)
         {
-            _logger.LogWarning("OneSignal is not configured. Skipping notification: {Title}", title);
+            var school = await _schoolRepository.Query()
+                .IgnoreQueryFilters()
+                .Where(s => s.Id == schoolId && !s.IsDeleted)
+                .Select(s => new { s.OneSignalAppId, s.OneSignalApiKey })
+                .FirstOrDefaultAsync();
+
+            if (school != null && !string.IsNullOrWhiteSpace(school.OneSignalAppId) && !string.IsNullOrWhiteSpace(school.OneSignalApiKey))
+            {
+                appId = school.OneSignalAppId;
+                apiKey = school.OneSignalApiKey;
+            }
+        }
+
+        // Fall back to global settings
+        appId ??= _settings.AppId;
+        apiKey ??= _settings.RestApiKey;
+
+        if (string.IsNullOrWhiteSpace(appId) || string.IsNullOrWhiteSpace(apiKey))
+        {
+            _logger.LogWarning("OneSignal is not configured for school {SchoolId} and no global fallback. Skipping notification: {Title}", schoolId, title);
             return;
         }
 
@@ -88,7 +117,7 @@ public class OneSignalNotificationService : IOneSignalNotificationService
         {
             var payload = new
             {
-                app_id = _settings.AppId,
+                app_id = appId,
                 headings = new { en = title },
                 contents = new { en = message },
                 filters
@@ -98,7 +127,7 @@ public class OneSignalNotificationService : IOneSignalNotificationService
             {
                 Content = JsonContent.Create(payload)
             };
-            request.Headers.TryAddWithoutValidation("Authorization", $"Basic {_settings.RestApiKey}");
+            request.Headers.TryAddWithoutValidation("Authorization", $"Basic {apiKey}");
 
             var response = await _httpClient.SendAsync(request);
             var body = await response.Content.ReadAsStringAsync();

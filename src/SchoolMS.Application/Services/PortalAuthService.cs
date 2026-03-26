@@ -17,6 +17,7 @@ public class PortalAuthService : IPortalAuthService
     private readonly IRepository<Student> _studentRepo;
     private readonly IRepository<Parent> _parentRepo;
     private readonly IRepository<HrEmployee> _staffRepo;
+    private readonly IRepository<School> _schoolRepo;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IConfiguration _configuration;
 
@@ -25,6 +26,7 @@ public class PortalAuthService : IPortalAuthService
         IRepository<Student> studentRepo,
         IRepository<Parent> parentRepo,
         IRepository<HrEmployee> staffRepo,
+        IRepository<School> schoolRepo,
         IUnitOfWork unitOfWork,
         IConfiguration configuration)
     {
@@ -32,6 +34,7 @@ public class PortalAuthService : IPortalAuthService
         _studentRepo = studentRepo;
         _parentRepo = parentRepo;
         _staffRepo = staffRepo;
+        _schoolRepo = schoolRepo;
         _unitOfWork = unitOfWork;
         _configuration = configuration;
     }
@@ -49,7 +52,8 @@ public class PortalAuthService : IPortalAuthService
         {
             Succeeded = true, Token = token, FullName = teacher.FullName,
             UserType = "Teacher", PersonId = teacher.Id,
-            SchoolId = teacher.SchoolId, BranchId = teacher.BranchId
+            SchoolId = teacher.SchoolId, BranchId = teacher.BranchId,
+            OneSignalAppId = await GetSchoolOneSignalAppIdAsync(teacher.SchoolId)
         };
     }
 
@@ -86,7 +90,8 @@ public class PortalAuthService : IPortalAuthService
             Succeeded = true, Token = token, FullName = student.FullName,
             UserType = "Student", PersonId = student.Id,
             SchoolId = student.SchoolId, BranchId = student.BranchId,
-            ClassRoomId = student.ClassRoomId
+            ClassRoomId = student.ClassRoomId,
+            OneSignalAppId = await GetSchoolOneSignalAppIdAsync(student.SchoolId)
         };
     }
 
@@ -103,7 +108,8 @@ public class PortalAuthService : IPortalAuthService
         {
             Succeeded = true, Token = token, FullName = parent.FatherName,
             UserType = "Parent", PersonId = parent.Id,
-            SchoolId = parent.SchoolId
+            SchoolId = parent.SchoolId,
+            OneSignalAppId = await GetSchoolOneSignalAppIdAsync(parent.SchoolId)
         };
     }
 
@@ -120,7 +126,8 @@ public class PortalAuthService : IPortalAuthService
         {
             Succeeded = true, Token = token, FullName = staff.FullName,
             UserType = "Staff", PersonId = staff.Id,
-            SchoolId = staff.SchoolId, BranchId = staff.BranchId
+            SchoolId = staff.SchoolId, BranchId = staff.BranchId,
+            OneSignalAppId = await GetSchoolOneSignalAppIdAsync(staff.SchoolId)
         };
     }
 
@@ -165,5 +172,14 @@ public class PortalAuthService : IPortalAuthService
         _studentRepo.Update(student);
         await _unitOfWork.SaveChangesAsync();
         return true;
+    }
+
+    private async Task<string?> GetSchoolOneSignalAppIdAsync(int schoolId)
+    {
+        var school = await _schoolRepo.Query().IgnoreQueryFilters()
+            .Where(s => s.Id == schoolId && !s.IsDeleted)
+            .Select(s => s.OneSignalAppId)
+            .FirstOrDefaultAsync();
+        return school;
     }
 }

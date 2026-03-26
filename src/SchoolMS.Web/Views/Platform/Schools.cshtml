@@ -124,6 +124,15 @@
                 </div>
 
                 <hr />
+
+                <!-- OneSignal Configuration -->
+                <h6><i class="fas fa-bell me-1"></i>OneSignal Configuration</h6>
+                <div class="row g-3">
+                    <div class="col-md-6"><label class="form-label">OneSignal App ID</label><input type="text" class="form-control" id="oneSignalAppId" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" /></div>
+                    <div class="col-md-6"><label class="form-label">OneSignal REST API Key</label><input type="text" class="form-control" id="oneSignalApiKey" placeholder="Your REST API Key" /></div>
+                </div>
+
+                <hr />
                 <div id="adminFields">
                     <h6><i class="fas fa-user-shield me-1"></i>@Localizer["SchoolAdminAccount"]</h6>
                     <div class="alert alert-info small mb-2">
@@ -264,6 +273,7 @@
         $('#hrAbsenceDeductionPerDay').val(0); $('#hrAbsenceDeductionType').val('Fixed');
         $('#hrLateDeductionPerMinute').val(0); $('#hrEarlyLeaveDeductionPerMinute').val(0);
         $('#hrSalaryCalculationMethod').val('Monthly');
+        $('#oneSignalAppId').val(''); $('#oneSignalApiKey').val('');
         $('#adminFields').show(); $('#subscriptionPlan').val('');
     }
     function editSchool(id) {
@@ -291,6 +301,8 @@
             $('#hrLateDeductionPerMinute').val(s.hrLateDeductionPerMinute || 0);
             $('#hrEarlyLeaveDeductionPerMinute').val(s.hrEarlyLeaveDeductionPerMinute || 0);
             $('#hrSalaryCalculationMethod').val(s.hrSalaryCalculationMethod || 'Monthly');
+            $('#oneSignalAppId').val(s.oneSignalAppId || '');
+            $('#oneSignalApiKey').val(s.oneSignalApiKey || '');
             new bootstrap.Modal('#schoolModal').show();
         });
     }
@@ -313,7 +325,9 @@
             hrAbsenceDeductionType: $('#hrAbsenceDeductionType').val(),
             hrLateDeductionPerMinute: parseFloat($('#hrLateDeductionPerMinute').val()) || 0,
             hrEarlyLeaveDeductionPerMinute: parseFloat($('#hrEarlyLeaveDeductionPerMinute').val()) || 0,
-            hrSalaryCalculationMethod: $('#hrSalaryCalculationMethod').val()
+            hrSalaryCalculationMethod: $('#hrSalaryCalculationMethod').val(),
+            oneSignalAppId: $('#oneSignalAppId').val() || null,
+            oneSignalApiKey: $('#oneSignalApiKey').val() || null
         };
     }
     function saveSchool() {

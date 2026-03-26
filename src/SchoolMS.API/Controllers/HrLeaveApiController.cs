@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SchoolMS.Application.DTOs;
@@ -18,10 +19,12 @@ public class HrLeaveApiController : ControllerBase
     private readonly IOneSignalNotificationService _pushService;
     public HrLeaveApiController(IHrLeaveService service, IOneSignalNotificationService pushService) { _service = service; _pushService = pushService; }
 
-    // Leave Requests
+    private int? GetEmployeeIdFromToken() => int.TryParse(User.FindFirst("PersonId")?.Value, out var id) ? id : null;
+
+    // Leave Requests — returns only the logged-in employee's requests
     [HttpGet("requests")]
     public async Task<ActionResult<List<HrLeaveRequestDto>>> GetAllRequests(int schoolId, [FromQuery] HrLeaveStatus? status)
-        => Ok(await _service.GetRequestsBySchoolIdAsync(schoolId, status));
+        => Ok(await _service.GetRequestsBySchoolIdAsync(schoolId, status, GetEmployeeIdFromToken()));
 
     [HttpPost("requests")]
     public async Task<ActionResult<HrLeaveRequestDto>> CreateRequest(int schoolId, [FromBody] HrLeaveRequestDto dto)
@@ -33,7 +36,15 @@ public class HrLeaveApiController : ControllerBase
     public async Task<ActionResult<List<HrLeaveTypeDto>>> GetLeaveTypes()
         => Ok(await _service.GetLeaveTypesAsync());
 
-    // Leave Balances
+    // Leave Balances — returns the logged-in employee's balances
+    [HttpGet("balances")]
+    public async Task<ActionResult<List<HrLeaveBalanceDto>>> GetMyBalances()
+    {
+        var empId = GetEmployeeIdFromToken();
+        if (!empId.HasValue) return Unauthorized();
+        return Ok(await _service.GetBalancesAsync(empId.Value));
+    }
+
     [HttpGet("balances/{employeeId}")]
     public async Task<ActionResult<List<HrLeaveBalanceDto>>> GetBalances(int employeeId)
         => Ok(await _service.GetBalancesAsync(employeeId));
@@ -53,5 +64,5 @@ public class HrLeaveApiController : ControllerBase
     [HttpGet("holidays")]
     public async Task<ActionResult<List<HrHolidayDto>>> GetHolidays(int schoolId, [FromQuery] int? year)
         => Ok(await _service.GetHolidaysBySchoolIdAsync(schoolId, year));
-                                                  
+
 }

@@ -102,6 +102,9 @@ app.Use(async (context, next) =>
             context.Session.SetString("DeviceId", deviceClaim ?? "");
             if (int.TryParse(branchClaim, out var branchId))
                 context.Session.SetInt32("BranchId", branchId);
+            var oneSignalClaim = context.User.FindFirst("OneSignalAppId")?.Value;
+            if (!string.IsNullOrEmpty(oneSignalClaim))
+                context.Session.SetString("OneSignalAppId", oneSignalClaim);
         }
     }
     await next();

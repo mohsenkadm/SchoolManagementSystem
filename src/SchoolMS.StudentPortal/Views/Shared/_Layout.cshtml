@@ -9,7 +9,10 @@
     var currentController = ViewContext.RouteData.Values["controller"]?.ToString() ?? "";
     var currentAction = ViewContext.RouteData.Values["action"]?.ToString() ?? "";
     var notifs = ViewBag.LayoutNotifications as List<Notification>;
-    var oneSignalAppId = OneSignalOpts.Value.AppId;
+    // Per-school OneSignal AppId from session (set at login), falls back to global config
+    var oneSignalAppId = Context.Session.GetString("OneSignalAppId");
+    if (string.IsNullOrWhiteSpace(oneSignalAppId))
+        oneSignalAppId = OneSignalOpts.Value.AppId;
     var studentId = Context.Session.GetInt32("StudentId");
     var schoolId = Context.Session.GetInt32("SchoolId");
     var branchId = Context.Session.GetInt32("BranchId");

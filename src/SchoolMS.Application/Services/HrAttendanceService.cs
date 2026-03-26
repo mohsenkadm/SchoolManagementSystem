@@ -30,7 +30,7 @@ public class HrAttendanceService : IHrAttendanceService
         _unitOfWork = unitOfWork;
     }
 
-    public async Task<List<HrDailyAttendanceDto>> GetDailyAttendanceAsync(DateTime date, int? departmentId = null, int? branchId = null)
+    public async Task<List<HrDailyAttendanceDto>> GetDailyAttendanceAsync(DateTime date, int? departmentId = null, int? branchId = null, int? employeeId = null)
     {
         var query = _attendanceRepo.Query()
             .Include(a => a.Employee)
@@ -41,6 +41,8 @@ public class HrAttendanceService : IHrAttendanceService
             query = query.Where(a => a.Employee.DepartmentId == departmentId.Value);
         if (branchId.HasValue)
             query = query.Where(a => a.Employee.BranchId == branchId.Value);
+        if (employeeId.HasValue)
+            query = query.Where(a => a.EmployeeId == employeeId.Value);
 
         var items = await query.OrderBy(a => a.Employee.FullName).ToListAsync();
         return items.Select(a => new HrDailyAttendanceDto

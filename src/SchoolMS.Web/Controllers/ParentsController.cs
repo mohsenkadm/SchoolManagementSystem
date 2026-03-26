@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SchoolMS.Application.DTOs;
 using SchoolMS.Application.Interfaces;
+using SchoolMS.Application.Settings;
 using SchoolMS.Domain.Entities;
 using SchoolMS.Domain.Interfaces;
 using SchoolMS.Web.Filters;
@@ -168,6 +169,6 @@ public class ParentsController : Controller
         {
             await file.CopyToAsync(stream);
         }
-        return $"/uploads/parents/{fileName}";
+        return AppUrlSettings.BuildWebUrl($"/uploads/parents/{fileName}");
     }
 }

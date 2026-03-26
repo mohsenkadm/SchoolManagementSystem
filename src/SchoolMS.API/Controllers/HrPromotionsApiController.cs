@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SchoolMS.Application.DTOs;
@@ -18,11 +19,18 @@ public class HrPromotionsApiController : ControllerBase
     private readonly IOneSignalNotificationService _pushService;
     public HrPromotionsApiController(IHrPromotionService service, IOneSignalNotificationService pushService) { _service = service; _pushService = pushService; }
 
+    private int? GetEmployeeIdFromToken() => int.TryParse(User.FindFirst("PersonId")?.Value, out var id) ? id : null;
+
     [HttpGet]
     public async Task<ActionResult<List<HrPromotionDto>>> GetAll(int schoolId, [FromQuery] HrPromotionStatus? status)
-        => Ok(await _service.GetBySchoolIdAsync(schoolId, status));
+        => Ok(await _service.GetBySchoolIdAsync(schoolId, status, GetEmployeeIdFromToken()));
 
-    [HttpGet("career-history/{employeeId}")]
-    public async Task<ActionResult<List<HrCareerHistoryDto>>> GetCareerHistory(int employeeId)
-        => Ok(await _service.GetCareerHistoryAsync(employeeId));
+    [HttpGet("career-history")]
+    public async Task<ActionResult<List<HrCareerHistoryDto>>> GetMyCareerHistory()
+    {
+        var empId = GetEmployeeIdFromToken();
+        if (!empId.HasValue) return Unauthorized();
+        return Ok(await _service.GetCareerHistoryAsync(empId.Value));
+    }
+                                                               
 }

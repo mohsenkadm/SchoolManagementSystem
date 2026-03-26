@@ -31,18 +31,20 @@ public class HrLeaveService : IHrLeaveService
         _mapper = mapper;
     }
 
-    public async Task<List<HrLeaveRequestDto>> GetAllRequestsAsync(HrLeaveStatus? status = null)
+    public async Task<List<HrLeaveRequestDto>> GetAllRequestsAsync(HrLeaveStatus? status = null, int? employeeId = null)
     {
         var query = _requestRepo.Query().Include(l => l.Employee).Include(l => l.LeaveType).AsQueryable();
         if (status.HasValue) query = query.Where(l => l.Status == status.Value);
+        if (employeeId.HasValue) query = query.Where(l => l.EmployeeId == employeeId.Value);
         var items = await query.OrderByDescending(l => l.CreatedAt).ToListAsync();
         return MapLeaveRequests(items);
     }
 
-    public async Task<List<HrLeaveRequestDto>> GetRequestsBySchoolIdAsync(int schoolId, HrLeaveStatus? status = null)
+    public async Task<List<HrLeaveRequestDto>> GetRequestsBySchoolIdAsync(int schoolId, HrLeaveStatus? status = null, int? employeeId = null)
     {
         var query = _requestRepo.Query().Where(l => l.SchoolId == schoolId).Include(l => l.Employee).Include(l => l.LeaveType).AsQueryable();
         if (status.HasValue) query = query.Where(l => l.Status == status.Value);
+        if (employeeId.HasValue) query = query.Where(l => l.EmployeeId == employeeId.Value);
         var items = await query.OrderByDescending(l => l.CreatedAt).ToListAsync();
         return MapLeaveRequests(items);
     }

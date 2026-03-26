@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SchoolMS.Application.DTOs;
@@ -17,14 +18,15 @@ public class HrDisciplinaryApiController : ControllerBase
     private readonly IOneSignalNotificationService _pushService;
     public HrDisciplinaryApiController(IHrDisciplinaryService service, IOneSignalNotificationService pushService) { _service = service; _pushService = pushService; }
 
-    [HttpGet]
-    public async Task<ActionResult<List<HrDisciplinaryActionDto>>> GetAll(int schoolId, [FromQuery] int? employeeId)
-        => Ok(await _service.GetBySchoolIdAsync(schoolId, employeeId));
+    private int? GetEmployeeIdFromToken() => int.TryParse(User.FindFirst("PersonId")?.Value, out var id) ? id : null;
 
+    [HttpGet]
+    public async Task<ActionResult<List<HrDisciplinaryActionDto>>> GetAll(int schoolId)
+        => Ok(await _service.GetBySchoolIdAsync(schoolId, GetEmployeeIdFromToken()));
 
     // Violation Types
     [HttpGet("violation-types")]
     public async Task<ActionResult<List<HrViolationTypeDto>>> GetViolationTypes(int schoolId)
         => Ok(await _service.GetViolationTypesBySchoolIdAsync(schoolId));
-   
+
 }

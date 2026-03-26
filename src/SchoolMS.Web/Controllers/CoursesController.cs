@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SchoolMS.Application.DTOs;
 using SchoolMS.Application.Interfaces;
+using SchoolMS.Application.Settings;
 using SchoolMS.Web.Filters;
 
 namespace SchoolMS.Web.Controllers;
@@ -170,6 +171,6 @@ public class CoursesController : Controller
         using var stream = new FileStream(filePath, FileMode.Create);
         await file.CopyToAsync(stream);
 
-        return $"/uploads/courses/{fileName}";
+        return AppUrlSettings.BuildWebUrl($"/uploads/courses/{fileName}");
     }
 }

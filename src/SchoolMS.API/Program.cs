@@ -28,6 +28,11 @@ builder.Host.UseSerilog();
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddApplication();
 
+// Configure centralized base URLs for file storage
+var appUrls = builder.Configuration.GetSection("AppUrls");
+SchoolMS.Application.Settings.AppUrlSettings.WebBaseUrl = appUrls["WebBaseUrl"] ?? "https://localhost:7060";
+SchoolMS.Application.Settings.AppUrlSettings.ApiBaseUrl = appUrls["ApiBaseUrl"] ?? "https://localhost:7246";
+
 // Localization
 builder.Services.AddLocalization(options => options.ResourcesPath = "Resources");
 

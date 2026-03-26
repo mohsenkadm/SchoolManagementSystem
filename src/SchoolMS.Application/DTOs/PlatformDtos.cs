@@ -35,6 +35,8 @@ public class SchoolDto
     public decimal HrLateDeductionPerMinute { get; set; }
     public decimal HrEarlyLeaveDeductionPerMinute { get; set; }
     public string? HrSalaryCalculationMethod { get; set; }
+    public string? OneSignalAppId { get; set; }
+    public string? OneSignalApiKey { get; set; }
     public int BranchCount { get; set; }
     public int StudentCount { get; set; }
     public int TeacherCount { get; set; }
@@ -67,6 +69,8 @@ public class SchoolCreateDto
     public decimal HrLateDeductionPerMinute { get; set; }
     public decimal HrEarlyLeaveDeductionPerMinute { get; set; }
     public string? HrSalaryCalculationMethod { get; set; }
+    public string? OneSignalAppId { get; set; }
+    public string? OneSignalApiKey { get; set; }
     public string AdminEmail { get; set; } = string.Empty;
     public string AdminPassword { get; set; } = string.Empty;
     public string AdminFullName { get; set; } = string.Empty;
@@ -99,6 +103,8 @@ public class SchoolUpdateDto
     public decimal HrLateDeductionPerMinute { get; set; }
     public decimal HrEarlyLeaveDeductionPerMinute { get; set; }
     public string? HrSalaryCalculationMethod { get; set; }
+    public string? OneSignalAppId { get; set; }
+    public string? OneSignalApiKey { get; set; }
 }
 
 public class SubscriptionPlanDto

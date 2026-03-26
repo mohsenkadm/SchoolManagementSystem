@@ -86,15 +86,15 @@ public interface IHrFingerprintService
 
 public interface IHrAttendanceService
 {
-    Task<List<HrDailyAttendanceDto>> GetDailyAttendanceAsync(DateTime date, int? departmentId = null, int? branchId = null);
+    Task<List<HrDailyAttendanceDto>> GetDailyAttendanceAsync(DateTime date, int? departmentId = null, int? branchId = null, int? employeeId = null);
     Task<List<HrDailyAttendanceDto>> GetMonthlyAttendanceAsync(int employeeId, int month, int year);
     Task ProcessDailyAttendanceAsync(DateTime date);
 }
 
 public interface IHrOvertimeService
 {
-    Task<List<HrOvertimeRequestDto>> GetAllAsync(OvertimeStatus? status = null);
-    Task<List<HrOvertimeRequestDto>> GetBySchoolIdAsync(int schoolId, OvertimeStatus? status = null);
+    Task<List<HrOvertimeRequestDto>> GetAllAsync(OvertimeStatus? status = null, int? employeeId = null);
+    Task<List<HrOvertimeRequestDto>> GetBySchoolIdAsync(int schoolId, OvertimeStatus? status = null, int? employeeId = null);
     Task<HrOvertimeRequestDto> CreateAsync(HrOvertimeRequestDto dto);
     Task ApproveAsync(int id, string approvedBy);
     Task RejectAsync(int id, string rejectedBy, string reason);
@@ -126,8 +126,8 @@ public interface IHrSalaryService
     Task MarkPayrollPaidAsync(int payrollId);
 
     // Advances
-    Task<List<HrSalaryAdvanceDto>> GetAdvancesAsync(AdvanceStatus? status = null);
-    Task<List<HrSalaryAdvanceDto>> GetAdvancesBySchoolIdAsync(int schoolId, AdvanceStatus? status = null);
+    Task<List<HrSalaryAdvanceDto>> GetAdvancesAsync(AdvanceStatus? status = null, int? employeeId = null);
+    Task<List<HrSalaryAdvanceDto>> GetAdvancesBySchoolIdAsync(int schoolId, AdvanceStatus? status = null, int? employeeId = null);
     Task<HrSalaryAdvanceDto> CreateAdvanceAsync(HrSalaryAdvanceDto dto);
     Task ApproveAdvanceAsync(int id, string approvedBy, decimal approvedAmount, int deductionMonths);
     Task RejectAdvanceAsync(int id, string rejectedBy, string reason);
@@ -138,22 +138,22 @@ public interface IHrSalaryService
     Task<HrEmployeeLoanDto> CreateLoanAsync(HrEmployeeLoanDto dto);
 
     // Bonuses
-    Task<List<HrBonusDto>> GetBonusesAsync(int? month = null, int? year = null);
-    Task<List<HrBonusDto>> GetBonusesBySchoolIdAsync(int schoolId, int? month = null, int? year = null);
+    Task<List<HrBonusDto>> GetBonusesAsync(int? month = null, int? year = null, int? employeeId = null);
+    Task<List<HrBonusDto>> GetBonusesBySchoolIdAsync(int schoolId, int? month = null, int? year = null, int? employeeId = null);
     Task<HrBonusDto> CreateBonusAsync(HrBonusDto dto);
     Task ApproveBonusAsync(int id, string approvedBy);
 
     // Penalties
-    Task<List<HrPenaltyDto>> GetPenaltiesAsync(int? month = null, int? year = null);
-    Task<List<HrPenaltyDto>> GetPenaltiesBySchoolIdAsync(int schoolId, int? month = null, int? year = null);
+    Task<List<HrPenaltyDto>> GetPenaltiesAsync(int? month = null, int? year = null, int? employeeId = null);
+    Task<List<HrPenaltyDto>> GetPenaltiesBySchoolIdAsync(int schoolId, int? month = null, int? year = null, int? employeeId = null);
     Task<HrPenaltyDto> CreatePenaltyAsync(HrPenaltyDto dto);
     Task ApprovePenaltyAsync(int id, string approvedBy);
 }
 
 public interface IHrPromotionService
 {
-    Task<List<HrPromotionDto>> GetAllAsync(HrPromotionStatus? status = null);
-    Task<List<HrPromotionDto>> GetBySchoolIdAsync(int schoolId, HrPromotionStatus? status = null);
+    Task<List<HrPromotionDto>> GetAllAsync(HrPromotionStatus? status = null, int? employeeId = null);
+    Task<List<HrPromotionDto>> GetBySchoolIdAsync(int schoolId, HrPromotionStatus? status = null, int? employeeId = null);
     Task<HrPromotionDto?> GetByIdAsync(int id);
     Task<HrPromotionDto> CreateAsync(HrPromotionDto dto);
     Task ApproveAsync(int id, string approvedBy);
@@ -163,8 +163,8 @@ public interface IHrPromotionService
 
 public interface IHrLeaveService
 {
-    Task<List<HrLeaveRequestDto>> GetAllRequestsAsync(HrLeaveStatus? status = null);
-    Task<List<HrLeaveRequestDto>> GetRequestsBySchoolIdAsync(int schoolId, HrLeaveStatus? status = null);
+    Task<List<HrLeaveRequestDto>> GetAllRequestsAsync(HrLeaveStatus? status = null, int? employeeId = null);
+    Task<List<HrLeaveRequestDto>> GetRequestsBySchoolIdAsync(int schoolId, HrLeaveStatus? status = null, int? employeeId = null);
     Task<HrLeaveRequestDto> CreateRequestAsync(HrLeaveRequestDto dto);
     Task ApproveByManagerAsync(int id, string approvedBy);
     Task ApproveByHrAsync(int id, string approvedBy);

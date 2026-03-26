@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SchoolMS.Application.DTOs;
@@ -18,18 +19,25 @@ public class HrSalaryApiController : ControllerBase
     private readonly IOneSignalNotificationService _pushService;
     public HrSalaryApiController(IHrSalaryService service, IOneSignalNotificationService pushService) { _service = service; _pushService = pushService; }
 
-    // Salary Setup
-    [HttpGet("employee/{employeeId}")]
-    public async Task<ActionResult<HrSalaryDetailDto>> GetCurrentSalary(int employeeId)
+    private int? GetEmployeeIdFromToken() => int.TryParse(User.FindFirst("PersonId")?.Value, out var id) ? id : null;
+
+    // Salary Setup — my salary
+    [HttpGet("my-salary")]
+    public async Task<ActionResult<HrSalaryDetailDto>> GetMySalary()
     {
-        var item = await _service.GetCurrentSalaryAsync(employeeId);
+        var empId = GetEmployeeIdFromToken();
+        if (!empId.HasValue) return Unauthorized();
+        var item = await _service.GetCurrentSalaryAsync(empId.Value);
         return item == null ? NotFound() : Ok(item);
     }
 
-    [HttpGet("employee/{employeeId}/history")]
-    public async Task<ActionResult<List<HrSalaryDetailDto>>> GetSalaryHistory(int employeeId)
-        => Ok(await _service.GetSalaryHistoryAsync(employeeId));
-
+    [HttpGet("my-salary/history")]
+    public async Task<ActionResult<List<HrSalaryDetailDto>>> GetMySalaryHistory()
+    {
+        var empId = GetEmployeeIdFromToken();
+        if (!empId.HasValue) return Unauthorized();
+        return Ok(await _service.GetSalaryHistoryAsync(empId.Value));
+    }                                      
     // Allowance Types
     [HttpGet("allowance-types")]
     public async Task<ActionResult<List<HrAllowanceTypeDto>>> GetAllowanceTypes()
@@ -39,45 +47,25 @@ public class HrSalaryApiController : ControllerBase
     [HttpGet("deduction-types")]
     public async Task<ActionResult<List<HrDeductionTypeDto>>> GetDeductionTypes()
         => Ok(await _service.GetDeductionTypesAsync());
-
-    // Payroll
-    [HttpPost("payroll/generate")]
-    public async Task<ActionResult<HrMonthlyPayrollDto>> GeneratePayroll(
-        [FromQuery] int month, [FromQuery] int year, [FromQuery] int branchId)
-        => Ok(await _service.GeneratePayrollAsync(month, year, branchId));
-
-    [HttpGet("payroll")]
-    public async Task<ActionResult<HrMonthlyPayrollDto>> GetPayroll(
-        [FromQuery] int month, [FromQuery] int year, [FromQuery] int branchId)
-    {
-        var item = await _service.GetPayrollAsync(month, year, branchId);
-        return item == null ? NotFound() : Ok(item);
-    }
-
-    [HttpGet("payroll/list")]
-    public async Task<ActionResult<List<HrMonthlyPayrollDto>>> GetPayrollList([FromQuery] int? year)
-        => Ok(await _service.GetPayrollListAsync(year));
-
-
-    // Advances
+                      
+    // Advances — returns only the logged-in employee's data
     [HttpGet("advances")]
     public async Task<ActionResult<List<HrSalaryAdvanceDto>>> GetAdvances(int schoolId, [FromQuery] AdvanceStatus? status)
-        => Ok(await _service.GetAdvancesBySchoolIdAsync(schoolId, status));
+        => Ok(await _service.GetAdvancesBySchoolIdAsync(schoolId, status, GetEmployeeIdFromToken()));
 
     // Loans
     [HttpGet("loans")]
-    public async Task<ActionResult<List<HrEmployeeLoanDto>>> GetLoans(int schoolId, [FromQuery] int? employeeId)
-        => Ok(await _service.GetLoansBySchoolIdAsync(schoolId, employeeId));
+    public async Task<ActionResult<List<HrEmployeeLoanDto>>> GetLoans(int schoolId)
+        => Ok(await _service.GetLoansBySchoolIdAsync(schoolId, GetEmployeeIdFromToken()));
 
     // Bonuses
     [HttpGet("bonuses")]
     public async Task<ActionResult<List<HrBonusDto>>> GetBonuses(int schoolId, [FromQuery] int? month, [FromQuery] int? year)
-        => Ok(await _service.GetBonusesBySchoolIdAsync(schoolId, month, year));
-
+        => Ok(await _service.GetBonusesBySchoolIdAsync(schoolId, month, year, GetEmployeeIdFromToken()));
 
     // Penalties
     [HttpGet("penalties")]
     public async Task<ActionResult<List<HrPenaltyDto>>> GetPenalties(int schoolId, [FromQuery] int? month, [FromQuery] int? year)
-        => Ok(await _service.GetPenaltiesBySchoolIdAsync(schoolId, month, year));
+        => Ok(await _service.GetPenaltiesBySchoolIdAsync(schoolId, month, year, GetEmployeeIdFromToken()));
 
 }

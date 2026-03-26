@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SchoolMS.Application.DTOs;
@@ -17,12 +18,17 @@ public class HrContractsApiController : ControllerBase
     private readonly IOneSignalNotificationService _pushService;
     public HrContractsApiController(IHrContractService service, IOneSignalNotificationService pushService) { _service = service; _pushService = pushService; }
 
-    [HttpGet]
-    public async Task<ActionResult<List<HrEmployeeContractDto>>> GetAll(int schoolId)
-        => Ok(await _service.GetBySchoolIdAsync(schoolId));
+    private int? GetEmployeeIdFromToken() => int.TryParse(User.FindFirst("PersonId")?.Value, out var id) ? id : null;
 
-    [HttpGet("employee/{employeeId}")]
-    public async Task<ActionResult<List<HrEmployeeContractDto>>> GetByEmployee(int schoolId, int employeeId)
-        => Ok(await _service.GetByEmployeeAsync(employeeId));
-                         
+
+    // Returns logged-in employee's contracts
+    [HttpGet("my-contracts")]
+    public async Task<ActionResult<List<HrEmployeeContractDto>>> GetMyContracts()
+    {
+        var empId = GetEmployeeIdFromToken();
+        if (!empId.HasValue) return Unauthorized();
+        return Ok(await _service.GetByEmployeeAsync(empId.Value));
+    }
+
+
 }

@@ -69,6 +69,9 @@ public class AccountController : Controller
                     HttpContext.Session.SetString("DeviceId", deviceClaim ?? "");
                     if (int.TryParse(branchClaim, out var branchId))
                         HttpContext.Session.SetInt32("BranchId", branchId);
+                    var oneSignalClaim = User.FindFirst("OneSignalAppId")?.Value;
+                    if (!string.IsNullOrEmpty(oneSignalClaim))
+                        HttpContext.Session.SetString("OneSignalAppId", oneSignalClaim);
                 }
 
                 return RedirectToAction("Index", "Home");
@@ -150,10 +153,12 @@ public class AccountController : Controller
         HttpContext.Session.SetString("DeviceId", deviceId);
         if (result.BranchId.HasValue)
             HttpContext.Session.SetInt32("BranchId", result.BranchId.Value);
+        if (!string.IsNullOrEmpty(result.OneSignalAppId))
+            HttpContext.Session.SetString("OneSignalAppId", result.OneSignalAppId);
 
         // Issue persistent auth cookie so login survives server restarts
         await SignInWithCookieAsync(result.PersonId, result.SchoolId, result.FullName ?? "",
-            slug, deviceId, result.BranchId);
+            slug, deviceId, result.BranchId, result.OneSignalAppId);
 
         return RedirectToAction("Index", "Home");
     }
@@ -489,7 +494,7 @@ public class AccountController : Controller
     }
 
     private async Task SignInWithCookieAsync(int studentId, int schoolId, string studentName,
-        string slug, string deviceId, int? branchId)
+        string slug, string deviceId, int? branchId, string? oneSignalAppId = null)
     {
         var claims = new List<Claim>
         {
@@ -501,6 +506,8 @@ public class AccountController : Controller
         };
         if (branchId.HasValue)
             claims.Add(new Claim("BranchId", branchId.Value.ToString()));
+        if (!string.IsNullOrEmpty(oneSignalAppId))
+            claims.Add(new Claim("OneSignalAppId", oneSignalAppId));
 
         var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
         var principal = new ClaimsPrincipal(identity);

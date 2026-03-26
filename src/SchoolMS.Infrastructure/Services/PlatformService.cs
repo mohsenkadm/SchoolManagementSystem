@@ -107,6 +107,8 @@ public class PlatformService : IPlatformService
             HrLateDeductionPerMinute = s.HrLateDeductionPerMinute,
             HrEarlyLeaveDeductionPerMinute = s.HrEarlyLeaveDeductionPerMinute,
             HrSalaryCalculationMethod = s.HrSalaryCalculationMethod,
+            OneSignalAppId = s.OneSignalAppId,
+            OneSignalApiKey = s.OneSignalApiKey,
             BranchCount = s.Branches.Count(b => !b.IsDeleted),
             CurrentPlan = s.SchoolSubscriptions.Where(ss => ss.IsActive && !ss.IsDeleted)
                 .OrderByDescending(ss => ss.ActivatedAt).FirstOrDefault()?.SystemSubscriptionPlan?.PlanName,
@@ -141,6 +143,8 @@ public class PlatformService : IPlatformService
             HrLateDeductionPerMinute = dto.HrLateDeductionPerMinute,
             HrEarlyLeaveDeductionPerMinute = dto.HrEarlyLeaveDeductionPerMinute,
             HrSalaryCalculationMethod = dto.HrSalaryCalculationMethod,
+            OneSignalAppId = dto.OneSignalAppId,
+            OneSignalApiKey = dto.OneSignalApiKey,
             SchoolId = 0, CreatedAt = DateTime.UtcNow, CreatedBy = "Platform"
         };
         _context.Schools.Add(school);
@@ -232,6 +236,8 @@ public class PlatformService : IPlatformService
         school.HrLateDeductionPerMinute = dto.HrLateDeductionPerMinute;
         school.HrEarlyLeaveDeductionPerMinute = dto.HrEarlyLeaveDeductionPerMinute;
         school.HrSalaryCalculationMethod = dto.HrSalaryCalculationMethod;
+        school.OneSignalAppId = dto.OneSignalAppId;
+        school.OneSignalApiKey = dto.OneSignalApiKey;
         school.UpdatedAt = DateTime.UtcNow; school.UpdatedBy = "Platform";
         await _context.SaveChangesAsync();
         return new SchoolDto { Id = school.Id, Name = school.Name, Slug = school.Slug, IsActive = school.IsActive, CreatedAt = school.CreatedAt };

@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using SchoolMS.API.Hubs;
 using SchoolMS.Application.DTOs;
 using SchoolMS.Application.Interfaces;
+using SchoolMS.Application.Settings;
 using SchoolMS.Domain.Entities;
 using SchoolMS.Domain.Interfaces;
 using UserType = SchoolMS.Domain.Enums.UserType;
@@ -123,7 +124,7 @@ public class ChatApiController : ControllerBase
             var filePath = Path.Combine(uploadsDir, fileName);
             using var stream = new FileStream(filePath, FileMode.Create);
             await file.CopyToAsync(stream);
-            fileUrl = $"/uploads/chat/{fileName}";
+            fileUrl = AppUrlSettings.BuildApiUrl($"/uploads/chat/{fileName}");
             fileType = file.ContentType;
         }
 
